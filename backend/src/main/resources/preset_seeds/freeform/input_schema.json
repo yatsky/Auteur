@@ -1,0 +1,37 @@
+{
+  "type": "object",
+  "title": "FREEFORM 自由创作",
+  "description": "通用基础模板:输入主题 + 基调 + 时长,生成一条短视频。",
+  "required": ["theme"],
+  "properties": {
+    "theme": {
+      "type": "string",
+      "title": "主题",
+      "description": "一句话描述这条视频要讲什么。例:'宋代汴京一个底层书贩的一天'。"
+    },
+    "tone": {
+      "type": "string",
+      "title": "情感基调",
+      "enum": ["温暖", "悬疑", "克制", "戏谑", "冷静", "感伤"],
+      "default": "克制"
+    },
+    "duration_minutes": {
+      "type": "integer",
+      "title": "时长(分钟)",
+      "minimum": 1,
+      "maximum": 15,
+      "default": 5
+    },
+    "audience": {
+      "type": "string",
+      "title": "目标观众(可选)",
+      "description": "例:'25-35 岁泛知识人群' / '青少年' / '都市白领'。"
+    },
+    "key_points": {
+      "type": "array",
+      "title": "必含要点(可选)",
+      "description": "想让 LLM 在脚本里覆盖的关键事实/数字/桥段。",
+      "items": { "type": "string" }
+    }
+  }
+}

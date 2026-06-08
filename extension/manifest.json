@@ -1,0 +1,73 @@
+{
+  "manifest_version": 3,
+  "name": "auteur-sync",
+  "version": "0.1.0",
+  "description": "把抖音/B站/视频号/快手后台的 KPI 回写到 auteur 数据库",
+  "background": {
+    "service_worker": "background/index.js",
+    "type": "module"
+  },
+  "host_permissions": [
+    "https://creator.douyin.com/*",
+    "https://www.douyin.com/*",
+    "https://member.bilibili.com/*",
+    "https://channels.weixin.qq.com/*",
+    "https://cp.kuaishou.com/*"
+  ],
+  "permissions": ["storage", "alarms"],
+  "content_scripts": [
+    {
+      "matches": ["https://creator.douyin.com/*", "https://www.douyin.com/*"],
+      "js": ["content/douyin.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://creator.douyin.com/*", "https://www.douyin.com/*"],
+      "js": ["page-hooks/douyin-hook.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://member.bilibili.com/*"],
+      "js": ["content/bilibili.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://member.bilibili.com/*"],
+      "js": ["page-hooks/bilibili-hook.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://channels.weixin.qq.com/*"],
+      "js": ["content/weixin.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": ["https://channels.weixin.qq.com/*"],
+      "js": ["page-hooks/weixin-hook.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": ["https://cp.kuaishou.com/*"],
+      "js": ["content/kuaishou.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": ["https://cp.kuaishou.com/*"],
+      "js": ["page-hooks/kuaishou-hook.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    }
+  ],
+  "options_page": "options/index.html",
+  "action": {
+    "default_popup": "popup/index.html",
+    "default_title": "auteur-sync"
+  }
+}

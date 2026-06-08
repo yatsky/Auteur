@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>auteur-sync 选项</title>
+    <style>
+      :root {
+        --c-bg: rgb(10 10 10);
+        --c-card: rgb(26 26 26);
+        --c-chip: rgb(38 38 38);
+        --c-hover: rgb(46 46 46);
+        --c-border: rgb(42 42 42);
+        --c-border-strong: rgb(51 51 51);
+        --c-text: rgb(250 250 250);
+        --c-text-secondary: rgb(163 163 163);
+        --c-text-muted: rgb(115 115 115);
+        --c-accent: rgb(168 85 247);
+        --c-accent-hover: rgb(147 51 234);
+        --c-accent-soft: rgb(168 85 247 / 0.15);
+        --c-done: #10b981;
+        --c-failed: #ef4444;
+        font: 14px/1.5 Inter, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+        color-scheme: dark;
+      }
+
+      :root.light {
+        --c-bg: rgb(245 245 245);
+        --c-card: rgb(255 255 255);
+        --c-chip: rgb(240 240 240);
+        --c-hover: rgb(229 229 229);
+        --c-border: rgb(229 229 229);
+        --c-border-strong: rgb(212 212 212);
+        --c-text: rgb(23 23 23);
+        --c-text-secondary: rgb(82 82 82);
+        --c-text-muted: rgb(115 115 115);
+        --c-accent: rgb(147 51 234);
+        --c-accent-hover: rgb(126 34 206);
+        --c-accent-soft: rgb(147 51 234 / 0.12);
+        --c-done: #059669;
+        --c-failed: #dc2626;
+        color-scheme: light;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        padding: 40px 24px;
+        background: var(--c-bg);
+        color: var(--c-text);
+      }
+
+      main {
+        max-width: 560px;
+        margin: 0 auto;
+        background: var(--c-card);
+        border: 1px solid var(--c-border);
+        border-radius: 12px;
+        padding: 24px 28px 28px;
+      }
+
+      .title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+      }
+      h1 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+        letter-spacing: 0.2px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      h1 .brand-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--c-accent);
+        box-shadow: 0 0 8px rgb(from var(--c-accent) r g b / 0.65);
+      }
+      .icon-btn {
+        background: var(--c-chip);
+        border: 1px solid var(--c-border);
+        color: var(--c-text-secondary);
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+      .icon-btn:hover {
+        background: var(--c-hover);
+        color: var(--c-text);
+        border-color: var(--c-text-muted);
+      }
+      .icon-btn svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      p.hint {
+        color: var(--c-text-secondary);
+        font-size: 13px;
+        margin: 0 0 18px;
+        line-height: 1.5;
+      }
+
+      label {
+        display: block;
+        margin-top: 18px;
+        font-weight: 500;
+        font-size: 13px;
+        color: var(--c-text-secondary);
+        letter-spacing: 0.2px;
+      }
+
+      input[type="text"],
+      input[type="password"] {
+        width: 100%;
+        padding: 9px 12px;
+        margin-top: 6px;
+        background: var(--c-bg);
+        border: 1px solid var(--c-border-strong);
+        border-radius: 6px;
+        color: var(--c-text);
+        font: inherit;
+        transition: border-color 0.15s, box-shadow 0.15s;
+      }
+      input[type="text"]:focus,
+      input[type="password"]:focus {
+        outline: none;
+        border-color: var(--c-accent);
+        box-shadow: 0 0 0 3px var(--c-accent-soft);
+      }
+
+      .platforms {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .platforms label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0;
+        padding: 6px 10px;
+        background: var(--c-chip);
+        border: 1px solid var(--c-border);
+        border-radius: 999px;
+        color: var(--c-text);
+        font-weight: 400;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+      }
+      .platforms label:hover { background: var(--c-hover); }
+      .platforms input[type="checkbox"] { accent-color: var(--c-accent); }
+
+      .actions {
+        margin-top: 28px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      button.btn-primary,
+      button.btn-ghost {
+        font: inherit;
+        padding: 8px 18px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+      .btn-primary {
+        background: var(--c-accent);
+        border: 1px solid var(--c-accent);
+        color: #fff;
+      }
+      .btn-primary:hover { background: var(--c-accent-hover); border-color: var(--c-accent-hover); }
+      .btn-ghost {
+        background: var(--c-chip);
+        border: 1px solid var(--c-border);
+        color: var(--c-text);
+      }
+      .btn-ghost:hover { background: var(--c-hover); }
+
+      #status { font-size: 13px; }
+      .saved { color: var(--c-done); }
+      .err   { color: var(--c-failed); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="title-row">
+        <h1><span class="brand-dot"></span>auteur-sync 选项</h1>
+        <button class="icon-btn" id="themeBtn" title="切换主题" aria-label="切换主题">
+          <svg id="themeIcon" viewBox="0 0 24 24" aria-hidden="true"></svg>
+        </button>
+      </div>
+      <p class="hint">浏览器插件登录抖音/B站/视频号/快手后台时,被动嗅探页面 fetch 响应,把 KPI 回写到下面的 backend。</p>
+
+      <label for="backendUrl">后端地址</label>
+      <input id="backendUrl" type="text" placeholder="http://localhost:8081" />
+
+      <label for="token">X-Extension-Token</label>
+      <input id="token" type="password" placeholder="与 application.yml 里 auteur.extension.token 保持一致" />
+
+      <label>启用平台</label>
+      <div class="platforms">
+        <label><input type="checkbox" data-platform="抖音" />抖音</label>
+        <label><input type="checkbox" data-platform="B站" />B站</label>
+        <label><input type="checkbox" data-platform="视频号" />视频号</label>
+        <label><input type="checkbox" data-platform="快手" />快手</label>
+      </div>
+
+      <div class="actions">
+        <button id="saveBtn" class="btn-primary">保存</button>
+        <button id="testBtn" class="btn-ghost">测试连通性</button>
+        <span id="status"></span>
+      </div>
+    </main>
+
+    <script src="options.js"></script>
+  </body>
+</html>

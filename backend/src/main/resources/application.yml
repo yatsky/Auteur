@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: auteur-backend
+  profiles:
+    active: local
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 2
+      keepalive-time: 120000      # 2min
+      max-lifetime: 600000        # 10min,过期连接退役重建
+      validation-timeout: 5000
+      connection-timeout: 30000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc.time_zone: Asia/Shanghai
+        format_sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+server:
+  port: 8082
+
+logging:
+  level:
+    com.auteur: INFO
+    org.hibernate.SQL: WARN
+
+auteur:
+  llm:
+    timeout-seconds: 600
+  voice:
+    provider: volcano
+  prompts:
+    location: classpath:prompts/
+  video:
+    remotion:
+      enabled: ${AUTEUR_REMOTION_ENABLED:true}
+      renderer-dir: ${AUTEUR_REMOTION_DIR:./renderer}
+      public-base-url: ${AUTEUR_PUBLIC_BASE_URL:http://localhost:8081}
+  bgm:
+    jamendo:
+      base-url: https://api.jamendo.com/v3.0
+      timeout-seconds: 30
+      storage:
+        local-dir: ./storage/bgm
+        public-base: /api/files/bgm

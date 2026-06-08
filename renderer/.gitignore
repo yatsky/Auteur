@@ -1,0 +1,6 @@
+node_modules/
+out/
+.cache/
+.chrome/
+*.log
+.DS_Store

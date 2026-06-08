@@ -1,0 +1,41 @@
+# --- Secrets (NEVER commit) ---
+backend/src/main/resources/application-local.yml
+**/application-local.yml
+*.env
+.env
+.env.local
+
+# --- Generated assets (TTS / video / etc) ---
+backend/storage/
+storage/
+
+# --- Build output ---
+target/
+build/
+out/
+*.class
+*.jar
+*.war
+*.log
+
+# --- IDE ---
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.project
+.classpath
+.settings/
+.claude/
+
+# --- Local sandbox / experiments ---
+test/
+backend/scripts/archive/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Pencil temp ---
+*.pen.bak

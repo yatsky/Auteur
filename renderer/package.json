@@ -1,0 +1,25 @@
+{
+  "name": "auteur-renderer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Remotion 视频合成器：通用 Story 模板",
+  "scripts": {
+    "setup:chrome": "bash scripts/setup-chrome.sh",
+    "dev": "npm run setup:chrome && remotion studio src/index.ts",
+    "render": "npm run setup:chrome && remotion render src/index.ts StoryHorizontal out/story.mp4 --props=./src/sample-props.json",
+    "render:fast": "npm run setup:chrome && remotion render src/index.ts StoryHorizontal out/story.mp4 --props=./src/sample-props.json --jpeg-quality=70 --concurrency=4",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.0",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "typescript": "^5.6.0"
+  }
+}

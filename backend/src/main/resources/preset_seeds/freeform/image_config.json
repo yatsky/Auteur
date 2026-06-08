@@ -1,0 +1,9 @@
+{
+  "model": null,
+  "identity_lock_text": null,
+  "reference_image_path": null,
+  "style_suffix": "Cinematic photography style, natural lighting, shallow depth of field, no watermark, no text overlay, high detail.",
+  "style_tag": "电影感+自然光+浅景深",
+  "negative_prompt": "watermark, text, logo, low quality, blurry, distorted",
+  "image_size": "1080x1920"
+}

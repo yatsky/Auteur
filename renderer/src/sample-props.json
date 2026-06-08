@@ -1,0 +1,67 @@
+{
+  "audioUrl": "",
+  "audioDurationSec": 30,
+  "watermark": "历史人物志",
+  "shots": [
+    {
+      "shotId": 1,
+      "imageUrl": "https://picsum.photos/seed/s1/1080/1920",
+      "startSec": 0,
+      "durationSec": 5,
+      "sectionCode": "①"
+    },
+    {
+      "shotId": 2,
+      "imageUrl": "https://picsum.photos/seed/s2/1080/1920",
+      "startSec": 5,
+      "durationSec": 5,
+      "sectionCode": "①"
+    },
+    {
+      "shotId": 3,
+      "imageUrl": "https://picsum.photos/seed/s3/1080/1920",
+      "startSec": 10,
+      "durationSec": 5,
+      "sectionCode": "②"
+    },
+    {
+      "shotId": 4,
+      "imageUrl": "https://picsum.photos/seed/s4/1080/1920",
+      "startSec": 15,
+      "durationSec": 5,
+      "sectionCode": "②"
+    },
+    {
+      "shotId": 5,
+      "imageUrl": "https://picsum.photos/seed/s5/1080/1920",
+      "startSec": 20,
+      "durationSec": 5,
+      "sectionCode": "③"
+    },
+    {
+      "shotId": 6,
+      "imageUrl": "https://picsum.photos/seed/s6/1080/1920",
+      "startSec": 25,
+      "durationSec": 5,
+      "sectionCode": "③"
+    }
+  ],
+  "subtitleCues": [
+    { "startSec": 0,  "endSec": 4,  "text": "顺治十一年,三月十八日。" },
+    { "startSec": 5,  "endSec": 9,  "text": "朕,是大清第四位皇帝。" },
+    { "startSec": 10, "endSec": 14, "text": "八岁那年,父皇驾崩。" },
+    { "startSec": 15, "endSec": 19, "text": "满朝文武,无人敢与朕对视。" },
+    { "startSec": 20, "endSec": 24, "text": "鳌拜跋扈,辅政四臣已成尾大不掉之势。" },
+    { "startSec": 25, "endSec": 29, "text": "朕只能等。等到自己,足够强。" }
+  ],
+  "plan": {
+    "shotPlans": [],
+    "highlightKeywords": [],
+    "blackHoldsAt": []
+  },
+  "hookImages": [],
+  "hookAudioUrl": "",
+  "hookText": "",
+  "hookDurationSec": 0,
+  "hookPageFlipSoundUrl": ""
+}
