@@ -31,7 +31,8 @@ out/
 .claude/
 
 # --- Local sandbox / experiments ---
-test/
+# 锚定到根:不要误伤 backend/src/test/(Maven 标准测试目录)
+/test/
 backend/scripts/archive/
 
 # --- OS ---
