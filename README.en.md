@@ -13,8 +13,13 @@
 [![ffmpeg](https://img.shields.io/badge/ffmpeg-Compositor-darkgreen)](https://ffmpeg.org/)
 [![CI](https://github.com/nxin-github/Auteur/actions/workflows/ci.yml/badge.svg)](https://github.com/nxin-github/Auteur/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
+[![Live Demo](https://img.shields.io/badge/🎮_Live_Demo-auteur--phi.vercel.app-success?style=flat-square)](https://auteur-phi.vercel.app)
 
 [中文](./README.md) ｜ English
+
+### [🎮 Live Demo · Click here to play →](https://auteur-phi.vercel.app)
+
+*A real-pipeline output ("Stealing the food delivery — a life") packaged as an interactive playground. Watch the whole studio collaborate, auto-edit, and run the retrospective layer in 30 seconds — zero install.*
 
 </div>
 

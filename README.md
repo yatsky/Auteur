@@ -13,8 +13,13 @@
 [![ffmpeg](https://img.shields.io/badge/ffmpeg-Compositor-darkgreen)](https://ffmpeg.org/)
 [![CI](https://github.com/nxin-github/Auteur/actions/workflows/ci.yml/badge.svg)](https://github.com/nxin-github/Auteur/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
+[![Live Demo](https://img.shields.io/badge/🎮_Live_Demo-auteur--phi.vercel.app-success?style=flat-square)](https://auteur-phi.vercel.app)
 
 [English](./README.en.md) ｜ 中文
+
+### [🎮 在线 Demo · 点这里直接玩 →](https://auteur-phi.vercel.app)
+
+*基于真实流水线产出的「今天体验的人生副本：偷外卖的人的一生」打包成可点击演示，30 秒看完整剧组协作 + 自动剪辑 + 数据复盘全流程，无需安装。*
 
 </div>
 
