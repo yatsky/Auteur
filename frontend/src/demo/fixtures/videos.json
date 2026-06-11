@@ -1,0 +1,20 @@
+[
+  {
+    "id": 2,
+    "width": 1920,
+    "format": "16:9",
+    "height": 1080,
+    "isFinal": 1,
+    "costYuan": 0.0,
+    "scriptId": 12,
+    "videoUrl": "https://nx-zimeiti.tos-cn-beijing.volces.com/scripts/12/video/script-12-1781148744186.mp4",
+    "bgmVolume": null,
+    "createdAt": "2026-06-11 11:38:00.000000",
+    "shotCount": 52,
+    "timingNote": "shots=52 cues=63 speechSec=248.5 introSec=0.2 gapAbsorbed=true",
+    "bgmTrackId": null,
+    "voiceAssetId": 10,
+    "timingStrategy": "PRECISE_BY_CUE",
+    "durationSeconds": 249
+  }
+]

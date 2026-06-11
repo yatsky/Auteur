@@ -1,0 +1,114 @@
+[
+  {
+    "id": 14,
+    "genre": null,
+    "notes": null,
+    "title": "今天体验的人生副本:偷外卖的人的一生",
+    "source": "AI_BRAINSTORM",
+    "status": "DRAFT",
+    "dynasty": null,
+    "emotion": "隐忍",
+    "hookType": "身份反差",
+    "presetId": 4,
+    "seriesId": null,
+    "createdAt": "2026-06-11 08:56:04.000000",
+    "updatedAt": "2026-06-11 08:56:04.000000",
+    "protagonist": "偷外卖的人",
+    "projectName": "今天体验的人生副本:",
+    "directorNote": null,
+    "sourceHookId": null,
+    "potentialScore": 85.0,
+    "durationMinutes": 7,
+    "presetInputJson": "{\"archetype\":\"底层生活写照 / 内心挣扎与现实无奈 / 社会边缘视角\",\"nodes\":[{\"phase\":\"初入社会\",\"scene\":\"热闹的商业街\",\"details\":[\"高中毕业没考上大学\",\"找工作四处碰壁\",\"身上只剩 50 块钱\"]},{\"phase\":\"生活困境\",\"scene\":\"狭小昏暗的出租屋\",\"details\":[\"工资低不够开销\",\"交不起房租面临被赶\",\"每天只能吃泡面\"]},{\"phase\":\"首次偷窃\",\"scene\":\"居民楼下的外卖架\",\"details\":[\"肚子饿得咕咕叫\",\"看到外卖起了贪念\",\"紧张地拿走一份外卖\"]},{\"phase\":\"习惯成自然\",\"scene\":\"小区的电梯间\",\"details\":[\"经常偷外卖解馋\",\"被人发现过几次但没被抓住\",\"觉得这是来钱快的办法\"]},{\"phase\":\"内心煎熬\",\"scene\":\"夜深人静的街头\",\"details\":[\"对自己的行为感到愧疚\",\"想改变却又没有办法\",\"不知道未来在哪里\"]},{\"phase\":\"冲突升级\",\"scene\":\"外卖站点门口\",\"details\":[\"被外卖员堵截\",\"发生激烈争吵\",\"差点大打出手\"]},{\"phase\":\"舆论压力\",\"scene\":\"网络上的曝光贴\",\"details\":[\"被人拍照曝光到网上\",\"遭受网友的指责和谩骂\",\"生活受到严重影响\"]},{\"phase\":\"寻求改变\",\"scene\":\"职业技能培训班教室\",\"details\":[\"报名参加技能培训\",\"努力学习新的知识和技能\",\"希望能找到正经工作\"]},{\"phase\":\"重新出发\",\"scene\":\"新公司的入职处\",\"details\":[\"凭借新技能找到工作\",\"工资虽然不高但很稳定\",\"决心告别过去\"]},{\"phase\":\"回归正轨\",\"scene\":\"温馨的小家庭客厅\",\"details\":[\"组建了自己的家庭\",\"生活逐渐走上正轨\",\"偶尔想起过去感到庆幸\"]}],\"era\":\"2018-2028\",\"identity_tag\":\"偷外卖的人\"}",
+    "aiSuggestedSeries": "边缘人生图鉴",
+    "presetVersionUsed": 1,
+    "protagonistRefUrl": null,
+    "historicalReference": null
+  },
+  {
+    "id": 15,
+    "genre": null,
+    "notes": null,
+    "title": "今天体验的人生副本：偷外卖的人的一生",
+    "source": "AGENT_MANUAL",
+    "status": "PUBLISHED",
+    "dynasty": null,
+    "emotion": "嘲弄,紧张,绝望",
+    "hookType": null,
+    "presetId": 4,
+    "seriesId": null,
+    "createdAt": "2026-06-11 09:16:07.000000",
+    "updatedAt": "2026-06-11 11:43:51.000000",
+    "protagonist": "25岁城市青年小张，普通上班族，月薪不高但爱面子，习惯性偷拿外卖占小便宜",
+    "projectName": "外卖偷窃者",
+    "directorNote": {
+      "tone": "黑色幽默转严肃批判，从轻佻嘲弄到社会性死亡的坠落感",
+      "pacing": "前快后慢：0-90秒展现偷外卖的日常轻佻，90-180秒累积矛盾，180-300秒被设计报复，300-360秒曝光与社会性死亡",
+      "keyMoments": [
+        {
+          "time": "0:15",
+          "what": "第一次偷外卖，镜头特写手部动作"
+        },
+        {
+          "time": "2:30",
+          "what": "被设计报复，吃下特殊处理的外卖"
+        },
+        {
+          "time": "4:10",
+          "what": "手机屏幕亮起，自己的丑态已在网上传播"
+        }
+      ],
+      "visualStyle": {
+        "palette": "城市冷灰调，关键时刻用手机屏幕的冷蓝光",
+        "lighting": "楼道昏暗灯光，外卖柜的荧光，手机屏幕光",
+        "avoidWords": [
+          "温馨",
+          "明亮",
+          "正能量"
+        ],
+        "depthOfField": "手持纪实感，偷窃时特写手部，曝光后远景疏离"
+      },
+      "narrativeArc": [
+        {
+          "section": "A",
+          "guidance": "钩子段：用'顺手牵羊'的日常画面开场，主角轻佻得意，让观众反感但熟悉"
+        },
+        {
+          "section": "B",
+          "guidance": "累积段：多次偷外卖被发现，与外卖员/邻居冲突升级"
+        },
+        {
+          "section": "C",
+          "guidance": "中段转折：被设计报复，在不知情情况下吃下特殊处理的'外卖'"
+        },
+        {
+          "section": "D",
+          "guidance": "揭秘段：发现真相，被录下吃屎的丑态"
+        },
+        {
+          "section": "E",
+          "guidance": "留白段：视频在网上爆传，现实社交圈崩塌，社会性死亡"
+        }
+      ],
+      "directorNotes": "不要过度恶趣味，重点在社会性死亡的现实后果，避免具体描述排泄物细节",
+      "highlightThemes": [
+        "占小便宜",
+        "网络暴力",
+        "社会性死亡"
+      ],
+      "protagonistVibe": {
+        "voiceVibe": "起初得意轻佻，被识破后慌张，最后绝望麻木",
+        "appearance": "25岁普通上班族，白衬衫黑裤子，外表干净但眼神闪烁",
+        "speakingPace": "快语速狡辩，真相揭露时停顿颤抖"
+      }
+    },
+    "sourceHookId": null,
+    "potentialScore": null,
+    "durationMinutes": 6,
+    "presetInputJson": null,
+    "aiSuggestedSeries": null,
+    "presetVersionUsed": 1,
+    "protagonistRefUrl": null,
+    "historicalReference": null
+  }
+]

@@ -1,94 +1,192 @@
 /**
- * Demo fixtures 总表
+ * Demo fixtures 总表 —— 真实流水线数据
  *
- * 这个文件是 demo mode 的"剧本"。每个 entry 是 "<METHOD> <URL 模板>" → 数据。
- * URL 模板把数字 id 写成 :id,如 GET /topics/:id。
+ * 数据来源: 真实跑了一条 "今天体验的人生副本：偷外卖的人的一生"(topic id=15, script id=12),
+ * 由 backend/scripts/export-demo-fixtures.py 导出。资源(图/音频/视频)直接走 TOS URL,
+ * demo 站不带本地拷贝。
  *
- * Entry 类型可以是:
- *   - 直接的对象/数组(纯静态)
- *   - 函数:(config) => data(根据请求参数返回不同数据,如 listTopics(status=DRAFT) vs status=PUBLISHED)
- *
- * 真实 fixture 数据来自 backend/scripts/export-demo-fixtures.sh 导出的 JSON,
- * 那个脚本从你跑过一次的真实流水线 dump 数据 + 拷资源到 public/demo-assets/。
- *
- * ⚠️ 当前是占位空数据,等用户跑完流水线 + 导出脚本后自动填充。
+ * 主表把 method + URL 模板映射到响应数据。这里只列演示路径会用到的核心 endpoints。
+ * 其余未列的会被 interceptor 默认返回 null,不会让 demo 站炸,只是 console 里有一行 warn。
  */
 
 import type { InternalAxiosRequestConfig } from 'axios'
 
-// 等用户跑完流水线后,这些 import 会指向真实数据
-// import topicsFixture from './fixtures/topics.json'
-// import scriptFixture from './fixtures/script-1.json'
-// ... 暂时全用空占位
+// ─── 真实 fixtures(从 ./fixtures/*.json 导入)───────────
+import topicFixture from './fixtures/topic.json'
+import scriptFixture from './fixtures/script.json'
+import scriptSectionsFixture from './fixtures/script-sections.json'
+import brainstormResultFixture from './fixtures/brainstorm-result.json'
+import storyboardFixture from './fixtures/storyboard.json'
+import imagesFixture from './fixtures/images.json'
+import voiceFixture from './fixtures/voice.json'
+import videosFixture from './fixtures/videos.json'
+import coversFixture from './fixtures/covers.json'
+import presetFixture from './fixtures/preset.json'
+import criticLogsFixture from './fixtures/critic-logs.json'
+import factcheckIssuesFixture from './fixtures/factcheck-issues.json'
+import bgmChoiceFixture from './fixtures/bgm-choice.json'
+import bgmTracksFixture from './fixtures/bgm-tracks.json'
+import pipelineRunsFixture from './fixtures/pipeline-runs.json'
+import publishedVideosFixture from './fixtures/published-videos.json'
+import genreStatsFixture from './fixtures/genre-stats.json'
+import weeklyReviewsFixture from './fixtures/weekly-reviews.json'
+import seriesFixture from './fixtures/series.json'
+import seriesHooksFixture from './fixtures/series-hooks.json'
 
 export type FixtureFn = (config: InternalAxiosRequestConfig) => unknown
 export type FixtureEntry = unknown | FixtureFn
 
+// 帮 ID 路径里挑出"我们演示的那条" — script_id 实际是 12,但前端可能用各种 id 调用。
+// 演示路径上只有这一条 script,我们对所有 :id 都返回同一条数据(简化)。
+const DEMO_SCRIPT = scriptFixture
+const DEMO_TOPIC = topicFixture
+
+// 选题池:把 brainstorm 候选 + 主 topic 当作 DRAFT 池里的内容。
+// 前端 listTopics(DRAFT) 期望 SpringPage<Topic>{ content, totalElements, ... }
+const draftTopics = brainstormResultFixture.filter(
+  (t: { status?: string }) => t.status !== 'PUBLISHED',
+)
+const publishedTopics = brainstormResultFixture.filter(
+  (t: { status?: string }) => t.status === 'PUBLISHED',
+)
+
+function springPage<T>(items: T[], pageSize = 30) {
+  return {
+    content: items,
+    totalElements: items.length,
+    totalPages: Math.max(1, Math.ceil(items.length / pageSize)),
+    number: 0,
+    size: pageSize,
+    first: true,
+    last: true,
+    empty: items.length === 0,
+    numberOfElements: items.length,
+  }
+}
+
 /**
- * 主表:把 method + URL 模板映射到响应数据
- *
- * 这里只列演示路径会用到的核心 endpoints。其余未列的会被 interceptor 默认返回 null,
- * 不会让 demo 站炸,只是 console 里会有一行 warn。
+ * 主表
  */
 export const fixturesTable: Record<string, FixtureEntry> = {
   // ─── Preset ───────────────────────────────────────────
-  'GET /presets': [],
-  'GET /presets/:id': null,
-  'GET /presets/by-name/freeform': null,
+  'GET /presets': [presetFixture].filter(Boolean),
+  'GET /presets/:id': presetFixture,
+  'GET /presets/by-name/:id': presetFixture,
+  'GET /presets/:id/versions': [],
+  'GET /presets/:id/assets': [],
 
   // ─── Topic ────────────────────────────────────────────
-  'GET /topics': { content: [], totalElements: 0, totalPages: 0, number: 0, size: 30 },
-  'GET /topics/:id': null,
-  'GET /topics/:id/lineage': [],
-  'POST /topics/brainstorm': [],
-  'POST /topics/:id/scripts/generate': null,
+  'GET /topics': (cfg: InternalAxiosRequestConfig) => {
+    const status = (cfg.params?.status as string) ?? 'DRAFT'
+    const items = status === 'PUBLISHED' ? publishedTopics : draftTopics
+    return springPage(items)
+  },
+  'GET /topics/:id': DEMO_TOPIC,
+  'GET /topics/:id/lineage': [
+    {
+      topicId: DEMO_TOPIC.id,
+      title: DEMO_TOPIC.title,
+      projectName: DEMO_TOPIC.projectName ?? null,
+      latestScriptId: DEMO_SCRIPT.id,
+      hookSummary: null,
+      fromScriptId: null,
+    },
+  ],
+  // 头脑风暴 —— 返回完整候选,前端会展示这一批并让用户挑。
+  'POST /topics/brainstorm': brainstormResultFixture,
+  // 同步生成脚本(不太常用,前端默认走 async 路径)
+  'POST /topics/:id/scripts/generate': DEMO_SCRIPT,
+  // 异步触发 —— 返 runId,前端轮询 GET /runs/{id} 看进度
   'POST /topics/:id/scripts/generate-async': () => ({ runId: 1001 }),
-  'PATCH /topics/:id': (cfg) => cfg.data, // 假装保存成功,原样返回
+  'PATCH /topics/:id': (cfg: InternalAxiosRequestConfig) => ({ ...DEMO_TOPIC, ...(cfg.data as object) }),
   'DELETE /topics/:id': null,
+  'POST /topics/:id/director-note/optimize': () => ({
+    note: DEMO_TOPIC.directorNote ?? null,
+    explanation: '导演笔记已根据您的反馈重新生成(demo mock)',
+  }),
 
   // ─── Script ───────────────────────────────────────────
-  'GET /scripts/:id': null,
-  'GET /scripts/:id/storyboard': [],
+  'GET /scripts/:id': DEMO_SCRIPT,
+  'GET /scripts/:id/sections': scriptSectionsFixture,
+  'GET /scripts/:id/storyboard': storyboardFixture,
   'POST /scripts/:id/storyboard/generate': () => ({ runId: 1002 }),
-  'GET /scripts/:id/images': [],
+  'POST /scripts/:id/storyboard/generate-async': () => ({ runId: 1002 }),
+  'GET /scripts/:id/images': imagesFixture,
   'POST /scripts/:id/images/generate': () => ({ runId: 1003 }),
-  'GET /scripts/:id/voice': null,
+  'GET /scripts/:id/voice': voiceFixture[0] ?? null,
+  'GET /scripts/:id/voice/list': voiceFixture,
   'POST /scripts/:id/voice/generate': () => ({ runId: 1004 }),
-  'GET /scripts/:id/videos': [],
-  'GET /scripts/:id/factcheck': [],
+  'GET /scripts/:id/videos': videosFixture,
+  'POST /scripts/:id/videos/assemble': () => ({ runId: 1007 }),
+  'GET /scripts/:id/factcheck': factcheckIssuesFixture,
   'POST /scripts/:id/factcheck-async': () => ({ runId: 1005 }),
-  'GET /scripts/:id/covers': [],
+  'GET /scripts/:id/covers': coversFixture,
   'POST /scripts/:id/covers': () => ({ runId: 1006 }),
-
-  // ─── Pipeline run ─────────────────────────────────────
-  // GET /runs/:id 走 interceptor 里的特殊 getRunStatus(),不在这里
+  'GET /scripts/:id/critic-logs': criticLogsFixture,
+  'GET /scripts/:id/align-timing': storyboardFixture,
+  'POST /scripts/:id/align-timing': storyboardFixture,
+  // 单镜重生成 —— demo 里直接返回原图(假装"已重新生成")
+  'POST /scripts/:id/images/:id/regenerate': (cfg: InternalAxiosRequestConfig) => {
+    const shotId = Number(cfg.url?.match(/images\/(\d+)/)?.[1] ?? 0)
+    return imagesFixture.find((i: { shotId?: number }) => i.shotId === shotId) ?? imagesFixture[0]
+  },
 
   // ─── BGM ──────────────────────────────────────────────
-  'GET /bgm/scripts/:id/recommend': [],
-  'GET /bgm/scripts/:id/tracks': [],
-  'GET /bgm/scripts/:id/choice': null,
-  'POST /bgm/scripts/:id/select': null,
+  'GET /bgm/scripts/:id/recommend': bgmTracksFixture.slice(0, 5),
+  'GET /bgm/scripts/:id/tracks': bgmTracksFixture,
+  'GET /bgm/scripts/:id/choice': bgmChoiceFixture,
+  'POST /bgm/scripts/:id/select': bgmChoiceFixture,
+
+  // ─── Cover ────────────────────────────────────────────
+  'POST /covers/:id/finalize': (cfg: InternalAxiosRequestConfig) => {
+    const id = Number(cfg.url?.match(/covers\/(\d+)/)?.[1] ?? 0)
+    return coversFixture.find((c: { id?: number }) => c.id === id) ?? coversFixture[0]
+  },
+
+  // ─── FactCheck ────────────────────────────────────────
+  'POST /factcheck-issues/:id/apply': null,
 
   // ─── Agent ────────────────────────────────────────────
+  // demo 站的 chat 暂时只展示空界面 + "demo 模式不支持实时对话"提示。
   'GET /agent/tools': [],
   'GET /agent/sessions': [],
-  'POST /agent/sessions': () => ({ id: 1, title: 'Demo 对话', createdAt: new Date(0).toISOString() }),
+  'POST /agent/sessions': () => ({
+    id: 1,
+    title: 'Demo 对话',
+    createdAt: new Date(0).toISOString(),
+    archived: false,
+  }),
   'GET /agent/sessions/:id/messages': [],
 
-  // ─── Insights ─────────────────────────────────────────
-  'GET /insights/top-bottom': { top: [], bottom: [] },
-  'GET /insights/dimension-weights': [],
-  'GET /insights/weekly-review': null,
+  // ─── Insights / 数据看板 ──────────────────────────────
+  'GET /insights/top-bottom': { top: publishedVideosFixture.slice(0, 5), bottom: [] },
+  'GET /insights/dimension-weights': genreStatsFixture,
+  'GET /insights/weekly-review': weeklyReviewsFixture[0] ?? null,
+  'GET /insights/recompute-scores': null,
+  'GET /insights/video-attribution': [],
   'GET /analytics/daily-trend': [],
   'GET /analytics/compare': { rows: [] },
-  'GET /reviews/weekly': [],
+  'GET /reviews/weekly': weeklyReviewsFixture,
 
   // ─── 其他 ─────────────────────────────────────────────
   'GET /config': {},
   'GET /brand-identity': null,
-  'GET /published-videos': { content: [], totalElements: 0 },
-  'GET /genre-stats': [],
-  'GET /series': [],
+  'GET /published-videos': springPage(publishedVideosFixture),
+  'GET /genre-stats': genreStatsFixture,
+  'GET /series': seriesFixture,
+  'GET /series-hooks': seriesHooksFixture,
+  'GET /pipeline-runs': pipelineRunsFixture,
+
+  // 持久化操作 —— demo 里都假装成功,不真改任何东西
+  'POST /agent/sessions/:id/messages': () => ({ ok: true }),
+  'PATCH /scripts/:id': (cfg: InternalAxiosRequestConfig) => ({ ...DEMO_SCRIPT, ...(cfg.data as object) }),
+  'PATCH /scripts/:id/sections/:id': (cfg: InternalAxiosRequestConfig) => cfg.data,
+  'PATCH /storyboard-shots/:id': (cfg: InternalAxiosRequestConfig) => cfg.data,
+  'POST /presets': (cfg: InternalAxiosRequestConfig) => ({ ...presetFixture, ...(cfg.data as object) }),
+  'PATCH /presets/:id': (cfg: InternalAxiosRequestConfig) => cfg.data,
+  'POST /presets/:id/save-version': null,
+  'POST /presets/:id/rollback': presetFixture,
+  'POST /presets/:id/optimize': () => ({ optimized: presetFixture, explanation: 'demo 模式' }),
 }
 
 // ─── 长任务模拟 ─────────────────────────────────────────
@@ -103,15 +201,29 @@ interface RunProgress {
 
 const runs: Record<number, RunProgress> = {}
 
+// 不同阶段的 demo "假等待时长" —— 让用户感觉真在跑,但又不无聊
+const RUN_DURATIONS: Record<number, number> = {
+  1001: 4000, // generate-script
+  1002: 5000, // generate-storyboard
+  1003: 8000, // generate-images (最长,52 张图)
+  1004: 4000, // generate-voice
+  1005: 3000, // factcheck
+  1006: 4000, // generate-covers
+  1007: 6000, // assemble-video
+}
+
 export function getRunStatus(runId: number): {
   id: number
   status: string
   progress: number
   scriptId?: number
 } {
-  // 不存在 → 自动开一个跑 5 秒的(覆盖前端调用 generate-async 后立即问的场景)
   if (!runs[runId]) {
-    runs[runId] = { startedAt: Date.now(), durationMs: 5000, scriptId: 1 }
+    runs[runId] = {
+      startedAt: Date.now(),
+      durationMs: RUN_DURATIONS[runId] ?? 5000,
+      scriptId: scriptFixture.id,
+    }
   }
   const r = runs[runId]
   const elapsed = Date.now() - r.startedAt

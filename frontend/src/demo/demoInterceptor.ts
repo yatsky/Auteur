@@ -66,7 +66,7 @@ export function installDemoInterceptor(http: AxiosInstance): void {
 
       // 2) 表里有 → 走 fixture
       if (entry !== undefined) {
-        const fn: FixtureFn = typeof entry === 'function' ? entry : (() => entry)
+        const fn: FixtureFn = typeof entry === 'function' ? (entry as FixtureFn) : () => entry
         // 选 delay profile:写入类(POST/PUT/PATCH)走 trigger,LLM 类显式标注用 llm,默认 fast
         const isMutating = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(
           (config.method ?? 'GET').toUpperCase(),

@@ -1,0 +1,98 @@
+[
+  {
+    "id": 21,
+    "role": "SCRIPT",
+    "score": 85,
+    "decision": "PASS",
+    "feedback": "",
+    "topicId": 15,
+    "scriptId": 12,
+    "createdAt": "2026-06-11 09:20:46.000000",
+    "issuesJson": null,
+    "contentType": "lifecopy"
+  },
+  {
+    "id": 22,
+    "role": "SCRIPT",
+    "score": 85,
+    "decision": "PASS",
+    "feedback": "",
+    "topicId": 15,
+    "scriptId": 12,
+    "createdAt": "2026-06-11 10:07:28.000000",
+    "issuesJson": null,
+    "contentType": "lifecopy"
+  },
+  {
+    "id": 23,
+    "role": "VOICE",
+    "score": 100,
+    "decision": "PASS",
+    "feedback": null,
+    "topicId": 15,
+    "scriptId": 12,
+    "createdAt": "2026-06-11 10:17:04.000000",
+    "issuesJson": null,
+    "contentType": "lifecopy"
+  },
+  {
+    "id": 24,
+    "role": "VOICE",
+    "score": 100,
+    "decision": "PASS",
+    "feedback": null,
+    "topicId": 15,
+    "scriptId": 12,
+    "createdAt": "2026-06-11 10:17:08.000000",
+    "issuesJson": null,
+    "contentType": "lifecopy"
+  },
+  {
+    "id": 25,
+    "role": "VOICE",
+    "score": 100,
+    "decision": "PASS",
+    "feedback": null,
+    "topicId": 15,
+    "scriptId": 12,
+    "createdAt": "2026-06-11 10:19:02.000000",
+    "issuesJson": null,
+    "contentType": "lifecopy"
+  },
+  {
+    "id": 26,
+    "role": "VOICE",
+    "score": 100,
+    "decision": "PASS",
+    "feedback": null,
+    "topicId": 15,
+    "scriptId": 12,
+    "createdAt": "2026-06-11 10:29:25.000000",
+    "issuesJson": null,
+    "contentType": "lifecopy"
+  },
+  {
+    "id": 27,
+    "role": "VOICE",
+    "score": 0,
+    "decision": "REWRITE",
+    "feedback": "voice 体检不通过(语音不重投,仅告警):duration 偏差大: target=360s actual=249s (差 31%)",
+    "topicId": 15,
+    "scriptId": 12,
+    "createdAt": "2026-06-11 10:31:56.000000",
+    "issuesJson": "[\"duration 偏差大: target=360s actual=249s (差 31%)\"]",
+    "contentType": "lifecopy"
+  },
+  {
+    "id": 28,
+    "role": "STORYBOARD",
+    "score": 100,
+    "decision": "PASS",
+    "feedback": null,
+    "topicId": 15,
+    "scriptId": 12,
+    "createdAt": "2026-06-11 10:41:47.000000",
+    "issuesJson": null,
+    "contentType": "lifecopy"
+  }
+]
