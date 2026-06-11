@@ -14,10 +14,12 @@ public interface VideoRenderer {
     /**
      * 单镜片段:一张静态图 + 该镜的播放时长。
      * sectionCode 用于章节断点检测(Remotion 路径消费),老 ffmpeg 路径忽略此字段,可空。
+     * anchorText 是该 shot 的脚本字面锚定短语(6-15 字),Remotion 路径用作 motion intent 启发式输入,
+     * 把高潮/转场/凝视等情绪映射到对应运镜池;ffmpeg 路径忽略,可空。
      */
     record ImageClip(int shotIndex, String imageUrl,
                      double startSec, double durationSec, String caption,
-                     String sectionCode) {}
+                     String sectionCode, String anchorText) {}
 
     /**
      * BGM 配置。bgmFile 本地 mp3 路径(ffmpeg 用),httpUrl 同曲的 https URL(Remotion 浏览器加载用,

@@ -265,7 +265,7 @@ public class VideoAssemblyService {
             clips.add(new VideoRenderer.ImageClip(
                     shot.getShotIndex() != null ? shot.getShotIndex() : usedShots,
                     img.getFileUrl(), cursor, dur, shot.getPromptZh(),
-                    shot.getSectionCode()));
+                    shot.getSectionCode(), shot.getAnchorText()));
             cursor += dur;
             usedShots++;
         }

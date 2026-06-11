@@ -101,7 +101,7 @@ public class RemotionVideoRenderer implements VideoRenderer {
                 ordered.set(ordered.size() - 1, new ImageClip(
                         last.shotIndex(), last.imageUrl(),
                         last.startSec(), last.durationSec() + tail, last.caption(),
-                        last.sectionCode()));
+                        last.sectionCode(), last.anchorText()));
                 log.info("[剪辑·Remotion] scriptId={} 末镜延长 +{}s → total={}s",
                         req.scriptId(),
                         String.format("%.1f", tail),
@@ -153,7 +153,7 @@ public class RemotionVideoRenderer implements VideoRenderer {
                         req.hook().durationSec(), req.hook().text(),
                         req.hook().pageFlipSoundUrl() == null || req.hook().pageFlipSoundUrl().isBlank() ? "无" : "有");
             }
-            ObjectNode plan = buildDemoPlan(ordered, persona);
+            ObjectNode plan = buildDemoPlan(ordered, persona, req.scriptId());
             root.set("plan", plan);
 
             Path propsFile = workDir.resolve("props.json");
@@ -199,15 +199,27 @@ public class RemotionVideoRenderer implements VideoRenderer {
 
     // ---------------- 子步骤 ----------------
 
-    /** 5 种 motion 在 shot 序列上循环出现。highlightKeywords 从 persona 简单提取。 */
-    private ObjectNode buildDemoPlan(List<ImageClip> ordered, JsonNode persona) {
-        String[] motionCycle = {"in", "out", "panLeft", "panRight", "static"};
+    /**
+     * 用 scriptId 做种子的伪随机选 motion,且强制相邻镜不同种。
+     * 同一个 scriptId 重渲染得到相同序列(可复现);不同 scriptId 序列各异(对 AI 检测器
+     * 不再呈现固定周期模式)。"相邻不同"是这套约束里最关键的一条:循环原版每 5 镜重复,
+     * 一旦改成相邻去重,即使 5 种全用上,序列也不会出现规律周期。
+     *
+     * 内容感:有 anchorText 时走 MotionIntentHeuristic,把高潮/凝视/转场等情绪映射到运镜池;
+     * 无 anchorText 时回退到全 5 种池随机(P0 行为)。两条路径都在同一个 Random 实例上抽,
+     * 所以"种子可复现 + 相邻去重"在两种 case 下都成立。
+     */
+    private ObjectNode buildDemoPlan(List<ImageClip> ordered, JsonNode persona, long seed) {
+        java.util.Random rnd = new java.util.Random(seed);
         ArrayNode shotPlans = objectMapper.createArrayNode();
-        for (int i = 0; i < ordered.size(); i++) {
+        String prev = null;
+        for (ImageClip clip : ordered) {
+            String motion = MotionIntentHeuristic.pickMotion(clip.anchorText(), prev, rnd);
             ObjectNode sp = objectMapper.createObjectNode();
-            sp.put("shotId", ordered.get(i).shotIndex());
-            sp.put("motion", motionCycle[i % motionCycle.length]);
+            sp.put("shotId", clip.shotIndex());
+            sp.put("motion", motion);
             shotPlans.add(sp);
+            prev = motion;
         }
 
         ArrayNode keywords = objectMapper.createArrayNode();

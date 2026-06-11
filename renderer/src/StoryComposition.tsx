@@ -1,5 +1,6 @@
 import { AbsoluteFill, Audio, Img, Sequence } from 'remotion'
 import { BlackHoldFrame } from './components/BlackHoldFrame'
+import { FlashHint } from './components/FlashHint'
 import { HookTitle } from './components/HookTitle'
 import { MotionImage } from './components/MotionImage'
 import { SubtitleTrack } from './components/SubtitleTrack'
@@ -92,8 +93,10 @@ export const StoryComposition: React.FC<StoryProps> = ({
     text: c.text.replace(/[,。?!;、,.?!;]/g, '').trim(),
   }))
 
-  // 章节断点检测(用拆短后的 cuesShort 做 overlap)
-  const chapterBreaks: number[] = []
+  // 章节断点检测(用拆短后的 cuesShort 做 overlap)。
+  // black 模式需要 cue 间隙(画面变黑但音频不停,与字幕重叠会出现"黑屏但还在说话")。
+  // overlap 时回退到 flash:白色叠层短闪不依赖静音,补回章节感不与字幕冲突。
+  const chapterBreaks: { startSec: number; kind: 'black' | 'flash' }[] = []
   for (let i = 1; i < shots.length; i++) {
     const prev = shots[i - 1].sectionCode
     const curr = shots[i].sectionCode
@@ -106,7 +109,7 @@ export const StoryComposition: React.FC<StoryProps> = ({
     const overlapsCue = cuesShort.some(
       (c) => safeEnd > c.startSec && safeStart < c.endSec,
     )
-    if (!overlapsCue) chapterBreaks.push(breakStart)
+    chapterBreaks.push({ startSec: breakStart, kind: overlapsCue ? 'flash' : 'black' })
   }
 
   const hookEnabled =
@@ -153,18 +156,19 @@ export const StoryComposition: React.FC<StoryProps> = ({
             <MotionImage
               imageUrl={shot.imageUrl}
               motion={motionByShot.get(shot.shotId) ?? 'in'}
+              shotId={shot.shotId}
             />
           </Sequence>
         ))}
 
-        {chapterBreaks.map((s, i) => (
+        {chapterBreaks.map((b, i) => (
           <Sequence
             key={`chapter-${i}`}
-            from={sec(s)}
+            from={sec(b.startSec)}
             durationInFrames={sec(CHAPTER_BREAK_SEC)}
-            name={`chapterBreak-${i}`}
+            name={`chapterBreak-${i}-${b.kind}`}
           >
-            <BlackHoldFrame />
+            {b.kind === 'black' ? <BlackHoldFrame /> : <FlashHint />}
           </Sequence>
         ))}
 
