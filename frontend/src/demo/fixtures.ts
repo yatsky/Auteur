@@ -106,24 +106,53 @@ export const fixturesTable: Record<string, FixtureEntry> = {
   }),
 
   // ─── Script ───────────────────────────────────────────
-  'GET /scripts/:id': DEMO_SCRIPT,
-  'GET /scripts/:id/sections': scriptSectionsFixture,
-  'GET /scripts/:id/storyboard': storyboardFixture,
+  // GET /scripts —— 列表(用于 ScriptList / TopicDetail 顶部最新 script 查询)
+  // 形状是 SpringPage<ScriptListItem>:打平的 Script + projectName + 最近 PipelineRun 字段
+  'GET /scripts': () => {
+    const item = {
+      id: scriptFixture.id,
+      topicId: (scriptFixture as { topicId?: number | null }).topicId ?? topicFixture.id,
+      projectName: topicFixture.projectName ?? topicFixture.title,
+      version: (scriptFixture as { version?: number }).version ?? 1,
+      modelUsed: (scriptFixture as { modelUsed?: string | null }).modelUsed ?? null,
+      wordCount: (scriptFixture as { wordCount?: number | null }).wordCount ?? null,
+      durationSeconds: (scriptFixture as { durationSeconds?: number | null }).durationSeconds ?? null,
+      status: (scriptFixture as { status?: string }).status ?? 'PUBLISHED',
+      reviewScore: (scriptFixture as { reviewScore?: number | null }).reviewScore ?? null,
+      createdAt: (scriptFixture as { createdAt?: string }).createdAt ?? new Date(0).toISOString(),
+      updatedAt: (scriptFixture as { updatedAt?: string }).updatedAt ?? new Date(0).toISOString(),
+      lastRunStage: 'VIDEO',
+      lastRunStatus: 'DONE',
+      lastRunAt: (scriptFixture as { updatedAt?: string }).updatedAt ?? new Date(0).toISOString(),
+    }
+    return springPage([item])
+  },
+  // 注意:GET /scripts/:id 返 ScriptDetailResponse(聚合),不是单个 Script。
+  'GET /scripts/:id': {
+    script: scriptFixture,
+    sections: scriptSectionsFixture,
+    presetName: (presetFixture as unknown as { name?: string })?.name ?? null,
+    bgmLocked: Boolean((presetFixture as unknown as { bgmLocked?: number | boolean })?.bgmLocked),
+  },
+  // 真实 endpoint 是 /shots(不是 /storyboard)
+  'GET /scripts/:id/shots': storyboardFixture,
   'POST /scripts/:id/storyboard/generate': () => ({ runId: 1002 }),
   'POST /scripts/:id/storyboard/generate-async': () => ({ runId: 1002 }),
   'GET /scripts/:id/images': imagesFixture,
   'POST /scripts/:id/images/generate': () => ({ runId: 1003 }),
-  'GET /scripts/:id/voice': voiceFixture[0] ?? null,
-  'GET /scripts/:id/voice/list': voiceFixture,
+  // 返 VoiceAsset[] 列表(不是单条)
+  'GET /scripts/:id/voice': voiceFixture,
   'POST /scripts/:id/voice/generate': () => ({ runId: 1004 }),
-  'GET /scripts/:id/videos': videosFixture,
+  // 真实 endpoint 是 /video(单数,不是 /videos)
+  'GET /scripts/:id/video': videosFixture,
   'POST /scripts/:id/videos/assemble': () => ({ runId: 1007 }),
-  'GET /scripts/:id/factcheck': factcheckIssuesFixture,
+  // 真实 endpoint 是 /issues
+  'GET /scripts/:id/issues': factcheckIssuesFixture,
   'POST /scripts/:id/factcheck-async': () => ({ runId: 1005 }),
+  'POST /scripts/:id/factcheck': factcheckIssuesFixture,
   'GET /scripts/:id/covers': coversFixture,
   'POST /scripts/:id/covers': () => ({ runId: 1006 }),
   'GET /scripts/:id/critic-logs': criticLogsFixture,
-  'GET /scripts/:id/align-timing': storyboardFixture,
   'POST /scripts/:id/align-timing': storyboardFixture,
   // 单镜重生成 —— demo 里直接返回原图(假装"已重新生成")
   'POST /scripts/:id/images/:id/regenerate': (cfg: InternalAxiosRequestConfig) => {
