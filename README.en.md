@@ -42,6 +42,11 @@ Auteur turns "make a short video" into a **virtual film studio** — not a promp
 
 ### 1️⃣ 16 collaborating AI roles, not a prompt chain
 
+<div align="center">
+  <img src="./docs/screenshot-brainstorm.png" alt="AI Brainstorm — multi-role topic candidate generation" width="900" />
+  <p><i>AI Brainstorm: multiple roles + historical performance + series continuity collaborate on topic candidates</i></p>
+</div>
+
 > The industry default is to chain LLM prompts: one error and the whole thing reruns; intermediates are invisible.
 >
 > **Auteur is different: every role is its own Spring Service with its own prompt template, its own LLM call & retry policy, and its own output table in the DB.**
@@ -64,6 +69,11 @@ Auteur turns "make a short video" into a **virtual film studio** — not a promp
 | | 🎞️ Producer | SRT → ShotTimingResolver → ImageClip assembly → ffmpeg/Remotion render |
 | **Retrospective** | 📊 Analyst | Pulls real-world metrics scraped by the browser extension; runs hook attribution + weekly retrospective |
 | | 🧭 Series Planner | Connects "next-episode hooks" across videos into a topic seed for the next round |
+
+<div align="center">
+  <img src="./docs/screenshot-topic-pool.png" alt="Topic Pool — cross-preset candidate management with potential scoring" width="900" />
+  <p><i>Topic Pool: cross-preset candidate management auto-sorted by "potential score", continuously calibrated by metric write-backs</i></p>
+</div>
 
 **Key collaboration design:**
 
@@ -92,6 +102,11 @@ The backend validates automatically:
 - ✅ anchor is genuinely a substring of the script (after normalization)
 - ✅ consecutive shots have monotonically increasing anchor positions (no LLM reordering)
 - ⚠️ shots that fail to match are flagged `anchor_match=false` — video still renders, but logs and UI surface it
+
+<div align="center">
+  <img src="./docs/screenshot-storyboard.png" alt="Storyboard workbench — CN/EN prompt + anchor + duration per shot" width="900" />
+  <p><i>Storyboard workbench: bilingual prompt + anchor + actual duration per shot, individually re-generatable</i></p>
+</div>
 
 #### 🎞️ One-click assembly — the producer takes over
 
@@ -126,6 +141,11 @@ You: "Regenerate shot 5 of yesterday's topic, make the style darker"
 - ✅ **Approval gates for risky ops** — preset edits and deletions surface an approval card; one tap to proceed
 - 🔁 **Interruptible / resumable / rollbackable** — every message is persisted; reopening a session continues where you left off
 
+<div align="center">
+  <img src="./docs/screenshot-agent-chat.png" alt="AI Agent chat workbench — natural-language pipeline control" width="900" />
+  <p><i>/chat workbench: natural-language commands; the Agent loads skills, calls tools, drives the pipeline end-to-end</i></p>
+</div>
+
 **This means: you can chat about creative direction while the AI is *actually doing the work* in the background.**
 
 ---
@@ -159,6 +179,11 @@ preset:
 - ✅ Ships with: `freeform` (generic baseline, seeded by default) + `LifeCopy` (horizontal identity-locked drama with comic art + page-flip sound hook + PRECISE_BY_CUE; code present, not seeded by default)
 
 ### Metric-driven retrospective (the meta-learning layer)
+
+<div align="center">
+  <img src="./docs/screenshot-dashboard.png" alt="Insights dashboard — metric write-back + hook attribution" width="900" />
+  <p><i>Insights dashboard: real-world metrics from Douyin / Bilibili / WeChat / Kuaishou auto-ingested, retention × hook × genre attribution feeds the next brainstorm</i></p>
+</div>
 
 The `extension/` directory is a Chrome extension that hooks into the creator dashboards of **Douyin / Bilibili / WeChat Channels / Kuaishou**, scrapes plays, retention, and engagement, and POSTs them back to Auteur into `published_video`.
 
