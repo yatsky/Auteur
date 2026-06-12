@@ -10,6 +10,7 @@ import com.auteur.insights.InsightDtos.VideoFeature;
 import com.auteur.llm.LlmCallSpec;
 import com.auteur.llm.LlmClient;
 import com.auteur.llm.LlmResult;
+import com.auteur.llm.ModelRegistry;
 import com.auteur.llm.PromptTemplateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,7 @@ public class WeeklyReviewService {
 
     private final LlmClient llmClient;
     private final PromptTemplateService promptService;
+    private final ModelRegistry modelRegistry;
     private final InsightService insightService;
     private final JdbcTemplate jdbc;
     private final WeeklyReviewRepository weeklyReviewRepository;
@@ -102,7 +104,7 @@ public class WeeklyReviewService {
         LlmCallSpec spec = LlmCallSpec.builder()
                 .operation("weekly_review")
                 .relatedType("REVIEW")
-                .model(tpl.model())
+                .model(modelRegistry.modelFor("weekly_review"))
                 .temperature(temperature)
                 .maxTokens(tpl.maxTokens())
                 .build();

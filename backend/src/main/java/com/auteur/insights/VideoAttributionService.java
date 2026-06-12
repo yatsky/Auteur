@@ -8,6 +8,7 @@ import com.auteur.domain.PublishedVideoRepository;
 import com.auteur.llm.LlmCallSpec;
 import com.auteur.llm.LlmClient;
 import com.auteur.llm.LlmResult;
+import com.auteur.llm.ModelRegistry;
 import com.auteur.llm.PromptTemplateService;
 import com.auteur.web.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class VideoAttributionService {
 
     private final LlmClient llmClient;
     private final PromptTemplateService promptService;
+    private final ModelRegistry modelRegistry;
     private final PublishedVideoRepository pvRepo;
     private final JdbcTemplate jdbc;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -95,7 +97,7 @@ public class VideoAttributionService {
                 .operation("video_attribution")
                 .relatedType("PUBLISHED_VIDEO")
                 .relatedId(videoId)
-                .model(tpl.model())
+                .model(modelRegistry.modelFor("video_attribution"))
                 .temperature(temperature)
                 .maxTokens(tpl.maxTokens())
                 .build();

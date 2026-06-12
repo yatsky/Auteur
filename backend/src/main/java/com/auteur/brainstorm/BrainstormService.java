@@ -12,6 +12,7 @@ import com.auteur.insights.InsightService;
 import com.auteur.llm.LlmCallSpec;
 import com.auteur.llm.LlmClient;
 import com.auteur.llm.LlmResult;
+import com.auteur.llm.ModelRegistry;
 import com.auteur.llm.PromptTemplateService;
 import com.auteur.pipeline.PipelineRunService;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class BrainstormService {
 
     private final LlmClient llmClient;
     private final PromptTemplateService promptService;
+    private final ModelRegistry modelRegistry;
     private final TopicRepository topicRepository;
     private final SeriesResolver seriesResolver;
     private final PipelineRunService runService;
@@ -95,7 +97,10 @@ public class BrainstormService {
 
         PromptTemplateService.Rendered tpl = promptService.renderInline(preset.getBrainstormPromptYaml(), vars);
         String operation = "brainstorm_" + preset.getName();
-        String model = req.getModel() != null ? req.getModel() : tpl.model();
+        // 模型优先级:req.model(用户单次覆盖) > preset 内 yaml.model > 全局默认(app_config)
+        String model = req.getModel() != null && !req.getModel().isBlank()
+                ? req.getModel()
+                : modelRegistry.modelOrDefault(tpl.model(), "brainstorm");
         Double temperature = tpl.temperature() != null ? tpl.temperature() : 0.85;
 
         LlmCallSpec spec = LlmCallSpec.builder()

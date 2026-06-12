@@ -4,6 +4,7 @@ import com.auteur.llm.ChatRequest;
 import com.auteur.llm.LlmCallSpec;
 import com.auteur.llm.LlmClient;
 import com.auteur.llm.LlmToolResult;
+import com.auteur.llm.ModelRegistry;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -72,6 +73,7 @@ public class AgentLoopService {
     private final ObjectMapper objectMapper;
     private final ApprovalGate approvalGate;
     private final AgentCancellationRegistry cancellationRegistry;
+    private final ModelRegistry modelRegistry;
 
     public void turn(Long sessionId, String userText, SseEmitter emitter) {
         Consumer<AgentEvent> sink = ev -> sendEvent(emitter, ev);
@@ -152,7 +154,7 @@ public class AgentLoopService {
                             .operation("agent.chat.cap")
                             .relatedType("AGENT_SESSION")
                             .relatedId(session.getId())
-                            .model(session.getModel())
+                            .model(modelRegistry.modelOrDefault(session.getModel(), "agent_default"))
                             .temperature(0.3)
                             .build(),
                     history,
@@ -212,7 +214,7 @@ public class AgentLoopService {
                 .operation("agent.chat")
                 .relatedType("AGENT_SESSION")
                 .relatedId(session.getId())
-                .model(session.getModel())
+                .model(modelRegistry.modelOrDefault(session.getModel(), "agent_default"))
                 .temperature(0.3)
                 .build();
         return llmClient.chatWithTools(spec, history, toolRegistry.definitions());

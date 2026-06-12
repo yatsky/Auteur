@@ -15,6 +15,7 @@ import com.auteur.domain.ScriptRepository;
 import com.auteur.llm.LlmCallSpec;
 import com.auteur.llm.LlmClient;
 import com.auteur.llm.LlmResult;
+import com.auteur.llm.ModelRegistry;
 import com.auteur.llm.PromptTemplateService;
 import com.auteur.pipeline.PipelineRunService;
 import com.auteur.web.NotFoundException;
@@ -44,6 +45,7 @@ public class ImageAuditService {
 
     private final LlmClient llmClient;
     private final PromptTemplateService promptService;
+    private final ModelRegistry modelRegistry;
     private final ScriptRepository scriptRepository;
     private final TopicRepository topicRepository;
     private final StoryboardShotRepository shotRepository;
@@ -55,6 +57,7 @@ public class ImageAuditService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ImageAuditService(LlmClient llmClient, PromptTemplateService promptService,
+                             ModelRegistry modelRegistry,
                              ScriptRepository scriptRepository, TopicRepository topicRepository,
                              StoryboardShotRepository shotRepository, ImageAssetRepository assetRepository,
                              ImageGenService imageGenService, PipelineRunService runService,
@@ -62,6 +65,7 @@ public class ImageAuditService {
                              @Qualifier("imageWorkExecutor") Executor imageWorkExecutor) {
         this.llmClient = llmClient;
         this.promptService = promptService;
+        this.modelRegistry = modelRegistry;
         this.scriptRepository = scriptRepository;
         this.topicRepository = topicRepository;
         this.shotRepository = shotRepository;
@@ -319,7 +323,7 @@ public class ImageAuditService {
                 .operation("image_audit")
                 .relatedType("IMAGE")
                 .relatedId(asset.getId())
-                .model(tpl.model())
+                .model(modelRegistry.modelFor("image_audit"))
                 .temperature(tpl.temperature() != null ? tpl.temperature() : 0.0)
                 .build();
         LlmResult r = llmClient.chatWithImage(spec, tpl.system(), tpl.user(), asset.getFileUrl());

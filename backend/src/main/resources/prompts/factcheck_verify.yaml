@@ -1,6 +1,5 @@
 name: factcheck_verify
 description: 联网核证单条疑点，给 source_url + credibility
-model: xai.grok-4-fast-reasoning
 temperature: 0.0
 
 system: |

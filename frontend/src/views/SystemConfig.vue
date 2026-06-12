@@ -39,6 +39,8 @@ const grouped = computed<Array<{ category: string; label: string; items: AppConf
   }
   const buckets: Record<string, AppConfigItem[]> = {}
   for (const it of items.value) {
+    // category='model' 由专门的「AI 模型」页面管理,这里不展示,避免双入口编辑冲突
+    if (it.category === 'model') continue
     if (!buckets[it.category]) buckets[it.category] = []
     buckets[it.category].push(it)
   }

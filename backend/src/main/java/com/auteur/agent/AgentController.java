@@ -40,6 +40,7 @@ public class AgentController {
     private final SystemPromptBuilder systemPromptBuilder;
     private final ApprovalGate approvalGate;
     private final AgentCancellationRegistry cancellationRegistry;
+    private final com.auteur.llm.ModelRegistry modelRegistry;
 
     /**
      * SSE 长连接和 LLM 调用都不能占着 servlet 容器线程,挪到自己的线程池。
@@ -64,10 +65,14 @@ public class AgentController {
         AgentSession s = new AgentSession();
         if (body != null && body.getModel() != null && !body.getModel().isBlank()) {
             s.setModel(body.getModel().trim());
+        } else {
+            // 用户没指定 → 落库就把 app_config 里的全局 agent_default 写进去,
+            // 后续这条会话的所有 LLM 调用直接读 session.model,不再依赖 fallback 路径。
+            s.setModel(modelRegistry.modelFor("agent_default"));
         }
         s.setSystemPromptVersion(systemPromptBuilder.version());
         AgentSession saved = sessionRepo.save(s);
-        log.info("[Agent] 新建会话 id={}", saved.getId());
+        log.info("[Agent] 新建会话 id={} model={}", saved.getId(), saved.getModel());
         return saved;
     }
 

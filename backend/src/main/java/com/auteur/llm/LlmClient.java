@@ -1,7 +1,6 @@
 package com.auteur.llm;
 
 import com.auteur.common.text.TextUtils;
-import com.auteur.config.LlmProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,7 +19,6 @@ import java.util.List;
 public class LlmClient {
 
     private final RestClient llmRestClient;
-    private final LlmProperties props;
     private final com.auteur.runtimeconfig.RuntimeConfig runtimeConfig;
 
     public LlmResult chat(LlmCallSpec spec, String systemPrompt, String userPrompt) {
@@ -228,7 +226,15 @@ public class LlmClient {
 
     private String resolvePrimaryModel(LlmCallSpec spec) {
         if (spec.getModel() != null && !spec.getModel().isBlank()) return spec.getModel();
-        return runtimeConfig.get("auteur.llm.default-model", props.getDefaultModel());
+        // 走到这条路径意味着调用方没经过 ModelRegistry 直接构造了 LlmCallSpec —— 这是 bug。
+        // 兜底再读一次 app_config 里 auteur.llm.default-model(系统设置页可改),空就抛,让问题立即显形。
+        String fallback = runtimeConfig.get("auteur.llm.default-model");
+        if (fallback.isBlank()) {
+            throw new IllegalStateException(
+                    "LlmCallSpec.model 为空且 auteur.llm.default-model 未在系统设置中配置。"
+                            + "请检查调用方是否走 ModelRegistry,或在「配置 → 系统设置」填 auteur.llm.default-model。");
+        }
+        return fallback;
     }
 
     private static String providerOf(String model) {

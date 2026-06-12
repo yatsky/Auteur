@@ -1,6 +1,6 @@
 name: storyboard_freeform
 description: FREEFORM 通用分镜 — 接收脚本 sections,产出每镜的画面 prompt(中文)。
-model: DeepSeek-V3.2
+# model 留空 → 运行时由 ModelRegistry 读 app_config 里 auteur.model.storyboard。
 temperature: 0.5
 max_tokens: 16000
 

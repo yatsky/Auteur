@@ -1,6 +1,5 @@
 name: hook-extract
 description: 从 script E 段抽出"下集钩子"的强弱级和具体方向
-model: DeepSeek-V3.2
 temperature: 0.2
 
 system: |

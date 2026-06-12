@@ -1,6 +1,5 @@
 name: factcheck_apply
 description: 把事实核查的"建议"prose抽换成对原文的精确字符串替换
-model: DeepSeek-V3.2
 temperature: 0.0
 
 system: |

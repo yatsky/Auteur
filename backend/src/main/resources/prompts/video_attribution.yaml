@@ -1,6 +1,5 @@
 name: video_attribution
 description: 单视频归因分析 —— 基于该视频 KPI + 维度 + 30 天均值基线 → 输出 4 段定性归因
-model: Doubao-pro-128k
 temperature: 0.5
 
 system: |

@@ -13,6 +13,7 @@ import com.auteur.domain.StoryboardShotRepository;
 import com.auteur.domain.Topic;
 import com.auteur.llm.ImageClient;
 import com.auteur.llm.LlmCallSpec;
+import com.auteur.llm.ModelRegistry;
 import com.auteur.llm.SensitiveContentException;
 import com.auteur.pipeline.PipelineRunService;
 import com.auteur.web.NotFoundException;
@@ -40,9 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class ImageGenService {
 
-    /** 优先模型:超时/不可用时降级到 FALLBACK_MODEL。 */
-    private static final String PRIMARY_MODEL  = "gpt-image-2";
-    private static final String FALLBACK_MODEL = "qwen-image-2.0-pro";
+    /** 主/降级图像模型读 app_config 里的 auteur.model.image_primary / image_fallback,前端「AI 模型」页面编辑。 */
     /** 两个模型都支持的 9:16 portrait 尺寸。 */
     private static final String IMAGE_SIZE = "1024x1792";
     /** 串行限速:RPM=20,3.5s ≈ 17 RPM,留余量。 */
@@ -82,6 +81,7 @@ public class ImageGenService {
     private final ShotPromptRefineService refineService;
     private final com.auteur.domain.TopicRepository topicRepository;
     private final com.auteur.preset.TopicPresetResolver presetResolver;
+    private final ModelRegistry modelRegistry;
 
     public ImageGenService(ImageClient imageClient,
                            StoryboardShotRepository shotRepository,
@@ -92,7 +92,8 @@ public class ImageGenService {
                            @Qualifier("imageWorkExecutor") Executor imageWorkExecutor,
                            ShotPromptRefineService refineService,
                            com.auteur.domain.TopicRepository topicRepository,
-                           com.auteur.preset.TopicPresetResolver presetResolver) {
+                           com.auteur.preset.TopicPresetResolver presetResolver,
+                           ModelRegistry modelRegistry) {
         this.imageClient = imageClient;
         this.shotRepository = shotRepository;
         this.assetRepository = assetRepository;
@@ -103,6 +104,7 @@ public class ImageGenService {
         this.refineService = refineService;
         this.topicRepository = topicRepository;
         this.presetResolver = presetResolver;
+        this.modelRegistry = modelRegistry;
     }
 
     /** 同步生图,仅联调时用 — 线上长任务走 generateForScriptAsync。 */
@@ -411,10 +413,11 @@ public class ImageGenService {
         } catch (SensitiveContentException sensitive) {
             return handleSensitive(shot, spec, sensitive);
         } catch (RuntimeException e) {
-            if (allowFallback && !FALLBACK_MODEL.equals(model)) {
+            String fallback = modelRegistry.modelFor("image_fallback");
+            if (allowFallback && !fallback.equals(model)) {
                 log.warn("[美术] shotId={} {} failed ({}), falling back to {}",
-                        shot.getId(), model, e.getClass().getSimpleName(), FALLBACK_MODEL);
-                return generateWithFallback(shot, prompt, FALLBACK_MODEL, false);
+                        shot.getId(), model, e.getClass().getSimpleName(), fallback);
+                return generateWithFallback(shot, prompt, fallback, false);
             }
             throw e;
         }
@@ -428,7 +431,7 @@ public class ImageGenService {
      * fallback model(qwen 系列)是 text-to-image 模型,不传 ref。
      */
     private String pickRefDataUrl(com.auteur.preset.ImageConfig cfg, String model) {
-        if (FALLBACK_MODEL.equals(model)) return null;
+        if (modelRegistry.modelFor("image_fallback").equals(model)) return null;
         if (cfg == null || cfg.getReferenceImagePath() == null || cfg.getReferenceImagePath().isBlank()) {
             return null;
         }
@@ -450,12 +453,9 @@ public class ImageGenService {
         }
     }
 
-    /** 模型选择:cfg.model 优先;空时回退到 PRIMARY_MODEL。 */
+    /** 模型选择:cfg.model 优先;空时回退到 app_config 里的 auteur.model.image_primary。 */
     private String pickPrimaryModel(com.auteur.preset.ImageConfig cfg) {
-        if (cfg != null && cfg.getModel() != null && !cfg.getModel().isBlank()) {
-            return cfg.getModel();
-        }
-        return PRIMARY_MODEL;
+        return modelRegistry.modelOrDefault(cfg == null ? null : cfg.getModel(), "image_primary");
     }
 
     /** 尺寸选择:cfg.imageSize 优先;空时回退默认。 */
@@ -540,7 +540,7 @@ public class ImageGenService {
     private ImageAsset persistBlockedPlaceholder(StoryboardShot shot, String model, String reason) {
         ImageAsset asset = new ImageAsset();
         asset.setShotId(shot.getId());
-        asset.setModel(model != null ? model : PRIMARY_MODEL);
+        asset.setModel(model != null ? model : modelRegistry.modelFor("image_primary"));
         asset.setFileUrl(null);
         asset.setIsFinal(false);
         asset.setUsedProtagonistRef(false);

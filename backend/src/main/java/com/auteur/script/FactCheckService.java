@@ -14,6 +14,7 @@ import com.auteur.domain.TopicRepository;
 import com.auteur.llm.LlmCallSpec;
 import com.auteur.llm.LlmClient;
 import com.auteur.llm.LlmResult;
+import com.auteur.llm.ModelRegistry;
 import com.auteur.llm.PromptTemplateService;
 import com.auteur.pipeline.PipelineRunService;
 import com.auteur.web.NotFoundException;
@@ -31,6 +32,7 @@ public class FactCheckService {
 
     private final LlmClient llmClient;
     private final PromptTemplateService promptService;
+    private final ModelRegistry modelRegistry;
     private final ScriptRepository scriptRepository;
     private final TopicRepository topicRepository;
     private final FactCheckIssueRepository issueRepository;
@@ -39,12 +41,14 @@ public class FactCheckService {
 
     public FactCheckService(LlmClient llmClient,
                             PromptTemplateService promptService,
+                            ModelRegistry modelRegistry,
                             ScriptRepository scriptRepository,
                             TopicRepository topicRepository,
                             FactCheckIssueRepository issueRepository,
                             PipelineRunService runService) {
         this.llmClient = llmClient;
         this.promptService = promptService;
+        this.modelRegistry = modelRegistry;
         this.scriptRepository = scriptRepository;
         this.topicRepository = topicRepository;
         this.issueRepository = issueRepository;
@@ -110,7 +114,7 @@ public class FactCheckService {
                 .operation("factcheck")
                 .relatedType("SCRIPT")
                 .relatedId(scriptId)
-                .model(p1.model())
+                .model(modelRegistry.modelFor("factcheck"))
                 .temperature(p1.temperature() != null ? p1.temperature() : 0.2)
                 .build();
         LlmResult p1Result = llmClient.chat(p1Spec, p1.system(), p1.user());
@@ -195,7 +199,7 @@ public class FactCheckService {
                     .operation("factcheck_verify")
                     .relatedType("SCRIPT")
                     .relatedId(scriptId)
-                    .model(p2.model())
+                    .model(modelRegistry.modelFor("factcheck_verify"))
                     .temperature(p2.temperature() != null ? p2.temperature() : 0.0)
                     .build();
             LlmResult r = llmClient.chat(spec, p2.system(), p2.user());

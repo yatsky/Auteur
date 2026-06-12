@@ -1,6 +1,5 @@
 name: shot_prompt_refine
 description: 单镜重生时，把审图反馈融进原 prompt，输出修订版 promptZh / promptEn / negativePrompt
-model: claude-haiku-4-5-20251001
 temperature: 0.3
 
 system: |

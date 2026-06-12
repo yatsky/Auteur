@@ -1,6 +1,7 @@
 name: brainstorm_freeform
 description: FREEFORM 通用选题脑暴 — 给一个方向,生成 N 条候选选题。
-model: DeepSeek-V3.2
+# model 字段留空 → 运行时由 ModelRegistry 读 app_config 里 auteur.model.brainstorm,
+# 用户可在前端「AI 模型」页面统一编辑;此预设需要专属模型时在此处覆盖即可。
 temperature: 0.8
 
 system: |

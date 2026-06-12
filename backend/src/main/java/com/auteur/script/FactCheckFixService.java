@@ -11,6 +11,7 @@ import com.auteur.domain.ScriptSectionRepository;
 import com.auteur.llm.LlmCallSpec;
 import com.auteur.llm.LlmClient;
 import com.auteur.llm.LlmResult;
+import com.auteur.llm.ModelRegistry;
 import com.auteur.llm.PromptTemplateService;
 import com.auteur.web.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -36,18 +37,21 @@ public class FactCheckFixService {
     private final ScriptSectionRepository sectionRepository;
     private final LlmClient llmClient;
     private final PromptTemplateService promptService;
+    private final ModelRegistry modelRegistry;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public FactCheckFixService(FactCheckIssueRepository issueRepository,
                                ScriptRepository scriptRepository,
                                ScriptSectionRepository sectionRepository,
                                LlmClient llmClient,
-                               PromptTemplateService promptService) {
+                               PromptTemplateService promptService,
+                               ModelRegistry modelRegistry) {
         this.issueRepository = issueRepository;
         this.scriptRepository = scriptRepository;
         this.sectionRepository = sectionRepository;
         this.llmClient = llmClient;
         this.promptService = promptService;
+        this.modelRegistry = modelRegistry;
     }
 
     public record ApplyResult(boolean applied, String action, String rationale,
@@ -147,7 +151,7 @@ public class FactCheckFixService {
                 .operation("factcheck_apply")
                 .relatedType("SCRIPT")
                 .relatedId(scriptId)
-                .model(tpl.model())
+                .model(modelRegistry.modelFor("factcheck_apply"))
                 .temperature(tpl.temperature() != null ? tpl.temperature() : 0.0)
                 .build();
         LlmResult r = llmClient.chat(spec, tpl.system(), tpl.user());

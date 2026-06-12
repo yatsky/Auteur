@@ -1,6 +1,5 @@
 name: image_audit
 description: 用 Doubao Vision 审核单张分镜成片图，给 0-100 分 + PASS/REGENERATE/MANUAL 决策
-model: Doubao-Seed-1.6-vision
 temperature: 0.0
 
 system: |

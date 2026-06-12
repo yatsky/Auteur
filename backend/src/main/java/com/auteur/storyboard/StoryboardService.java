@@ -60,6 +60,7 @@ public class StoryboardService {
     private final StoryboardCriticService storyboardCriticService;
     private final com.auteur.video.DirectorNoteService directorNoteService;
     private final com.auteur.preset.TopicPresetResolver presetResolver;
+    private final com.auteur.llm.ModelRegistry modelRegistry;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public StoryboardService(LlmClient llmClient,
@@ -73,7 +74,8 @@ public class StoryboardService {
                              ScriptAlignmentService alignmentService,
                              StoryboardCriticService storyboardCriticService,
                              com.auteur.video.DirectorNoteService directorNoteService,
-                             com.auteur.preset.TopicPresetResolver presetResolver) {
+                             com.auteur.preset.TopicPresetResolver presetResolver,
+                             com.auteur.llm.ModelRegistry modelRegistry) {
         this.llmClient = llmClient;
         this.promptService = promptService;
         this.scriptRepository = scriptRepository;
@@ -86,6 +88,7 @@ public class StoryboardService {
         this.storyboardCriticService = storyboardCriticService;
         this.directorNoteService = directorNoteService;
         this.presetResolver = presetResolver;
+        this.modelRegistry = modelRegistry;
     }
 
     @Transactional
@@ -200,7 +203,7 @@ public class StoryboardService {
                 .operation("storyboard")
                 .relatedType("SCRIPT")
                 .relatedId(scriptId)
-                .model(tpl.model())
+                .model(modelRegistry.modelOrDefault(tpl.model(), "storyboard"))
                 .temperature(tpl.temperature() != null ? tpl.temperature() : 0.6)
                 .maxTokens(tpl.maxTokens())
                 .build();

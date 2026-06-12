@@ -26,6 +26,7 @@ import com.auteur.llm.LlmCallSpec;
 import com.auteur.llm.LlmClient;
 import com.auteur.llm.LlmResult;
 import com.auteur.llm.JsonHealer;
+import com.auteur.llm.ModelRegistry;
 import com.auteur.llm.PromptTemplateService;
 import com.auteur.pipeline.PipelineRunService;
 import com.auteur.preset.PresetInputInjector;
@@ -69,6 +70,7 @@ public class ScriptService {
     private final ScriptCriticService scriptCriticService;
     private final com.auteur.video.DirectorNoteService directorNoteService;
     private final com.auteur.preset.TopicPresetResolver presetResolver;
+    private final ModelRegistry modelRegistry;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ScriptService(LlmClient llmClient,
@@ -88,7 +90,8 @@ public class ScriptService {
                          InsightService insightService,
                          ScriptCriticService scriptCriticService,
                          com.auteur.video.DirectorNoteService directorNoteService,
-                         com.auteur.preset.TopicPresetResolver presetResolver) {
+                         com.auteur.preset.TopicPresetResolver presetResolver,
+                         ModelRegistry modelRegistry) {
         this.llmClient = llmClient;
         this.promptService = promptService;
         this.topicRepository = topicRepository;
@@ -107,6 +110,7 @@ public class ScriptService {
         this.scriptCriticService = scriptCriticService;
         this.directorNoteService = directorNoteService;
         this.presetResolver = presetResolver;
+        this.modelRegistry = modelRegistry;
     }
 
     @Transactional
@@ -415,9 +419,9 @@ public class ScriptService {
 
     /**
      * 模型选择：优先按预设里的 routing.by=potential_score 路由，旗舰/批量模型与阈值都从 yaml 读。
-     * 任何字段缺失都回退到 yaml 顶层 model；再缺就交给 LlmClient 用全局默认。
+     * 任何字段缺失都回退到 yaml 顶层 model；yaml 也未指定则回落到全局默认(app_config 里的 auteur.model.script)。
      */
-    private static String pickModel(Topic topic, PromptTemplateService.Rendered tpl) {
+    private String pickModel(Topic topic, PromptTemplateService.Rendered tpl) {
         com.auteur.llm.PromptTemplateLoader.Routing r = tpl.routing();
         if (r != null && "potential_score".equals(r.getBy())
                 && r.getThreshold() != null
@@ -428,7 +432,7 @@ public class ScriptService {
                     ? r.getPremiumModel()
                     : r.getBatchModel();
         }
-        return tpl.model();
+        return modelRegistry.modelOrDefault(tpl.model(), "script");
     }
 
     /**

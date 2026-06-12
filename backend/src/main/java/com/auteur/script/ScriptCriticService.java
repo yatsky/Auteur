@@ -9,6 +9,7 @@ import com.auteur.domain.Topic;
 import com.auteur.llm.LlmCallSpec;
 import com.auteur.llm.LlmClient;
 import com.auteur.llm.LlmResult;
+import com.auteur.llm.ModelRegistry;
 import com.auteur.llm.PromptTemplateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ public class ScriptCriticService {
 
     private final LlmClient llmClient;
     private final PromptTemplateService promptService;
+    private final ModelRegistry modelRegistry;
     private final CriticLogRepository criticLogRepository;
     private final com.auteur.preset.TopicPresetResolver presetResolver;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -84,7 +86,7 @@ public class ScriptCriticService {
             LlmCallSpec spec = LlmCallSpec.builder()
                     .operation(operation)
                     .relatedType("SCRIPT")
-                    .model(tpl.model())
+                    .model(modelRegistry.modelOrDefault(tpl.model(), "script_critic"))
                     .temperature(tpl.temperature() != null ? tpl.temperature() : 0.0)
                     .build();
 

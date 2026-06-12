@@ -1,6 +1,5 @@
 name: factcheck
 description: 通读脚本，找出与正史/朝代/服饰矛盾的疑点
-model: claude-opus-4-7
 temperature: 0.2
 
 system: |

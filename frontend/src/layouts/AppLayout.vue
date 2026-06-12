@@ -8,6 +8,7 @@ import {
   Layers as LayersIcon, Film as FilmIcon,
   Wand2,
   Settings,
+  Cpu,
   Sun, Moon,
   ShieldCheck,
   MessageSquare,
@@ -81,7 +82,8 @@ const navGroups: NavGroup[] = [
     title: '配置',
     items: [
       { to: '/presets', icon: Layers, label: '预设库', matchPaths: ['/presets'] },
-      { to: '/config', icon: Settings, label: '系统设置', matchPaths: ['/config'] },
+      { to: '/config/models', icon: Cpu, label: 'AI 模型', matchPaths: ['/config/models'] },
+      { to: '/config', icon: Settings, label: '系统设置' },
     ],
   },
 ]

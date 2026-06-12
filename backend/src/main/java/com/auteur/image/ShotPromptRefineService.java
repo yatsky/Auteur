@@ -7,6 +7,7 @@ import com.auteur.domain.StoryboardShot;
 import com.auteur.llm.LlmCallSpec;
 import com.auteur.llm.LlmClient;
 import com.auteur.llm.LlmResult;
+import com.auteur.llm.ModelRegistry;
 import com.auteur.llm.PromptTemplateService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class ShotPromptRefineService {
 
     private final LlmClient llmClient;
     private final PromptTemplateService promptService;
+    private final ModelRegistry modelRegistry;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /** 修订结果。任何字段为空字符串当作模型未返回，调用方按需保留原值。 */
@@ -62,7 +64,7 @@ public class ShotPromptRefineService {
                     .operation("shot_prompt_refine")
                     .relatedType("SHOT")
                     .relatedId(shot.getId())
-                    .model(tpl.model())
+                    .model(modelRegistry.modelFor("shot_prompt_refine"))
                     .temperature(tpl.temperature() != null ? tpl.temperature() : 0.3)
                     .build();
             LlmResult r = llmClient.chat(spec, tpl.system(), tpl.user());
@@ -96,7 +98,7 @@ public class ShotPromptRefineService {
                     .operation("shot_prompt_desensitize")
                     .relatedType("SHOT")
                     .relatedId(shot.getId())
-                    .model(tpl.model())
+                    .model(modelRegistry.modelFor("shot_prompt_desensitize"))
                     .temperature(tpl.temperature() != null ? tpl.temperature() : 0.2)
                     .build();
             LlmResult r = llmClient.chat(spec, tpl.system(), tpl.user());

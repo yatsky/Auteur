@@ -1,16 +1,14 @@
 name: script_freeform
 description: FREEFORM 通用脚本生成 — 接收 theme + tone + duration_minutes,产出多段叙事脚本。
-model: DeepSeek-V3.2
+# model 留空 → 运行时由 ModelRegistry 读 app_config 里 auteur.model.script。
+# 如需按潜力分流(高分用旗舰,低分用批量),自行在本预设加 routing 块,例如:
+#   routing:
+#     by: potential_score
+#     threshold: 45
+#     premium_model: claude-opus-4-7
+#     batch_model: DeepSeek-V3.2
+# 留空(本 freeform 预设默认状态)即直接走全局默认,不分流。
 temperature: 0.7
-
-# 模型路由：按选题潜力分（potential_score）分流。
-# 高分 ≥ threshold → premium_model；否则 batch_model。
-# 任一字段缺失则整体降级，直接使用上面的 model 字段。
-routing:
-  by: potential_score
-  threshold: 45
-  premium_model: claude-opus-4-7
-  batch_model: DeepSeek-V3.2
 
 system: |
   你是短视频编剧。给一个主题,写一份多段口播脚本。

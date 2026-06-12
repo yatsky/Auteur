@@ -32,6 +32,7 @@ import SeriesView from '../views/SeriesView.vue'
 import SeriesDetail from '../views/SeriesDetail.vue'
 import PresetLibrary from '../views/PresetLibrary.vue'
 import SystemConfig from '../views/SystemConfig.vue'
+import ModelConfig from '../views/ModelConfig.vue'
 import PresetEditor from '../views/PresetEditor.vue'
 import AdminToggle from '../views/AdminToggle.vue'
 
@@ -148,6 +149,8 @@ const router = createRouter({
     { path: '/presets', name: 'preset-library', component: PresetLibrary, meta: { title: '预设库' } },
     // 系统设置(LLM 中转 / 对象存储 / 语音 / BGM 等密钥)
     { path: '/config', name: 'system-config', component: SystemConfig, meta: { title: '系统设置' } },
+    // AI 模型(流水线每一步用的模型,落 app_config 表 category='model')
+    { path: '/config/models', name: 'model-config', component: ModelConfig, meta: { title: 'AI 模型' } },
     {
       path: '/presets/:id/edit',
       name: 'preset-editor',

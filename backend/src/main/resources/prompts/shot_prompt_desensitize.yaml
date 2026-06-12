@@ -1,6 +1,5 @@
 name: shot_prompt_desensitize
 description: 上一次生图被上游内容审查拦截时，把可能的敏感表述改写成中性等价物，输出修订版 promptZh / promptEn / negativePrompt
-model: claude-haiku-4-5-20251001
 temperature: 0.2
 
 system: |

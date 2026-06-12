@@ -14,6 +14,7 @@ import com.auteur.llm.JsonHealer;
 import com.auteur.llm.LlmCallSpec;
 import com.auteur.llm.LlmClient;
 import com.auteur.llm.LlmResult;
+import com.auteur.llm.ModelRegistry;
 import com.auteur.llm.PromptTemplateService;
 import com.auteur.web.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -41,11 +42,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class HookExtractor {
 
-    private static final String MODEL = "DeepSeek-V3.2";
     private static final Double TEMPERATURE = 0.2;
 
     private final LlmClient llmClient;
     private final PromptTemplateService promptService;
+    private final ModelRegistry modelRegistry;
     private final ScriptRepository scriptRepo;
     private final ScriptSectionRepository sectionRepo;
     private final SeriesHookRepository hookRepo;
@@ -92,7 +93,7 @@ public class HookExtractor {
                 .operation("hook-extract")
                 .relatedType("SCRIPT")
                 .relatedId(scriptId)
-                .model(tpl.model() != null ? tpl.model() : MODEL)
+                .model(modelRegistry.modelFor("hook_extract"))
                 .temperature(tpl.temperature() != null ? tpl.temperature() : TEMPERATURE)
                 .build();
         LlmResult result = llmClient.chat(spec, tpl.system(), tpl.user());

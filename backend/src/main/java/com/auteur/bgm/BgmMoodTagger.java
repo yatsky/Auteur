@@ -10,6 +10,7 @@ import com.auteur.domain.TopicRepository;
 import com.auteur.llm.LlmCallSpec;
 import com.auteur.llm.LlmClient;
 import com.auteur.llm.LlmResult;
+import com.auteur.llm.ModelRegistry;
 import com.auteur.llm.PromptTemplateService;
 import com.auteur.web.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -42,16 +43,19 @@ public class BgmMoodTagger {
 
     private final LlmClient llmClient;
     private final PromptTemplateService promptService;
+    private final ModelRegistry modelRegistry;
     private final ScriptRepository scriptRepository;
     private final TopicRepository topicRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public BgmMoodTagger(LlmClient llmClient,
                          PromptTemplateService promptService,
+                         ModelRegistry modelRegistry,
                          ScriptRepository scriptRepository,
                          TopicRepository topicRepository) {
         this.llmClient = llmClient;
         this.promptService = promptService;
+        this.modelRegistry = modelRegistry;
         this.scriptRepository = scriptRepository;
         this.topicRepository = topicRepository;
     }
@@ -80,7 +84,7 @@ public class BgmMoodTagger {
                 .operation("bgm_mood")
                 .relatedType("SCRIPT")
                 .relatedId(scriptId)
-                .model(tpl.model())
+                .model(modelRegistry.modelFor("bgm_mood"))
                 .temperature(tpl.temperature() != null ? tpl.temperature() : 0.3)
                 .build();
 

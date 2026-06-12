@@ -1,6 +1,5 @@
 name: weekly_review
 description: 基于本周视频 + Top/Bottom 共性 + 跨周对比 → 生成 4 段周复盘初稿
-model: Doubao-pro-128k
 temperature: 0.6
 
 system: |
