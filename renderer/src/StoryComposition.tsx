@@ -133,7 +133,12 @@ export const StoryComposition: React.FC<StoryProps> = ({
               name={`hook-cell-${i}`}
             >
               <AbsoluteFill style={{ backgroundColor: '#000' }}>
-                <Img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <Img
+                  src={url}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  delayRenderTimeoutInMilliseconds={120000}
+                  delayRenderRetries={2}
+                />
               </AbsoluteFill>
             </Sequence>
           ))}

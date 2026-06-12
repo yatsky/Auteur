@@ -60,7 +60,12 @@ export const MotionImage: React.FC<Props> = ({ imageUrl, motion, shotId }) => {
           transform: `scale(${scale}) translate(${translateX}%, ${translateY}%)`,
         }}
       >
-        <Img src={imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <Img
+          src={imageUrl}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          delayRenderTimeoutInMilliseconds={120000}
+          delayRenderRetries={2}
+        />
       </AbsoluteFill>
     </AbsoluteFill>
   )

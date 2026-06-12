@@ -76,6 +76,10 @@ extension/    抖音 / B 站 / 视频号 / 快手 浏览器扩展
 3. 同时改 entity 类
 4. Flyway 启动时自动执行
 
+·⚠️ **migration 里只放仓库可公开的内容**。`preset.storyboard_prompt_yaml` / `script_prompt_yaml` / `brainstorm_prompt_yaml` / `image_config_json` / `voice_config_json` 这些大列**是各频道的商业核心**（freeform / LifeCopy 之外的私有频道，如 football_legends，prompt 全套放 `.local/<preset>/` 并 `.gitignore`），**禁止**把这些列的内容硬塞进 SQL `UPDATE preset SET ... = '<yaml 全文>'` —— 等于把配方推上开源仓。
+
+migration 里 UPDATE `preset` 表只能改**元数据列**（`storyboard_mode` / `bgm_enabled` / `format_width` 等 flag/枚举），yaml/json 内容走 `.local/<preset>/<file>` + 配套的 `update_<preset>.sh`（PUT `/api/presets/{id}` 推到本地 DB）。如果是 mode 切换跟 yaml 重写必须配套（如 `FREE → PRECISE_BY_CUE` 同时改 prompt），SQL 只切 mode、yaml 走脚本，并在 migration 注释里写明部署顺序 + 中间态降级行为（参考 `V9__precise_by_cue_for_football_legends.sql`）。
+
 ### 2. 改预设相关代码 → 同步更新 seed 文件
 
 预设由 `preset_seeds/<name>/` 下的 yaml/json 文件定义。`PresetSeeder` 在 `preset` 表为空时注入。如果你改了 PresetEntity 字段或 prompt 格式，一定要同步更新 seed 文件，否则新部署的实例会拿到陈旧默认值。

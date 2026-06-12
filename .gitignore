@@ -5,6 +5,11 @@ backend/src/main/resources/application-local.yml
 .env
 .env.local
 
+# --- 本机专属内容 / 私有预设 / 个人脚本 ---
+# .local/ 下放只属于本机器的东西:私有预设 seed 文件、一次性 setup 脚本、未公开的笔记等。
+# 用 / 锚定到仓库根,只忽略根目录下的 .local;子目录里的 .local(若有同名)不受影响。
+/.local/
+
 # --- Generated assets (TTS / video / etc) ---
 # 必须用前导 / 锚定到 git 根,否则会误伤 Java 包 com.auteur.storage(backend/src/main/java/com/auteur/storage/)
 /backend/storage/
