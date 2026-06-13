@@ -32,12 +32,15 @@ public class PipelineRunService {
 
     private final PipelineRunRepository runRepo;
     private final Executor pipelineExecutor;
+    private final com.auteur.notify.LarkNotifyService larkNotify;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public PipelineRunService(PipelineRunRepository runRepo,
-                              @Qualifier("pipelineExecutor") Executor pipelineExecutor) {
+                              @Qualifier("pipelineExecutor") Executor pipelineExecutor,
+                              com.auteur.notify.LarkNotifyService larkNotify) {
         this.runRepo = runRepo;
         this.pipelineExecutor = pipelineExecutor;
+        this.larkNotify = larkNotify;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -62,6 +65,7 @@ public class PipelineRunService {
             r.setTotalItems(totalItems);
             r.setLastCompletedIndex(totalItems);
             runRepo.save(r);
+            larkNotify.notifyStageDone(r);
         });
     }
 
@@ -72,6 +76,7 @@ public class PipelineRunService {
             r.setFinishedAt(LocalDateTime.now());
             r.setErrorMsg(TextUtils.truncate(errorMsg, 1000));
             runRepo.save(r);
+            larkNotify.notifyStageFailed(r, errorMsg);
         });
     }
 

@@ -28,7 +28,7 @@ const edits = ref<Record<string, string>>({})
 const editingSecret = ref<Record<string, boolean>>({})
 
 const grouped = computed<Array<{ category: string; label: string; items: AppConfigItem[] }>>(() => {
-  const order = ['llm', 'tos', 'voice', 'bgm', 'video', 'cover', 'agent', 'tuning', 'extension']
+  const order = ['llm', 'tos', 'voice', 'bgm', 'video', 'cover', 'lark', 'agent', 'tuning', 'extension']
   const labels: Record<string, string> = {
     llm: 'AI 大模型接口',
     tos: '云端文件存储',
@@ -36,6 +36,7 @@ const grouped = computed<Array<{ category: string; label: string; items: AppConf
     bgm: '背景音乐曲库',
     video: '视频合成参数',
     cover: '封面生成',
+    lark: '飞书通知',
     agent: 'AI 助手对话',
     tuning: '业务质检规则',
     extension: '浏览器插件接入',
