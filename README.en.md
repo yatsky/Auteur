@@ -373,3 +373,15 @@ Free to use, modify, redistribute, and use commercially — just keep the copyri
 **If this project gave you a "huh, so *that's* what an AI video pipeline can look like" moment — a ⭐ star is the most direct way to thank the author.**
 
 </div>
+
+---
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=nxin-github%2FAuteur&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=nxin-github/Auteur&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=nxin-github/Auteur&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=nxin-github/Auteur&type=date&legend=top-left" />
+ </picture>
+</a>
