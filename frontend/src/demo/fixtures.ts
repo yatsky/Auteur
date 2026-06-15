@@ -38,6 +38,7 @@ import insightsWeeklyReviewFixture from './fixtures/insights-weekly-review.json'
 import dailyTrendFixture from './fixtures/analytics-daily-trend.json'
 import analyticsCompareFixture from './fixtures/analytics-compare.json'
 import weeklyReviewViewFixture from './fixtures/weekly-review-view.json'
+import appConfigFixture from './fixtures/app-config.json'
 
 export type FixtureFn = (config: InternalAxiosRequestConfig) => unknown
 export type FixtureEntry = unknown | FixtureFn
@@ -224,7 +225,14 @@ export const fixturesTable: Record<string, FixtureEntry> = {
   }),
 
   // ─── 其他 ─────────────────────────────────────────────
-  'GET /config': {},
+  // GET /config 给「AI 模型」+「系统设置」两页用,前端按 category 过滤分组(model / llm / tos / voice / bgm / video / cover / lark / agent / tuning / extension)
+  'GET /config': appConfigFixture,
+  // PUT /config:demo 模式假装保存成功,不真改任何 fixture
+  'PUT /config': (cfg: InternalAxiosRequestConfig) => {
+    const kv = (cfg.data ?? {}) as Record<string, string>
+    const keys = Object.keys(kv)
+    return { updated: keys.length, keys }
+  },
   'GET /brand-identity': null,
   // ─── Published Videos / GenreStats / Series ───────────
   // 真实 endpoint: GET /published-videos 直接返 PublishedVideo[],不是 SpringPage
