@@ -141,18 +141,17 @@ public class StoryboardService {
             throw new IllegalStateException("Script has no sections, cannot storyboard");
         }
 
-        // 流程硬约束:storyboard 必须建立在已生成的配音 SRT 之上(用于把每个 shot 对齐到音频时间戳)。
+        // 配音字幕是可选的:
+        //   有 SRT → 按 preset.storyboardMode 决定是否精准对齐(PRECISE_BY_CUE 时强制 anchor)
+        //   没 SRT → LLM 仅依据脚本自行判断分镜,运行时降级为 FREE 语义
         VoiceAsset voice = voiceAssetRepository.findFirstByScriptIdAndIsFinalTrueOrderByIdDesc(scriptId)
                 .orElseGet(() -> {
                     List<VoiceAsset> all = voiceAssetRepository.findByScriptIdOrderByIdDesc(scriptId);
                     return all.isEmpty() ? null : all.get(0);
                 });
-        if (voice == null) {
-            throw new IllegalStateException("请先在「配音字幕」生成本脚本的 voice,storyboard 需要 SRT 才能对齐时间戳");
-        }
-        if (voice.getSubtitleUrl() == null || voice.getSubtitleUrl().isBlank()) {
-            throw new IllegalStateException("voice #" + voice.getId() + " 缺 subtitle_url,无法对齐 storyboard 时间戳");
-        }
+        boolean hasSubtitle = voice != null
+                && voice.getSubtitleUrl() != null
+                && !voice.getSubtitleUrl().isBlank();
 
         if (shotRepository.countByScriptId(scriptId) > 0) {
             if (!force) {
@@ -165,11 +164,16 @@ public class StoryboardService {
             log.info("[摄影] force=true, deleted existing shots for scriptId={}", scriptId);
         }
 
-        // useCueAnchoring 由 preset.storyboardMode 决定:
-        //   PRECISE_BY_CUE → 加载 SRT cues + 强制 anchor 校验
-        //   FREE → 仅校验 shot 数量
+        // useCueAnchoring 同时受 preset.storyboardMode 与 SRT 可用性控制:
+        //   PRECISE_BY_CUE + 有 SRT → 加载 cues + 强制 anchor 校验
+        //   PRECISE_BY_CUE + 无 SRT → 运行时降级 FREE,LLM 自由分镜
+        //   FREE                    → LLM 自由分镜(不论是否有 SRT)
         com.auteur.preset.PresetContext ctx = presetResolver.forTopic(topic);
-        boolean useCueAnchoring = "PRECISE_BY_CUE".equals(ctx.preset().getStoryboardMode());
+        boolean preciseByCue = "PRECISE_BY_CUE".equals(ctx.preset().getStoryboardMode());
+        boolean useCueAnchoring = preciseByCue && hasSubtitle;
+        if (preciseByCue && !hasSubtitle) {
+            log.info("[摄影] scriptId={} preset=PRECISE_BY_CUE 但未生成配音字幕,降级 FREE 让 LLM 自行判断分镜", scriptId);
+        }
 
         // cue 锚定模式需要把 voice 的 SRT cues 喂给 LLM,让 LLM 拆 shot 时显式标 anchor_cue_indices。
         java.util.List<com.auteur.video.SrtParser.Cue> srtCues = useCueAnchoring
