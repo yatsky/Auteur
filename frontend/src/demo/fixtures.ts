@@ -48,7 +48,9 @@ const DEMO_SCRIPT = scriptFixture
 const DEMO_TOPIC = topicFixture
 
 // 选题池:把 brainstorm 候选 + 主 topic 当作 DRAFT 池里的内容。
-// 前端 listTopics(DRAFT) 期望 SpringPage<Topic>{ content, totalElements, ... }
+// 前端 SpringPage<T> 形状是 { content, page: { size, number, totalElements, totalPages } }
+// (后端 @EnableSpringDataWebSupport VIA_DTO 嵌套模式),不是平铺格式。
+// 之前这里平铺写死,Home.vue/TopicList.vue 读 resp.page.totalElements 直接 TypeError → 误报"无法连接后端"。
 const draftTopics = brainstormResultFixture.filter(
   (t: { status?: string }) => t.status !== 'PUBLISHED',
 )
@@ -59,14 +61,12 @@ const publishedTopics = brainstormResultFixture.filter(
 function springPage<T>(items: T[], pageSize = 30) {
   return {
     content: items,
-    totalElements: items.length,
-    totalPages: Math.max(1, Math.ceil(items.length / pageSize)),
-    number: 0,
-    size: pageSize,
-    first: true,
-    last: true,
-    empty: items.length === 0,
-    numberOfElements: items.length,
+    page: {
+      size: pageSize,
+      number: 0,
+      totalElements: items.length,
+      totalPages: Math.max(1, Math.ceil(items.length / pageSize)),
+    },
   }
 }
 
