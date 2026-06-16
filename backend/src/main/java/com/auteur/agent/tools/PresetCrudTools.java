@@ -39,8 +39,6 @@ public class PresetCrudTools {
         p.setName(args.get("name").asText());
         if (args.hasNonNull("displayName")) p.setDisplayName(args.get("displayName").asText());
         if (args.hasNonNull("description")) p.setDescription(args.get("description").asText());
-        p.setVisibility(args.hasNonNull("visibility") ? args.get("visibility").asText() : "private");
-        if (args.hasNonNull("ownerName")) p.setOwnerName(args.get("ownerName").asText());
         if (args.hasNonNull("brainstormPromptYaml")) p.setBrainstormPromptYaml(args.get("brainstormPromptYaml").asText());
         p.setScriptPromptYaml(args.get("scriptPromptYaml").asText());
         if (args.hasNonNull("scriptCriticPromptYaml")) p.setScriptCriticPromptYaml(args.get("scriptCriticPromptYaml").asText());
@@ -93,8 +91,6 @@ public class PresetCrudTools {
                                     Map.entry("name", Map.of("type", "string", "description", "全局唯一 key,如 my_preset")),
                                     Map.entry("displayName", Map.of("type", "string")),
                                     Map.entry("description", Map.of("type", "string")),
-                                    Map.entry("visibility", Map.of("type", "string", "enum", List.of("public", "private"))),
-                                    Map.entry("ownerName", Map.of("type", "string")),
                                     Map.entry("brainstormPromptYaml", Map.of("type", "string")),
                                     Map.entry("scriptPromptYaml", Map.of("type", "string")),
                                     Map.entry("scriptCriticPromptYaml", Map.of("type", "string")),
@@ -182,8 +178,6 @@ public class PresetCrudTools {
             copy.setDisplayName(newDisplayName != null ? newDisplayName
                     : (src.getDisplayName() == null ? newName : src.getDisplayName() + " 副本"));
             copy.setDescription(src.getDescription());
-            copy.setVisibility(src.getVisibility());
-            copy.setOwnerName(src.getOwnerName());
             copy.setInputSchemaJson(src.getInputSchemaJson());
             copy.setBrainstormPromptYaml(src.getBrainstormPromptYaml());
             copy.setScriptPromptYaml(src.getScriptPromptYaml());

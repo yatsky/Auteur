@@ -19,7 +19,7 @@ import java.util.Map;
 /**
  * 预设只读工具集。
  *
- * 全部走 admin 视角(adminMode=true, ownerName=null) — Agent 控制台默认拥有完整可见性。
+ * 项目个人部署单用户,全部 preset 一律可见 — 无 admin/owner 概念。
  */
 @Slf4j
 @Component
@@ -46,8 +46,6 @@ public class PresetReadTools {
         m.put("name", p.getName());
         m.put("displayName", p.getDisplayName());
         m.put("description", p.getDescription());
-        m.put("visibility", p.getVisibility());
-        m.put("ownerName", p.getOwnerName());
         m.put("storyboardMode", p.getStoryboardMode());
         m.put("scriptCriticThreshold", p.getScriptCriticThreshold());
         m.put("compositionId", p.getCompositionId());
@@ -93,13 +91,7 @@ public class PresetReadTools {
         public ChatRequest.Tool definition() {
             Map<String, Object> schema = Map.of(
                     "type", "object",
-                    "properties", Map.of(
-                            "visibility", Map.of(
-                                    "type", "string",
-                                    "enum", List.of("public", "private", "all"),
-                                    "description", "可选过滤;不传或 all 返回全部"
-                            )
-                    ),
+                    "properties", Map.of(),
                     "required", List.of()
             );
             return ChatRequest.Tool.of(
@@ -111,11 +103,8 @@ public class PresetReadTools {
 
         @Override
         public Object execute(JsonNode args) {
-            String filter = args != null && args.hasNonNull("visibility") ? args.get("visibility").asText() : "all";
-            // adminMode=true 取全部,然后按 visibility 过滤
-            List<Preset> all = presetService.listVisible(true, null);
+            List<Preset> all = presetService.listAll();
             List<Map<String, Object>> out = all.stream()
-                    .filter(p -> "all".equals(filter) || filter.equals(p.getVisibility()))
                     .map(PresetReadTools.this::summarize)
                     .toList();
             return Map.of("count", out.size(), "presets", out);

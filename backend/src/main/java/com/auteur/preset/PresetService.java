@@ -20,8 +20,6 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
  *   - update() 只覆盖当前版,不自动写 snapshot
  *   - saveAsNewVersion() 先 snapshot 当前 preset 到 preset_version,然后 currentVersion+1 + apply
  *   - rollback() 拿 snapshot_json 反序列化覆盖 preset 字段(不再写新 snapshot,避免循环)
- *
- * visibility/owner_name 是软标记,无鉴权。
  */
 @Slf4j
 @Service
@@ -47,11 +45,8 @@ public class PresetService {
         return presetRepo.findByName(name);
     }
 
-    public List<Preset> listVisible(boolean adminMode, String ownerName) {
-        if (adminMode && ownerName != null && !ownerName.isBlank()) {
-            return presetRepo.findByOwnerNameOrVisibilityOrderByUpdatedAtDesc(ownerName, "public");
-        }
-        return presetRepo.findByVisibilityOrderByUpdatedAtDesc("public");
+    public List<Preset> listAll() {
+        return presetRepo.findAllByUpdatedAtDesc();
     }
 
     /** 解析 image_config_json 为强类型;空字符串/null 返回空 ImageConfig。 */
@@ -170,8 +165,6 @@ public class PresetService {
     private void applyPatch(Preset cur, Preset patch) {
         if (patch.getDisplayName() != null) cur.setDisplayName(patch.getDisplayName());
         if (patch.getDescription() != null) cur.setDescription(patch.getDescription());
-        if (patch.getVisibility() != null) cur.setVisibility(patch.getVisibility());
-        if (patch.getOwnerName() != null) cur.setOwnerName(patch.getOwnerName());
         if (patch.getInputSchemaJson() != null) cur.setInputSchemaJson(patch.getInputSchemaJson());
         if (patch.getBrainstormPromptYaml() != null) cur.setBrainstormPromptYaml(patch.getBrainstormPromptYaml());
         if (patch.getScriptPromptYaml() != null) cur.setScriptPromptYaml(patch.getScriptPromptYaml());

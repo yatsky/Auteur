@@ -1,5 +1,6 @@
 package com.auteur.preset;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.persistence.*;
@@ -26,6 +27,8 @@ import java.time.LocalDateTime;
 @Table(name = "preset")
 @Getter
 @Setter
+// 兜住 preset_version 历史快照 JSON 里残留的旧字段(visibility/ownerName,V18 已 drop),rollback 不破。
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Preset {
 
     @Id
@@ -41,13 +44,6 @@ public class Preset {
 
     @Column(columnDefinition = "TEXT")
     private String description;
-
-    /** 'private' | 'public'。private 仅 owner_name 可见(软标记,无鉴权)。 */
-    @Column(nullable = false, length = 16)
-    private String visibility = "private";
-
-    @Column(name = "owner_name", length = 64)
-    private String ownerName;
 
     @JsonRawValue
     @JsonDeserialize(using = JsonRawStringDeserializer.class)

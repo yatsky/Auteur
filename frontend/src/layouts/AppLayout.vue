@@ -10,14 +10,12 @@ import {
   Settings,
   Cpu,
   Sun, Moon,
-  ShieldCheck,
   MessageSquare,
   PanelLeftClose, PanelLeftOpen,
 } from 'lucide-vue-next'
 import { useRoute } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 import { useResizableSidebar } from '../composables/useResizableSidebar'
-import { adminMode, ownerName } from '../lib/admin'
 
 const { theme, toggle } = useTheme()
 const route = useRoute()
@@ -38,7 +36,6 @@ interface NavItem {
   label: string
   hint?: string
   matchPaths?: string[]
-  adminOnly?: boolean
 }
 
 interface NavGroup {
@@ -74,7 +71,6 @@ const navGroups: NavGroup[] = [
       { to: '/series', icon: LayersIcon, label: '系列视图' },
     ],
   },
-  // 公开预设始终可见 — 私有预设需 admin 模式才能编辑/新建
   {
     title: '配置',
     items: [
@@ -118,24 +114,6 @@ function isActive(item: NavItem): boolean {
             <div class="text-base font-semibold text-text-primary leading-tight">Auteur</div>
             <div class="text-xs text-text-muted">控制台</div>
           </div>
-          <a
-            v-if="adminMode"
-            href="/admin"
-            @click.prevent="$router.push('/admin')"
-            class="chip text-[10px] bg-accent-soft text-accent flex items-center gap-1 cursor-pointer hover:opacity-80"
-            :title="`admin 模式已启用 (owner: ${ownerName || '我'}) — 点击进入开关页`"
-          >
-            <ShieldCheck :size="10" /> admin
-          </a>
-          <a
-            v-else
-            href="/admin"
-            @click.prevent="$router.push('/admin')"
-            class="chip text-[10px] bg-surface-tertiary text-text-muted cursor-pointer hover:text-text-primary"
-            title="点击启用 admin 模式"
-          >
-            仅访客
-          </a>
         </template>
       </div>
 

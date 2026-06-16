@@ -66,7 +66,6 @@ function onChange(e: Event) {
       <option value="" disabled>-- 选择预设 --</option>
       <option v-for="p in filtered" :key="p.id" :value="p.id">
         {{ p.displayName || p.name }}
-        <template v-if="p.visibility === 'private'">(私有)</template>
       </option>
     </select>
     <div v-if="selected?.description" class="text-xs text-text-muted">

@@ -34,7 +34,7 @@ public class PresetOptimizeService {
 
     /** section → 该节涉及的 Preset 字段(camelCase)。前端 tab 与此一一对应。 */
     private static final Map<String, List<String>> SECTION_FIELDS = Map.ofEntries(
-            Map.entry("basic", List.of("displayName", "description", "visibility", "ownerName")),
+            Map.entry("basic", List.of("displayName", "description")),
             Map.entry("input", List.of("inputSchemaJson")),
             Map.entry("brainstorm", List.of("brainstormPromptYaml")),
             Map.entry("script", List.of("scriptPromptYaml")),
@@ -62,8 +62,7 @@ public class PresetOptimizeService {
 
     private static final Map<String, String> SECTION_GUIDANCE = Map.ofEntries(
             Map.entry("basic",
-                    "这是预设的元信息(显示名/描述/可见性/所有者)。优化时关注文案的清晰度与准确性。"
-                            + "visibility 取值只能是 'private' 或 'public',不要随意从 private 改为 public。"),
+                    "这是预设的元信息(显示名/描述)。优化时关注文案的清晰度与准确性。"),
             Map.entry("input",
                     "inputSchemaJson 是 topic 创建表单的 JSON Schema(JSON 对象)。需符合 JSON Schema 规范,"
                             + "字段含 type/properties/required 等。前端 DynamicForm 据此渲染表单。"),
@@ -195,8 +194,6 @@ public class PresetOptimizeService {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("displayName", preset.getDisplayName());
         m.put("description", preset.getDescription());
-        m.put("visibility", preset.getVisibility());
-        m.put("ownerName", preset.getOwnerName());
         m.put("inputSchemaJson", parseJsonOrNull(preset.getInputSchemaJson()));
         m.put("brainstormPromptYaml", preset.getBrainstormPromptYaml());
         m.put("scriptPromptYaml", preset.getScriptPromptYaml());

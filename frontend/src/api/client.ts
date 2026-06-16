@@ -1,21 +1,10 @@
 import axios from 'axios'
-import { isAdmin, getOwnerName } from '../lib/admin'
 
 // 后端 RestController 都挂在 /api 下；vite dev proxy 把 /api 转到 :8082
 // timeout=60s —— LLM 调用普遍 20-40s(brainstorm 快/script 慢),15s 撑不住
 export const http = axios.create({
   baseURL: '/api',
   timeout: 60_000,
-})
-
-// admin 模式时给请求加 X-Auteur-Admin / X-Auteur-Owner 软提示头,后端按这个过滤私有 preset
-http.interceptors.request.use((config) => {
-  if (isAdmin()) {
-    config.headers.set('X-Auteur-Admin', '1')
-    const owner = getOwnerName()
-    if (owner) config.headers.set('X-Auteur-Owner', owner)
-  }
-  return config
 })
 
 // 跳错误页时不能直接 import router(循环引用),用 location.assign

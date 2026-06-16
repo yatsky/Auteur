@@ -5,8 +5,6 @@ export interface Preset {
   name: string
   displayName?: string | null
   description?: string | null
-  visibility: 'private' | 'public'
-  ownerName?: string | null
   inputSchemaJson?: any
   brainstormPromptYaml?: string | null
   scriptPromptYaml: string

@@ -9,8 +9,7 @@ import java.util.List;
 /**
  * Preset 管理 REST API。
  *
- * 可见性靠"软"协议:浏览器请求带 X-Auteur-Admin: 1 时返回私有 + 公开;否则只返公开。
- * 这不是真鉴权,只是 UI 层隔离 — 与"无部署/不上公网"威胁模型自洽(见 PRESET_REFACTOR_PLAN.md §〇)。
+ * 项目个人部署,无 owner/visibility 隔离 — 所有 preset 一律可见可编辑。
  */
 @Slf4j
 @RestController
@@ -22,12 +21,8 @@ public class PresetController {
     private final PresetOptimizeService presetOptimizeService;
 
     @GetMapping
-    public List<Preset> list(
-            @RequestHeader(value = "X-Auteur-Admin", required = false) String adminHeader,
-            @RequestHeader(value = "X-Auteur-Owner", required = false) String ownerName
-    ) {
-        boolean adminMode = "1".equals(adminHeader);
-        return presetService.listVisible(adminMode, ownerName);
+    public List<Preset> list() {
+        return presetService.listAll();
     }
 
     @GetMapping("/{id}")

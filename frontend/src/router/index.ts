@@ -34,7 +34,6 @@ import PresetLibrary from '../views/PresetLibrary.vue'
 import SystemConfig from '../views/SystemConfig.vue'
 import ModelConfig from '../views/ModelConfig.vue'
 import PresetEditor from '../views/PresetEditor.vue'
-import AdminToggle from '../views/AdminToggle.vue'
 
 const router = createRouter({
   // base 路径与 vite.config.ts 的 base 配置同步:
@@ -145,7 +144,7 @@ const router = createRouter({
       props: (route) => ({ id: Number(route.params.id) }),
     },
 
-    // Preset 管理(admin 模式 + 公开预设浏览)
+    // Preset 管理
     { path: '/presets', name: 'preset-library', component: PresetLibrary, meta: { title: '预设库' } },
     // 系统设置(LLM 中转 / 对象存储 / 语音 / BGM 等密钥)
     { path: '/config', name: 'system-config', component: SystemConfig, meta: { title: '系统设置' } },
@@ -165,8 +164,6 @@ const router = createRouter({
       meta: { title: '新建预设' },
       props: () => ({ id: null }),
     },
-    // admin 模式开关入口 — 访问 /admin?token=xxx 写 localStorage,/admin?logout=1 清除
-    { path: '/admin', name: 'admin-toggle', component: AdminToggle, meta: { title: 'Admin 模式' } },
 
     // 兜底 404 → 回首页
     { path: '/:pathMatch(.*)*', redirect: '/home' },

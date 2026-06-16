@@ -39,8 +39,6 @@ public class PresetSeeder implements ApplicationRunner {
         p.setName("freeform");
         p.setDisplayName("自由创作");
         p.setDescription("通用基础模板:输入主题 + 基调 + 时长,生成一条短视频。无锁脸、无水印、无 hook 段。复制本预设可定制自己的视频形态。");
-        p.setVisibility("public");
-        p.setOwnerName("auteur-builtin");
         p.setInputSchemaJson(read(dir + "input_schema.json"));
         p.setBrainstormPromptYaml(read(dir + "brainstorm.yaml"));
         p.setScriptPromptYaml(read(dir + "script.yaml"));

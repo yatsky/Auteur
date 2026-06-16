@@ -1,22 +1,19 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  ArrowLeft, Layers, Loader2, Pencil, Plus, Trash2, Download, Upload, ShieldCheck,
+  ArrowLeft, Layers, Loader2, Pencil, Plus, Trash2, Download, Upload,
 } from 'lucide-vue-next'
 import ErrorBanner from '../components/ErrorBanner.vue'
 import TimeText from '../components/TimeText.vue'
 import { listPresets, deletePreset, createPreset, type Preset } from '../api/presets'
 import { extractError } from '../lib/format'
-import { isAdmin } from '../lib/admin'
 import { useAsyncLoad } from '../composables/useAsyncLoad'
 
 const router = useRouter()
 const items = ref<Preset[]>([])
 const deletingId = ref<number | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
-
-const adminMode = computed(() => isAdmin())
 
 const { loading, errorMsg, run: load } = useAsyncLoad(async () => {
   items.value = await listPresets()
@@ -33,7 +30,6 @@ function goNew() {
 }
 
 async function onDelete(p: Preset) {
-  if (!adminMode.value) return
   if (!confirm(`确认删除预设「${p.displayName || p.name}」?\n关联的 version 快照和 asset 会一起删除(级联)。`)) return
   deletingId.value = p.id
   try {
@@ -105,14 +101,11 @@ async function onImportFile(e: Event) {
           </button>
           <h1 class="text-lg font-semibold">预设库</h1>
           <span class="chip text-[11px] bg-surface-tertiary text-text-muted">{{ items.length }} 个预设</span>
-          <span v-if="adminMode" class="chip text-[11px] bg-accent-soft text-accent flex items-center gap-1">
-            <ShieldCheck :size="11" /> admin
-          </span>
           <div class="ml-auto flex gap-2">
-            <button v-if="adminMode" class="btn" @click="triggerImport">
+            <button class="btn" @click="triggerImport">
               <Upload :size="13" /> 导入 JSON
             </button>
-            <button v-if="adminMode" class="btn-primary" @click="goNew">
+            <button class="btn-primary" @click="goNew">
               <Plus :size="13" /> 新建预设
             </button>
           </div>
@@ -126,9 +119,6 @@ async function onImportFile(e: Event) {
         </div>
         <div class="text-xs text-text-muted">
           一行预设描述"一种视频形态的所有配方"(input schema + 各 stage prompt + 风格 + 画幅)。
-          <span v-if="!adminMode">
-            访问 <code class="px-1 py-0.5 bg-surface-tertiary rounded">/admin?token=xxx</code> 启用编辑能力。
-          </span>
         </div>
       </div>
     </div>
@@ -143,7 +133,7 @@ async function onImportFile(e: Event) {
       <div v-if="!loading && items.length === 0" class="card p-8 text-center text-sm text-text-muted">
         <Layers :size="32" class="mx-auto mb-2 opacity-50" />
         <div>还没有预设</div>
-        <div v-if="adminMode" class="mt-3">
+        <div class="mt-3">
           <button class="btn-primary" @click="goNew">新建第一个</button>
         </div>
       </div>
@@ -154,7 +144,6 @@ async function onImportFile(e: Event) {
             <tr>
               <th class="text-left px-4 py-2 font-medium">名称</th>
               <th class="text-left px-4 py-2 font-medium">显示名</th>
-              <th class="text-left px-4 py-2 font-medium">可见性</th>
               <th class="text-left px-4 py-2 font-medium">画幅</th>
               <th class="text-left px-4 py-2 font-medium">composition</th>
               <th class="text-left px-4 py-2 font-medium">版本</th>
@@ -170,14 +159,6 @@ async function onImportFile(e: Event) {
             >
               <td class="px-4 py-2 font-mono text-xs">{{ p.name }}</td>
               <td class="px-4 py-2">{{ p.displayName || '—' }}</td>
-              <td class="px-4 py-2">
-                <span
-                  class="chip text-[10px]"
-                  :class="p.visibility === 'public' ? 'bg-status-done/15 text-status-done' : 'bg-surface-tertiary text-text-muted'"
-                >
-                  {{ p.visibility }}
-                </span>
-              </td>
               <td class="px-4 py-2 text-xs text-text-muted">{{ p.formatWidth }}×{{ p.formatHeight }}</td>
               <td class="px-4 py-2 text-xs text-text-muted">{{ p.compositionId }}</td>
               <td class="px-4 py-2 text-xs">v{{ p.currentVersion }}</td>
@@ -192,7 +173,6 @@ async function onImportFile(e: Event) {
                     <Download :size="13" />
                   </button>
                   <button
-                    v-if="adminMode"
                     class="btn-icon"
                     title="编辑"
                     @click="goEdit(p.id)"
@@ -200,7 +180,6 @@ async function onImportFile(e: Event) {
                     <Pencil :size="13" />
                   </button>
                   <button
-                    v-if="adminMode"
                     class="btn-icon hover:text-status-failed"
                     title="删除"
                     :disabled="deletingId === p.id"

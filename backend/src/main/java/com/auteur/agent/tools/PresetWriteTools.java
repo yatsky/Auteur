@@ -22,8 +22,7 @@ import java.util.Set;
  *   - save_preset_as_new_version: 改 + 新写一份 snapshot,currentVersion+1
  *   - rollback_preset_version:    回到指定历史版本
  *
- * 字段白名单是受限子集:不让 LLM 改 visibility/owner_name 之类访问控制属性,
- * 也不让改 inputSchemaJson(影响输入校验,需要专门工作流)。
+ * 字段白名单是受限子集:不让 LLM 改 inputSchemaJson(影响输入校验,需要专门工作流)。
  */
 @Slf4j
 @Component

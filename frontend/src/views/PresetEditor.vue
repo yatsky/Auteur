@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  ArrowLeft, Loader2, Save, GitBranch, Download, History, AlertCircle, ShieldCheck, Sparkles,
+  ArrowLeft, Loader2, Save, GitBranch, Download, History, Sparkles,
 } from 'lucide-vue-next'
 import ErrorBanner from '../components/ErrorBanner.vue'
 import PresetOptimizeDialog from '../components/PresetOptimizeDialog.vue'
@@ -11,13 +11,11 @@ import {
   rollbackPreset, type Preset, type PresetVersion,
 } from '../api/presets'
 import { extractError } from '../lib/format'
-import { isAdmin, getOwnerName } from '../lib/admin'
 
 const props = defineProps<{ id: number | null }>()
 const router = useRouter()
 
 const isNew = computed(() => props.id == null)
-const adminMode = computed(() => isAdmin())
 
 const loading = ref(false)
 const saving = ref(false)
@@ -45,8 +43,6 @@ function emptyPreset(): Preset {
     name: '',
     displayName: '',
     description: '',
-    visibility: 'private',
-    ownerName: getOwnerName() || null,
     inputSchemaJson: null,
     brainstormPromptYaml: '',
     scriptPromptYaml: 'name: my_script\ntemperature: 0.7\n\n# model 留空 → 走「AI 模型」页面 auteur.model.script;\n# 想给本预设单独指定模型,在这里加 model: <id> 即可。\n\nsystem: |\n  你是 ...\n\nuser: |\n  请按主题 {{theme}} 生成 ...\n',
@@ -207,7 +203,7 @@ async function toggleVersions() {
 
 // 与后端 PresetOptimizeService.SECTION_FIELDS 对齐;改这里时记得同步后端。
 const SECTION_FIELDS: Record<TabKey, string[]> = {
-  basic:       ['displayName', 'description', 'visibility', 'ownerName'],
+  basic:       ['displayName', 'description'],
   input:       ['inputSchemaJson'],
   brainstorm:  ['brainstormPromptYaml'],
   script:      ['scriptPromptYaml'],
@@ -226,7 +222,7 @@ function tabLabel(k: TabKey): string {
 }
 
 const TAB_HINTS: Record<TabKey, string> = {
-  basic: '预设元信息(显示名/描述/可见性)',
+  basic: '预设元信息(显示名/描述)',
   input: '创建 topic 时的表单字段(JSON Schema)',
   brainstorm: '选题阶段的 LLM Prompt(YAML)',
   script: '编剧阶段的 LLM Prompt(YAML,必填)',
@@ -318,19 +314,13 @@ const optimizeSectionLabel = computed(() =>
         <span v-if="!isNew" class="chip text-[11px] bg-surface-tertiary text-text-muted">
           v{{ draft.currentVersion }}
         </span>
-        <span v-if="adminMode" class="chip text-[11px] bg-accent-soft text-accent flex items-center gap-1">
-          <ShieldCheck :size="11" /> admin
-        </span>
-        <div v-if="!adminMode" class="chip text-[11px] bg-status-paused/15 text-status-paused flex items-center gap-1">
-          <AlertCircle :size="11" /> 只读 — 启用 admin 才能保存
-        </div>
         <div class="ml-auto flex gap-2">
           <button class="btn" @click="exportJson"><Download :size="13" /> 导出</button>
           <button v-if="!isNew" class="btn" @click="toggleVersions"><History :size="13" /> 版本</button>
-          <button v-if="adminMode" class="btn" :disabled="saving" @click="onSaveAsNewVersion">
+          <button class="btn" :disabled="saving" @click="onSaveAsNewVersion">
             <GitBranch :size="13" /> 保存为新版本
           </button>
-          <button v-if="adminMode" class="btn-primary" :disabled="saving" @click="onSave">
+          <button class="btn-primary" :disabled="saving" @click="onSave">
             <Loader2 v-if="saving" :size="13" class="animate-spin" />
             <Save v-else :size="13" />
             {{ saving ? '保存中…' : (isNew ? '创建' : '保存') }}
@@ -369,7 +359,7 @@ const optimizeSectionLabel = computed(() =>
           {{ tabHint(activeTab) }}
         </span>
         <button
-          v-if="adminMode && !isNew"
+          v-if="!isNew"
           class="ml-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-sm font-medium
                  bg-accent text-white hover:bg-accent-hover shadow-sm hover:shadow transition-all
                  ring-1 ring-accent/40"
@@ -380,7 +370,7 @@ const optimizeSectionLabel = computed(() =>
           <span>AI 优化此节</span>
         </button>
         <span
-          v-else-if="isNew"
+          v-else
           class="ml-auto text-xs text-text-muted italic"
         >
           先创建预设后可使用 AI 优化
@@ -391,30 +381,17 @@ const optimizeSectionLabel = computed(() =>
         <div class="space-y-1.5">
           <label class="text-sm text-text-primary block">内部标识 (name)</label>
           <div class="text-xs text-text-muted">全局唯一,只允许字母/数字/下划线;routing 用,创建后建议不改</div>
-          <input v-model="draft.name" :disabled="!adminMode" class="form-input font-mono" placeholder="lifecopy / freeform" />
+          <input v-model="draft.name" class="form-input font-mono" placeholder="lifecopy / freeform" />
         </div>
         <div class="space-y-1.5">
           <label class="text-sm text-text-primary block">显示名称</label>
           <div class="text-xs text-text-muted">UI 显示名,可中文</div>
-          <input v-model="draft.displayName" :disabled="!adminMode" class="form-input" placeholder="自由创作 / 我的预设" />
+          <input v-model="draft.displayName" class="form-input" placeholder="自由创作 / 我的预设" />
         </div>
         <div class="space-y-1.5">
           <label class="text-sm text-text-primary block">描述</label>
           <div class="text-xs text-text-muted">一句话说明这种视频形态适合什么</div>
-          <textarea v-model="draft.description" :disabled="!adminMode" class="form-textarea" rows="2" />
-        </div>
-        <div class="space-y-1.5">
-          <label class="text-sm text-text-primary block">可见性</label>
-          <div class="text-xs text-text-muted">私有 = 仅 owner 看见(localStorage admin 模式下可见)</div>
-          <div class="flex gap-3 text-sm">
-            <label class="flex items-center gap-1.5"><input type="radio" v-model="draft.visibility" :disabled="!adminMode" value="private" /> 私有</label>
-            <label class="flex items-center gap-1.5"><input type="radio" v-model="draft.visibility" :disabled="!adminMode" value="public" /> 公开</label>
-          </div>
-        </div>
-        <div class="space-y-1.5">
-          <label class="text-sm text-text-primary block">所有者</label>
-          <div class="text-xs text-text-muted">软标记,无鉴权</div>
-          <input v-model="draft.ownerName" :disabled="!adminMode" class="form-input" placeholder="我" />
+          <textarea v-model="draft.description" class="form-textarea" rows="2" />
         </div>
       </div>
 
@@ -424,7 +401,6 @@ const optimizeSectionLabel = computed(() =>
         </div>
         <textarea
           v-model="inputSchemaText"
-          :disabled="!adminMode"
           class="form-textarea font-mono text-xs"
           rows="22"
           placeholder='{"type":"object","required":["theme"],"properties":{"theme":{"type":"string","title":"主题"}}}'
@@ -435,14 +411,14 @@ const optimizeSectionLabel = computed(() =>
         <div class="text-sm text-text-secondary">
           选题 prompt yaml(空 = 该预设不支持头脑风暴)。yaml 必含 system / user 字段。
         </div>
-        <textarea v-model="draft.brainstormPromptYaml" :disabled="!adminMode" class="form-textarea font-mono text-xs" rows="22" />
+        <textarea v-model="draft.brainstormPromptYaml" class="form-textarea font-mono text-xs" rows="22" />
       </div>
 
       <div v-show="activeTab === 'script'" class="card p-5 space-y-3">
         <div class="text-sm text-text-secondary">
           编剧 prompt yaml(必填)。可用 <code v-pre>{{key}}</code> 引用 input_schema 字段。
         </div>
-        <textarea v-model="draft.scriptPromptYaml" :disabled="!adminMode" class="form-textarea font-mono text-xs" rows="26" />
+        <textarea v-model="draft.scriptPromptYaml" class="form-textarea font-mono text-xs" rows="26" />
       </div>
 
       <div v-show="activeTab === 'critic'" class="card p-5 space-y-3">
@@ -452,9 +428,9 @@ const optimizeSectionLabel = computed(() =>
         <div class="space-y-1.5">
           <label class="text-sm text-text-primary block">阈值 (threshold)</label>
           <div class="text-xs text-text-muted">0-100,典型 80;低于此分数触发 REWRITE</div>
-          <input v-model.number="draft.scriptCriticThreshold" :disabled="!adminMode" type="number" class="form-input w-24" min="0" max="100" />
+          <input v-model.number="draft.scriptCriticThreshold" type="number" class="form-input w-24" min="0" max="100" />
         </div>
-        <textarea v-model="draft.scriptCriticPromptYaml" :disabled="!adminMode" class="form-textarea font-mono text-xs" rows="22" />
+        <textarea v-model="draft.scriptCriticPromptYaml" class="form-textarea font-mono text-xs" rows="22" />
       </div>
 
       <div v-show="activeTab === 'storyboard'" class="card p-5 space-y-3">
@@ -462,12 +438,12 @@ const optimizeSectionLabel = computed(() =>
           <label class="text-sm text-text-primary block">分镜模式 (storyboard_mode)</label>
           <div class="text-xs text-text-muted">PRECISE_BY_CUE 强制 anchor_cue_indices 严格连续覆盖;FREE 只校验 shot 数量合理</div>
           <div class="flex gap-3 text-sm">
-            <label class="flex items-center gap-1.5"><input type="radio" v-model="draft.storyboardMode" :disabled="!adminMode" value="FREE" /> FREE(自由)</label>
-            <label class="flex items-center gap-1.5"><input type="radio" v-model="draft.storyboardMode" :disabled="!adminMode" value="PRECISE_BY_CUE" /> PRECISE_BY_CUE(严格按 cue)</label>
+            <label class="flex items-center gap-1.5"><input type="radio" v-model="draft.storyboardMode" value="FREE" /> FREE(自由)</label>
+            <label class="flex items-center gap-1.5"><input type="radio" v-model="draft.storyboardMode" value="PRECISE_BY_CUE" /> PRECISE_BY_CUE(严格按 cue)</label>
           </div>
         </div>
         <div class="text-sm text-text-secondary">摄影 prompt yaml(必填)。</div>
-        <textarea v-model="draft.storyboardPromptYaml" :disabled="!adminMode" class="form-textarea font-mono text-xs" rows="22" />
+        <textarea v-model="draft.storyboardPromptYaml" class="form-textarea font-mono text-xs" rows="22" />
       </div>
 
       <div v-show="activeTab === 'image'" class="card p-5 space-y-3">
@@ -478,7 +454,6 @@ const optimizeSectionLabel = computed(() =>
         </div>
         <textarea
           v-model="imageConfigText"
-          :disabled="!adminMode"
           class="form-textarea font-mono text-xs"
           rows="18"
           placeholder='{"model":"Doubao-Seedream-5.0-lite","identity_lock_text":"...","style_suffix":"...","negative_prompt":"...","image_size":"2560x1440"}'
@@ -492,7 +467,6 @@ const optimizeSectionLabel = computed(() =>
         </div>
         <textarea
           v-model="voiceConfigText"
-          :disabled="!adminMode"
           class="form-textarea font-mono text-xs"
           rows="12"
           placeholder='{"voice_id":"BV001_streaming","speed_ratio":1.0,"volume_ratio":1.0}'
@@ -503,41 +477,41 @@ const optimizeSectionLabel = computed(() =>
         <div class="space-y-1.5">
           <label class="text-sm text-text-primary block">启用 BGM (bgm_enabled)</label>
           <div class="text-xs text-text-muted">启用 BGM 选曲(Jamendo)</div>
-          <input type="checkbox" v-model="draft.bgmEnabled" :disabled="!adminMode" />
+          <input type="checkbox" v-model="draft.bgmEnabled" />
         </div>
         <div class="space-y-1.5">
           <label class="text-sm text-text-primary block">锁定 BGM (bgm_locked)</label>
           <div class="text-xs text-text-muted">勾上后:BgmPicker 隐藏选曲 UI,后端按 preset 兜底逻辑出曲。仅 bgm_enabled=true 时生效。</div>
-          <input type="checkbox" v-model="draft.bgmLocked" :disabled="!adminMode || !draft.bgmEnabled" />
+          <input type="checkbox" v-model="draft.bgmLocked" :disabled="!draft.bgmEnabled" />
         </div>
         <div class="text-sm text-text-secondary">BGM mood 推荐 prompt yaml(空 = 用默认 BGM 推荐逻辑)。</div>
-        <textarea v-model="draft.bgmMoodPromptYaml" :disabled="!adminMode" class="form-textarea font-mono text-xs" rows="14" />
+        <textarea v-model="draft.bgmMoodPromptYaml" class="form-textarea font-mono text-xs" rows="14" />
       </div>
 
       <div v-show="activeTab === 'composition'" class="card p-5 space-y-5">
         <div class="space-y-1.5">
           <label class="text-sm text-text-primary block">合成组件 (composition_id)</label>
           <div class="text-xs text-text-muted">Remotion composition 名,如 StoryHorizontal / StoryVertical / LifeCopy</div>
-          <input v-model="draft.compositionId" :disabled="!adminMode" class="form-input font-mono" />
+          <input v-model="draft.compositionId" class="form-input font-mono" />
         </div>
         <div class="space-y-1.5">
           <label class="text-sm text-text-primary block">成片分辨率 (宽 × 高)</label>
           <div class="text-xs text-text-muted">成片分辨率;横屏 1920×1080,竖屏 1080×1920</div>
           <div class="flex gap-2 items-center text-sm">
-            <input v-model.number="draft.formatWidth" :disabled="!adminMode" type="number" class="form-input w-28" />
+            <input v-model.number="draft.formatWidth" type="number" class="form-input w-28" />
             <span class="text-text-muted">×</span>
-            <input v-model.number="draft.formatHeight" :disabled="!adminMode" type="number" class="form-input w-28" />
+            <input v-model.number="draft.formatHeight" type="number" class="form-input w-28" />
           </div>
         </div>
         <div class="space-y-1.5">
           <label class="text-sm text-text-primary block">水印文本 (watermark_text)</label>
           <div class="text-xs text-text-muted">左上角水印文本;空 = 不加</div>
-          <input v-model="draft.watermarkText" :disabled="!adminMode" class="form-input" placeholder="虚构演绎 仅供娱乐" />
+          <input v-model="draft.watermarkText" class="form-input" placeholder="虚构演绎 仅供娱乐" />
         </div>
         <div class="space-y-1.5">
           <label class="text-sm text-text-primary block">开场 hook 段 (hook_segment_enabled)</label>
           <div class="text-xs text-text-muted">开场 4s hook 段(快切 + 钩子旁白)</div>
-          <input type="checkbox" v-model="draft.hookSegmentEnabled" :disabled="!adminMode" />
+          <input type="checkbox" v-model="draft.hookSegmentEnabled" />
         </div>
       </div>
     </div>
@@ -558,7 +532,7 @@ const optimizeSectionLabel = computed(() =>
           <span class="text-xs text-text-muted ml-auto">{{ v.createdAt }}</span>
         </div>
         <div v-if="v.comment" class="text-xs text-text-secondary mt-1">{{ v.comment }}</div>
-        <button v-if="adminMode" class="btn mt-2 text-xs" @click="onRollback(v.version)">回滚到此版</button>
+        <button class="btn mt-2 text-xs" @click="onRollback(v.version)">回滚到此版</button>
       </div>
     </div>
 
