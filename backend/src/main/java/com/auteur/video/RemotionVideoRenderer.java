@@ -41,6 +41,9 @@ public class RemotionVideoRenderer implements VideoRenderer {
     private final com.auteur.storage.TosStorageService tos;
     private final com.auteur.runtimeconfig.RuntimeConfig runtimeConfig;
 
+    /** resolveBashCommand() 懒加载缓存,避免每次渲染都探一遍文件系统。 */
+    private volatile String resolvedBash;
+
     public RemotionVideoRenderer(VideoProperties props, VoiceProperties voiceProps,
                                  ObjectMapper objectMapper,
                                  com.auteur.storage.TosStorageService tos,
@@ -309,7 +312,8 @@ public class RemotionVideoRenderer implements VideoRenderer {
     private int runRender(Path rendererDir, Path outPath, Path propsPath, int timeoutSec,
                           String compositionId)
             throws IOException, InterruptedException {        List<String> cmd = List.of(
-                "bash", "scripts/render.sh",
+                resolveBashCommand(),
+                "scripts/render.sh",
                 outPath.toString(),
                 propsPath.toString(),
                 compositionId
@@ -342,6 +346,56 @@ public class RemotionVideoRenderer implements VideoRenderer {
                     + " tail=" + tail.toString().trim());
         }
         return (int) (System.currentTimeMillis() - t0);
+    }
+
+    /**
+     * 解析 bash 命令路径。Linux/Mac/Docker 走 PATH 的 "bash" 即可;
+     * Windows 上 PATH 里的 bash.exe 经常是 C:/Windows/System32/bash.exe(WSL 入口),
+     * 默认 distro 若没装真 Linux(如只有 Docker Desktop 的内部卷)就会失败。
+     * 所以 Windows 显式探测 Git for Windows 自带的 bash.exe。
+     *
+     * 顺序:配置 auteur.video.remotion.bash-path -> Git/bin/bash.exe(64) ->
+     *      Git/usr/bin/bash.exe(64) -> Git/bin/bash.exe(x86)。
+     * 都没命中时抛清晰错误,提示装 Git for Windows 或显式配 bash-path。
+     */
+    private String resolveBashCommand() {
+        String cached = resolvedBash;
+        if (cached != null) return cached;
+
+        String configured = props.getRemotion().getBashPath();
+        if (configured != null && !configured.isBlank()) {
+            Path p = Paths.get(configured);
+            if (!Files.isExecutable(p)) {
+                throw new RuntimeException("auteur.video.remotion.bash-path 指向的文件不存在或不可执行: " + p);
+            }
+            log.info("[剪辑·Remotion] bash 来自配置: {}", p);
+            resolvedBash = p.toString();
+            return resolvedBash;
+        }
+
+        String osName = System.getProperty("os.name", "").toLowerCase();
+        if (!osName.contains("win")) {
+            resolvedBash = "bash";
+            return resolvedBash;
+        }
+
+        List<String> candidates = List.of(
+                "C:\\Program Files\\Git\\bin\\bash.exe",
+                "C:\\Program Files\\Git\\usr\\bin\\bash.exe",
+                "C:\\Program Files (x86)\\Git\\bin\\bash.exe"
+        );
+        for (String candidate : candidates) {
+            Path p = Paths.get(candidate);
+            if (Files.isExecutable(p)) {
+                log.info("[剪辑·Remotion] bash 自动探测命中: {}", p);
+                resolvedBash = p.toString();
+                return resolvedBash;
+            }
+        }
+        throw new RuntimeException(
+                "Windows 下未找到 Git Bash。请装 Git for Windows(https://git-scm.com/download/win),"
+                        + "或在 application-local.yml 设 auteur.video.remotion.bash-path=<bash.exe 绝对路径>。"
+                        + "已探测路径: " + candidates);
     }
 
     /**

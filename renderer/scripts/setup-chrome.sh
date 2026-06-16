@@ -11,15 +11,19 @@ CHROME_VERSION="149.0.7790.0"
 
 # 检测架构
 case "$(uname -sm)" in
-  "Darwin arm64") ARCH="mac-arm64" ;;
-  "Darwin x86_64") ARCH="mac-x64" ;;
-  "Linux x86_64") ARCH="linux64" ;;
+  "Darwin arm64") ARCH="mac-arm64"; CHROME_EXT="" ;;
+  "Darwin x86_64") ARCH="mac-x64"; CHROME_EXT="" ;;
+  "Linux x86_64") ARCH="linux64"; CHROME_EXT="" ;;
+  MINGW*|MSYS*|CYGWIN*) ARCH="win64"; CHROME_EXT=".exe" ;;
   *) echo "❌ 不支持的平台: $(uname -sm)"; exit 1 ;;
 esac
 
-DOWNLOAD_URL="https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/${ARCH}/chrome-headless-shell-${ARCH}.zip"
+DOWNLOAD_BASE="${CHROME_FOR_TESTING_MIRROR:-https://storage.googleapis.com/chrome-for-testing-public}"
+DOWNLOAD_URL="${DOWNLOAD_BASE}/${CHROME_VERSION}/${ARCH}/chrome-headless-shell-${ARCH}.zip"
+# 国内镜像(npmmirror 全量同步 chrome-for-testing)。主源失败时自动 fallback。
+MIRROR_URL="https://registry.npmmirror.com/-/binary/chrome-for-testing/${CHROME_VERSION}/${ARCH}/chrome-headless-shell-${ARCH}.zip"
 CHROME_DIR=".chrome/chrome-headless-shell-${ARCH}"
-CHROME_BIN="${CHROME_DIR}/chrome-headless-shell"
+CHROME_BIN="${CHROME_DIR}/chrome-headless-shell${CHROME_EXT}"
 
 if [ -x "${CHROME_BIN}" ]; then
   echo "✅ Chrome Headless Shell 已存在: ${CHROME_BIN}"
@@ -29,7 +33,14 @@ fi
 echo "📥 下载 Chrome Headless Shell ${CHROME_VERSION} (~80MB 压缩 / 解压后约 193MB)..."
 mkdir -p .chrome
 TMP_ZIP=$(mktemp -t chs.XXXXXX).zip
-curl -L --progress-bar "${DOWNLOAD_URL}" -o "${TMP_ZIP}"
+
+# --connect-timeout 15:Google CDN 在国内通常 SYN 都过不去,15s 内连不上立即落镜像,
+# 不要等默认的 SSL 握手 timeout(单次 ~5min)。--fail:HTTP 4xx/5xx 也算失败。
+echo "↓ 主源: ${DOWNLOAD_URL}"
+if ! curl --connect-timeout 15 --fail -L --progress-bar "${DOWNLOAD_URL}" -o "${TMP_ZIP}"; then
+  echo "⚠️ 主源失败,改用国内镜像: ${MIRROR_URL}"
+  curl --connect-timeout 30 --fail -L --progress-bar "${MIRROR_URL}" -o "${TMP_ZIP}"
+fi
 
 echo "📦 解压到 .chrome/..."
 unzip -q "${TMP_ZIP}" -d .chrome/

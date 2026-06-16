@@ -14,10 +14,13 @@
 [![CI](https://github.com/nxin-github/Auteur/actions/workflows/ci.yml/badge.svg)](https://github.com/nxin-github/Auteur/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
 [![Live Demo](https://img.shields.io/badge/🎮_Live_Demo-nxin--github.github.io%2FAuteur-success?style=flat-square)](https://nxin-github.github.io/Auteur/)
+[![CN Mirror](https://img.shields.io/badge/🇨🇳_CN_Mirror-CloudBase-blue?style=flat-square)](https://auteur-demo-auteur-demo-d5gklniiyc5672606.webapps.tcloudbase.com)
 
 [中文](./README.md) ｜ English
 
-### [🎮 Live Demo · Click here to play →](https://nxin-github.github.io/Auteur/)
+### 🎮 Live Demo · Click here to play
+
+[🌍 Global (GitHub Pages)](https://nxin-github.github.io/Auteur/) ｜ [🇨🇳 China Mirror (Tencent CloudBase)](https://auteur-demo-auteur-demo-d5gklniiyc5672606.webapps.tcloudbase.com)
 
 *A real-pipeline output ("Stealing the food delivery — a life") packaged as an interactive playground. Watch the whole studio collaborate, auto-edit, and run the retrospective layer in 30 seconds — zero install.*
 

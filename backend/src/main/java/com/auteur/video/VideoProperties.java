@@ -55,5 +55,12 @@ public class VideoProperties {
          */
         private String publicBaseUrl = "http://localhost:8082";
         private String voiceUrlPrefix = "/api/files/voice/";
+        /**
+         * 可选:bash 解释器绝对路径。空表示自动选取——
+         * Windows 探测 Git for Windows 自带的 bash.exe(避开系统 bash.exe 转 WSL),
+         * 其他平台直接走 PATH "bash"。
+         * 仅当 Git 装在非默认位置或想强制指定时才设。
+         */
+        private String bashPath = "";
     }
 }
