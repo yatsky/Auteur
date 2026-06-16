@@ -43,12 +43,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executor;
 
-/**
- * 视频合成 worker。流程:拉 storyboard_shot + script_section → 选 voice → 解析 SRT →
- * ShotTimingResolver 计算每镜真实时长 → 每 shot 选图 → 拼 ImageClip → 调 VideoRenderer → 落库 video_asset。
- *
- * 骨架阶段 totalItems=1(script-level 单 item)。
- */
+/** 视频合成 worker。骨架阶段 totalItems=1(script-level 单 item)。 */
 @Slf4j
 @Service
 public class VideoAssemblyService {
@@ -177,10 +172,7 @@ public class VideoAssemblyService {
         }
     }
 
-    /**
-     * 渲染完成后的收尾:清理 BGM 临时文件 → persistInNewTx 落库 → markDone + log。
-     * 不在 @Transactional 边界内调用。
-     */
+    /** 不在 @Transactional 边界内调用。 */
     private void persistAndAdvance(Long scriptId, Long runId, RenderParams p,
                                    VoiceAsset voice, int usedShots, VideoRenderer.Result r,
                                    VideoRenderer.BgmConfig bgmCfg, Long bgmTrackId,
@@ -206,10 +198,7 @@ public class VideoAssemblyService {
     /** runWorker 早期校验阶段的输入聚合。 */
     private record WorkerInputs(Script script, List<StoryboardShot> shots, List<ScriptSection> sections) {}
 
-    /**
-     * 加载 script + shots + sections 并做空校验。
-     * shots 为空时:markFailed + 返回 null,调用方早退。其他校验失败按 NotFoundException 抛出。
-     */
+    /** shots 为空时:markFailed + 返回 null,调用方早退。 */
     private WorkerInputs loadScriptShotsSections(Long scriptId, Long runId) {
         Script script = scriptRepository.findById(scriptId)
                 .orElseThrow(() -> new NotFoundException("Script not found: " + scriptId));
@@ -222,10 +211,6 @@ public class VideoAssemblyService {
         return new WorkerInputs(script, shots, sections);
     }
 
-    /**
-     * 加载 SRT cues(失败回落空)+ 调用 ShotTimingResolver.resolve 计算每镜时长。
-     * 支持 https TOS URL 与 legacy 本地路径。
-     */
     private ShotTimingResolver.Resolution buildTimingMap(List<StoryboardShot> shots,
                                                          List<ScriptSection> sections,
                                                          VoiceAsset voice,
@@ -241,10 +226,7 @@ public class VideoAssemblyService {
         return timing;
     }
 
-    /**
-     * 遍历 shots,挑图、按 timing.durations 拼 ImageClip。
-     * introSec(SRT 前置静音)加到第一个有图 clip,使 clip 绝对时间与音频对齐。
-     */
+    /** introSec(SRT 前置静音)加到第一个有图 clip,使 clip 绝对时间与音频对齐。 */
     private AssembledClips assembleClips(List<StoryboardShot> shots,
                                          ShotTimingResolver.Resolution timing,
                                          Long runId) {
@@ -304,10 +286,7 @@ public class VideoAssemblyService {
         return all.isEmpty() ? null : all.get(0);
     }
 
-    /**
-     * 加载并解析 SRT,失败安全降级到 List.of()。
-     * 支持 https/http URL(下载到临时文件)与 legacy /api/files/voice/x.srt 本地路径。
-     */
+    /** 支持 https/http URL(下载到临时文件)与 legacy 本地路径。 */
     private List<SrtParser.Cue> loadSrtCuesAny(String subUrl, Long runId) {
         if (subUrl == null || subUrl.isBlank()) return List.of();
         if (subUrl.startsWith("http://") || subUrl.startsWith("https://")) {
@@ -376,10 +355,7 @@ public class VideoAssemblyService {
                 watermarkText);
     }
 
-    /**
-     * hook 段准备:从 image_asset 均匀抽 12 张 + 用 topic.title 临时跑 voice。
-     * 任一步失败返回 null,主流程退回"无 hook"原行为。
-     */
+    /** 任一步失败返回 null,主流程退回"无 hook"原行为。 */
     private VideoRenderer.HookConfig prepareHook(
             List<VideoRenderer.ImageClip> clips, Topic topic, VoiceAsset voice,
             com.auteur.preset.PresetContext ctx) {

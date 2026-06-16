@@ -9,18 +9,6 @@ import java.util.List;
 /**
  * Preset 管理 REST API。
  *
- * 路径约定:
- *   GET    /api/presets                  列预设(根据 X-Auteur-Admin 头过滤,公开/私有可见性)
- *   GET    /api/presets/{id}             读单个
- *   POST   /api/presets                  创建
- *   PUT    /api/presets/{id}             覆盖当前版(不写 snapshot)
- *   POST   /api/presets/{id}/save-version  写一份 snapshot + currentVersion+1 + apply 改动
- *   POST   /api/presets/{id}/rollback?version=N   回滚到历史快照
- *   DELETE /api/presets/{id}             删除(级联删 version + asset)
- *   GET    /api/presets/{id}/versions    历史版本列表
- *   GET    /api/presets/{id}/assets      关联资源列表
- *   POST   /api/presets/{id}/optimize    "沟通优化":LLM 根据用户反馈重新生成某 section 字段(不落库)
- *
  * 可见性靠"软"协议:浏览器请求带 X-Auteur-Admin: 1 时返回私有 + 公开;否则只返公开。
  * 这不是真鉴权,只是 UI 层隔离 — 与"无部署/不上公网"威胁模型自洽(见 PRESET_REFACTOR_PLAN.md §〇)。
  */

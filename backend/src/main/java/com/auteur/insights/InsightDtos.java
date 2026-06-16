@@ -9,7 +9,6 @@ import java.util.Map;
 public final class InsightDtos {
     private InsightDtos() {}
 
-    /** /api/insights/dimension-weights 返回体。 */
     public record DimensionWeightReport(
             String platform,
             int days,
@@ -19,7 +18,6 @@ public final class InsightDtos {
             Map<String, List<DimensionValueWeight>> weights
     ) {}
 
-    /** 单一维度值的统计行（朝代=明、题材=神话、…）。 */
     public record DimensionValueWeight(
             String value,
             BigDecimal avgRetention,
@@ -57,7 +55,6 @@ public final class InsightDtos {
             List<VideoFeature> topByCoverCtr
     ) {}
 
-    /** Top/Bottom 列表里每条视频的特征（带维度组合，便于 UI 标签化展示）。 */
     public record VideoFeature(
             Long id,
             String title,
@@ -78,7 +75,7 @@ public final class InsightDtos {
             BigDecimal coverCtr
     ) {}
 
-    /** 喂给 BrainstormService 的整段 prompt 数据包，4 个字段直接对齐 yaml 占位符。 */
+    /** 喂给 BrainstormService 的整段 prompt 数据包,4 个字段直接对齐 yaml 占位符。 */
     public record BrainstormDataPack(
             String weightTable,
             String topFeatures,
@@ -87,7 +84,6 @@ public final class InsightDtos {
             String prevWeekPlan
     ) {}
 
-    /** 喂给 ScriptService 的钩子模板表现数据包。 */
     public record HookPerformancePack(
             String topHooks,
             String bottomHooks,

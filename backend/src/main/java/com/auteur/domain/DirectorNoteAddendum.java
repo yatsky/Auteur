@@ -8,7 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 /**
- * director_note_addendum (V50) — 导演笔记群聊增量。
+ * director_note_addendum — 导演笔记群聊增量。
  *
  * 每个 stage 完成后写一行,记录"我这一关实际定的方向"。
  * 下游 stage 渲染 prompt 时,DirectorNoteService.buildBlock 把所有 addendum 按时间排序拼成

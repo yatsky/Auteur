@@ -10,9 +10,6 @@ import java.util.regex.Pattern;
 /**
  * 句级 cue 拆短器:火山 TTS 的 sentence 平均 ~13s 太长,在 voice 端按中文标点拆成更细子 cue
  * (目标 ~6s/cue),让 storyboard LLM 看到更密的 cue → 出更密的 shot。
- *
- * 算法:跳过空文本/时间戳异常 sentence;短句不动;长句按字数比例选最接近的标点切,时间按字符比例分配,
- * 末段精确到原 endMs。无标点时按字数硬切;targetPieces 上限 6 防极端长句拆太碎。
  */
 @Slf4j
 public class VolcanoSentenceSplitter {

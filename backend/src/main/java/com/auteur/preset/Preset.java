@@ -20,8 +20,6 @@ import java.time.LocalDateTime;
  *   - 录音配置(可空 = 无旁白)
  *   - 合成配置(画幅/水印/BGM/hook 段/Remotion composition)
  *
- * 加新内容形态 = 在 UI 里建一行 preset,代码不动。
- *
  * JSON 列用 String 存,配 @JsonRawValue 让 REST 直接吐 JSON,无需 jackson 二次序列化。
  */
 @Entity

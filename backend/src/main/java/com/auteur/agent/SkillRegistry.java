@@ -21,11 +21,7 @@ import java.util.regex.Pattern;
  * Agent skill 注册表。启动期扫描 classpath:agent/skills/*.md,解析 YAML frontmatter,
  * 把每个 skill 的 metadata(name/summary/when) + 全文加载到内存。
  *
- * skill 是按需加载的"任务剧本":system prompt 末尾只列每个 skill 的 (name, summary, when),
- * LLM 决定调写工具前用 read_skill(name) 读全文。这样 token 不会被剧本一次性吃满,
- * 同时让 LLM 显式决定该不该读。
- *
- * 文件格式:YAML frontmatter + markdown 正文,见 skills/topic-creation.md。
+ * 按需加载:system prompt 末尾只列目录,LLM 调 read_skill(name) 读全文。
  */
 @Slf4j
 @Component
@@ -107,7 +103,6 @@ public class SkillRegistry {
 
     /**
      * 拼一段插到 system prompt 末尾的 skill 目录。每个 skill 一行 (name + summary + when)。
-     * LLM 看到目录就知道存在这些剧本,需要时调 read_skill(name) 读全文。
      */
     public String buildCatalog() {
         if (skills.isEmpty()) return "";

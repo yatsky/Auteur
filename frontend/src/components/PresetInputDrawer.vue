@@ -1,10 +1,4 @@
 <script setup lang="ts">
-/**
- * 预设输入抽屉 — 通用版,基于 preset.input_schema_json 用 DynamicForm 渲染表单。
- *
- * 触发位置:TopicDetail.vue 的"配置 preset 输入"按钮。
- * 持久化:走 PATCH /api/topics/{id} 的 presetInputJson 字段(JSON.stringify)。
- */
 import { computed, ref, watch } from 'vue'
 import { Loader2, Save, X } from 'lucide-vue-next'
 import { updateTopic } from '../api/topics'
@@ -45,7 +39,7 @@ watch(
     error.value = null
     try {
       preset.value = await getPreset(pid)
-      // 解析 initialInput:可能是对象,也可能是后端返回的 JSON 字符串
+      // initialInput 可能是对象,也可能是后端返回的 JSON 字符串
       const init = props.initialInput
       if (init == null) {
         form.value = {}

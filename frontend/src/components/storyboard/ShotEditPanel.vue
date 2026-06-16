@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// 分镜编辑面板:头部信息 + 拦截警告 + prompt 编辑器 + 关联图片缩略
-// 父持有 selectedShot / draft / 运行态;子件 emit 全部行为。
 import { computed } from 'vue'
 import {
   ImageIcon, ImageOff, Loader2, Pencil, RotateCcw, Save, ShieldAlert, Sparkles, X,
@@ -66,7 +64,6 @@ function updateDraftField(field: 'promptZh' | 'promptEn' | 'negativePrompt', val
     </template>
 
     <template v-else>
-      <!-- 头部:索引 + 状态 chip + meta -->
       <div class="card p-4">
         <div class="flex items-center gap-2 mb-2">
           <h2 class="text-base font-semibold">S{{ String(selectedShot.shotIndex).padStart(2, '0') }} · 编辑分镜</h2>
@@ -92,7 +89,6 @@ function updateDraftField(field: 'promptZh' | 'promptEn' | 'negativePrompt', val
         </div>
       </div>
 
-      <!-- 拦截警告 -->
       <div v-if="selectedIsBlocked"
            class="card p-4 border-status-failed bg-status-failed/5">
         <div class="flex items-start gap-2">
@@ -109,7 +105,6 @@ function updateDraftField(field: 'promptZh' | 'promptEn' | 'negativePrompt', val
         </div>
       </div>
 
-      <!-- 编辑器:3 个 prompt 字段 + 3 个动作 -->
       <div class="card p-4">
         <div class="flex items-center gap-2 mb-3">
           <Pencil :size="14" class="text-text-secondary" />
@@ -170,7 +165,6 @@ function updateDraftField(field: 'promptZh' | 'promptEn' | 'negativePrompt', val
         </div>
       </div>
 
-      <!-- 关联图片:每张缩略图带 6 状态色环 -->
       <div class="card p-4">
         <div class="flex items-center gap-2 mb-3">
           <ImageIcon :size="14" class="text-text-secondary" />
@@ -196,7 +190,6 @@ function updateDraftField(field: 'promptZh' | 'promptEn' | 'negativePrompt', val
               <ShieldAlert v-else-if="img.reviewDecision === 'SENSITIVE_BLOCKED'" :size="20" class="text-status-failed" />
               <ImageOff v-else :size="20" class="text-text-muted" />
             </div>
-            <!-- hover 浮层:点击选作 final 的强提示。only on non-final 图 -->
             <div
               v-if="img.fileUrl"
               class="absolute inset-0 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"

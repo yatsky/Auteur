@@ -1,11 +1,8 @@
 /**
  * Admin 模式开关。访问 /admin?token=<USER_TOKEN> 后写 localStorage,
- * 之后的请求会带 X-Auteur-Admin: 1 头(api/client.ts 拦截器读 isAdmin())。
+ * 之后的请求会带 X-Auteur-Admin: 1 头。
  *
- * 这不是真鉴权(开源版无部署,无威胁面),只是 UI 层把私有 preset 隔离开。
- *
- * 用 ref 包裹是为了 Vue 响应式追踪 — 直接读 localStorage 在 computed 里跟不到变化,
- * AdminToggle 切换后侧栏 chip 不会自动刷新。
+ * 用 ref 包裹是为了 Vue 响应式追踪 — 直接读 localStorage 在 computed 里跟不到变化。
  */
 import { ref, computed } from 'vue'
 

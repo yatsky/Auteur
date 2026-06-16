@@ -11,9 +11,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 /**
- * PATCH /api/topics/{id} 的 body。
- * 全字段 optional —— 服务端只 apply 非 null 字段(JSON 里没传的字段 = 不动)。
- * source / aiSuggestedSeries / createdAt / updatedAt 由系统管,不开放。
+ * PATCH /api/topics/{id} 的 body。服务端只 apply 非 null 字段(JSON 里没传 = 不动)。
  */
 @Data
 public class TopicUpdateRequest {
@@ -56,12 +54,9 @@ public class TopicUpdateRequest {
     /** 导演笔记 JSON 字符串。null = 不动;空串 / "null" = 清空。 */
     private String directorNote;
 
-    /** 绑定 preset(必填,创建后允许改)。null = 不动。 */
     private Long presetId;
 
-    /**
-     * 用户填的字段(per preset.input_schema)。null = 不动;空串 / "null" = 清空。
-     */
+    /** 用户填的字段。null = 不动;空串 / "null" = 清空。 */
     private String presetInputJson;
 }
 

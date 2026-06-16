@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 按平台分组展示已发布视频的表格。视图组件,所有交互 emit 上抛。
 import { computed } from 'vue'
 import { Loader2, Pencil, Trash2 } from 'lucide-vue-next'
 import TimeText from '../TimeText.vue'

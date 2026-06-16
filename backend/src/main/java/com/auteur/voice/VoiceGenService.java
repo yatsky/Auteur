@@ -26,9 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-/**
- * 配音 / 字幕产物生成 worker。totalItems=1(整个 script 一次合成),只有 RUNNING / DONE / FAILED 三态。
- */
+/** 配音 / 字幕产物生成 worker。totalItems=1(整个 script 一次合成)。 */
 @Slf4j
 @Service
 public class VoiceGenService {
@@ -69,7 +67,6 @@ public class VoiceGenService {
     public record GenParams(String voiceModel, String voiceLabel,
                             BigDecimal speed, Integer pitch, String subtitleStyle, Boolean markFinal) {}
 
-    /** 立即返回 runId,worker 在 pipelineExecutor 里跑;UI 通过 GET /api/runs/{runId} 轮询。 */
     public Long generateAsync(Long scriptId, GenParams p, String triggeredBy) {
         Map<String, Object> params = new HashMap<>();
         params.put("scriptId", scriptId);
@@ -173,8 +170,7 @@ public class VoiceGenService {
 
     /**
      * 把 fullText 清洗成可念的纯口播文本,避免 TTS 把结构标签当字念出来。
-     * 剥除:[A]/【A】 段落标签、行首圆圈数字 ①②、行首阿拉伯数字+点/顿号 "1. " "2、"。
-     * 规则保守:只匹配行首方/中括号 + 短标识(≤8 字符,字母/数字/CJK)。
+     * 剥除:[A]/【A】 段落标签、行首圆圈数字 ①②、行首阿拉伯数字+点/顿号。
      */
     static String sanitizeForTts(String text) {
         if (text == null) return "";

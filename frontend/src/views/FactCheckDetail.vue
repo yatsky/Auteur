@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 事实核查详情 —— sticky 顶栏 + 操作条 + issue 卡列表
 import { onMounted, ref, computed } from 'vue'
 import { ArrowLeft, CheckCircle2, Loader2, Pencil, Play, RefreshCw, Wand2, X } from 'lucide-vue-next'
 import { listIssues, runFactCheckAsync, applyIssueFix, dismissIssue, type ApplyFixResult } from '../api/scripts'
@@ -139,7 +138,6 @@ onMounted(load)
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1200px] mx-auto flex flex-col gap-1">
         <div class="flex items-center gap-4 flex-wrap">
@@ -169,7 +167,6 @@ onMounted(load)
     <div class="px-8 py-5 max-w-[1200px] mx-auto">
       <ErrorBanner :msg="errorMsg" />
 
-      <!-- 操作条 -->
       <div class="card p-3 mb-4 flex items-center gap-2 flex-wrap">
         <button class="btn-ghost" :disabled="loading" @click="load">
           <RefreshCw :size="13" :class="loading ? 'animate-spin' : ''" /> 刷新

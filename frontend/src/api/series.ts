@@ -1,7 +1,6 @@
 import { http } from './client'
 import type { Topic } from '../types'
 
-/** 后端 SeriesDto:list/get/create/update 都返这个形状,topicCount 是 enrich 出来的。 */
 export interface Series {
   id: number
   name: string
@@ -47,7 +46,7 @@ export async function updateSeries(id: number, body: Partial<SeriesUpsert>): Pro
   return data
 }
 
-/** 删 series 行。该系列下还有 topic 时后端 409;前端兜住把 message 弹给用户。 */
+/** 该系列下还有 topic 时后端 409;前端兜住把 message 弹给用户。 */
 export async function deleteSeries(id: number): Promise<void> {
   await http.delete(`/series/${id}`)
 }

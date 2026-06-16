@@ -1,13 +1,5 @@
 <script setup lang="ts">
-// FulfillHookDialog —— 钩子兑现编辑器。点 banner「填坑」打开,预填 LLM 建议,
-// 用户改完点确认 → 调 fulfillHook → emit confirmed(topic)。
-//
-// 设计要点:
-//   - title 必填,LLM 偶尔脑补(过度解读"意外火灾"为"自焚"等),给用户改的机会
-//   - dynasty 预填 LLM 建议,用户可改;不限制必填(钩子可能跨朝代/灵异)
-//   - hookType 5 个固定值(对齐 brainstorm.yaml):反逻辑 / 数字冲击 / 时间地点反常 / 未解之谜 / 反差身份
-//   - durationMinutes 默认 6;historicalReference 留给用户填史料锚点(可空)
-//   - hookText 全文展示在顶部供用户参考钩子原话,不允许编辑(改钩子内容会破坏溯源)
+// hookType 5 个固定值需要对齐 brainstorm.yaml。hookText 不允许编辑(改钩子内容会破坏溯源)。
 import { computed, ref, watch } from 'vue'
 import { Loader2, Sparkles, X } from 'lucide-vue-next'
 import { fulfillHook } from '../api/seriesHooks'
@@ -27,8 +19,6 @@ const dynasty = ref('')
 const hookType = ref('')
 const durationMinutes = ref<number>(6)
 const historicalReference = ref('')
-// 确认后立即触发后端 generateScript 异步链路 —— 默认勾选,
-// 用户审完直接出脚本,省去手动跑回详情页点按钮的两步跳转。
 const autoGenerateScript = ref(true)
 
 const busy = ref(false)
@@ -36,7 +26,6 @@ const error = ref<string | null>(null)
 
 const open = computed(() => props.hook !== null)
 
-// 打开时预填 LLM 建议
 watch(() => props.hook, (h) => {
   if (!h) return
   title.value = h.suggestedTitle || ''

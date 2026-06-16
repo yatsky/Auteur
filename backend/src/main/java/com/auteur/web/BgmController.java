@@ -14,14 +14,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * BGM 选曲端点。
- *
- * POST /api/bgm/scripts/{id}/recommend  首次进 BgmPicker → 打 mood + 拉 Jamendo,3 条
- * GET  /api/bgm/scripts/{id}/tracks?offset=N  "换一批" / 翻页,3 条
- * GET  /api/bgm/scripts/{id}/choice     回填已选(没选返 204)
- * POST /api/bgm/scripts/{id}/select     选定 + 下载本地 mp3
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/bgm/scripts/{scriptId}")
@@ -62,7 +54,7 @@ public class BgmController {
         }
     }
 
-    /** 没选时返 204 No Content,前端按"未选"显示。 */
+    /** 没选时返 204 No Content。 */
     @GetMapping("/choice")
     public BgmService.ChoiceDto getChoice(@PathVariable Long scriptId) {
         return bgmService.getChoiceDto(scriptId)

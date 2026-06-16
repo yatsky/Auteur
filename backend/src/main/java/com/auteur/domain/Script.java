@@ -45,13 +45,13 @@ public class Script {
     private BigDecimal reviewScore;
 
     /**
-     * 该 script 的主角基准照 asset id（V15 引入）。审图首张 PASS 时锁定，
+     * 该 script 的主角基准照 asset id。审图首张 PASS 时锁定，
      * 后续同 script 的非空镜镜头生图时作为 Seedream image-to-image reference。
      */
     @Column(name = "protagonist_ref_asset_id")
     private Long protagonistRefAssetId;
 
-    /** V30: LLM 给本 script 打的 BGM mood,6 词表之一,缓存避免每次推荐都重打。 */
+    /** LLM 给本 script 打的 BGM mood,6 词表之一,缓存避免每次推荐都重打。 */
     @Column(name = "bgm_mood_tag", length = 40)
     private String bgmMoodTag;
 

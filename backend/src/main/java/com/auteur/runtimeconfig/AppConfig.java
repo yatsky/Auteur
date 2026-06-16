@@ -9,7 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 /**
- * UI 可编辑的运行时配置(KV 表,V55 引入)。
+ * UI 可编辑的运行时配置(KV 表)。
  *
  * 跟 application-local.yml 配合工作:RuntimeConfig 优先读本表,空时回落 yml 默认值。
  * 新用户的 yml 只需配 spring.datasource.*,其它全部在前端「系统设置」页面填。

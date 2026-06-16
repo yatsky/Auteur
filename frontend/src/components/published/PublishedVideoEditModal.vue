@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 已发布视频 单行编辑/新增对话框。父用 v-model:open 控制开关、传 editing 决定模式。
 import { computed, ref, watch } from 'vue'
 import { Loader2, X } from 'lucide-vue-next'
 import {
@@ -12,7 +11,7 @@ import type { ScriptListItem } from '../../types'
 
 const props = defineProps<{
   open: boolean
-  editing: PublishedVideo | null  // null = 新建模式
+  editing: PublishedVideo | null
   scripts: ScriptListItem[]
 }>()
 
@@ -43,7 +42,6 @@ function nowLocalForInput(): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-// 父切换 open / editing 时重新填表
 watch(
   () => [props.open, props.editing] as const,
   ([open, v]) => {
@@ -82,7 +80,7 @@ watch(
   { immediate: true },
 )
 
-// dropdown 选中或清空时联动 topicId / projectName / durationSeconds(只在用户没填的时候)
+// 选中或清空时联动 topicId / projectName / durationSeconds(只在用户没填的时候)
 async function onScriptPick(idRaw: string | number | null) {
   const id = idRaw === '' || idRaw == null ? null : Number(idRaw)
   form.value.scriptId = id
@@ -100,7 +98,7 @@ async function onScriptPick(idRaw: string | number | null) {
   }
 }
 
-// 平均播放占比 = 平均播放时长 / 时长 × 100,2 位小数;只在两个源都有值时覆盖
+// 平均播放占比 = 平均播放时长 / 时长 × 100,只在两个源都有值时覆盖
 watch(
   () => [form.value.avgPlaySeconds, form.value.durationSeconds] as const,
   ([avg, dur]) => {
@@ -110,7 +108,7 @@ watch(
   },
 )
 
-// 编辑老数据时,scriptId 可能不在最近列表里;前置一个"历史"选项
+// scriptId 可能不在最近列表里;前置一个"历史"选项
 const scriptOptions = computed(() => {
   const list = props.scripts.slice()
   const cur = form.value.scriptId
@@ -194,7 +192,6 @@ function close() {
       </div>
 
       <div class="space-y-5 text-sm">
-        <!-- 基本信息 -->
         <section>
           <h3 class="text-[13px] font-semibold mb-3">基本信息</h3>
           <div class="space-y-3">
@@ -246,7 +243,6 @@ function close() {
           </div>
         </section>
 
-        <!-- 核心曝光数据 -->
         <section>
           <h3 class="text-[13px] font-semibold mb-3">核心曝光数据</h3>
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
@@ -278,7 +274,6 @@ function close() {
           </div>
         </section>
 
-        <!-- 留存 / 钩子细分 -->
         <section>
           <h3 class="text-[13px] font-semibold mb-3">留存 / 钩子细分</h3>
           <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -316,7 +311,6 @@ function close() {
           </div>
         </section>
 
-        <!-- 互动 / 成本 -->
         <section>
           <h3 class="text-[13px] font-semibold mb-3">互动 / 成本</h3>
           <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -338,7 +332,6 @@ function close() {
           </div>
         </section>
 
-        <!-- 元数据 -->
         <section>
           <h3 class="text-[13px] font-semibold mb-3">元数据</h3>
           <label class="flex flex-col gap-1.5">

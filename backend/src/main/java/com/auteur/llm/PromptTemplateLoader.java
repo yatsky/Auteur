@@ -54,7 +54,6 @@ public class PromptTemplateLoader {
         return out;
     }
 
-    /** YAML 文件反序列化容器。 */
     @Data
     public static class PromptYaml {
         private String name;

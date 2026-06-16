@@ -20,13 +20,6 @@ public final class PresetInputInjector {
 
     private PresetInputInjector() {}
 
-    /**
-     * @param objectMapper    Jackson mapper
-     * @param vars            目标变量 Map(就地修改)
-     * @param presetInputJson 原始 JSON 字符串,可能为 null/blank
-     * @param topicId         仅用于日志
-     * @param logTag          日志前缀,例如 "[编剧]" / "[摄影]"
-     */
     public static void inject(ObjectMapper objectMapper,
                               Map<String, Object> vars,
                               String presetInputJson,

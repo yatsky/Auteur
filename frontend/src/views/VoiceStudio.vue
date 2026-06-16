@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 配音字幕工作台 —— sticky 顶栏 + 左 script picker + 右配音工作区
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ArrowLeft, Loader2, Mic, Play, RefreshCw, Subtitles } from 'lucide-vue-next'
@@ -141,7 +140,6 @@ async function triggerGen() {
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex items-center justify-between gap-4">
         <div>
@@ -168,7 +166,6 @@ async function triggerGen() {
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
-        <!-- 左:script picker -->
         <aside class="card p-3 max-h-[680px] overflow-y-auto">
           <div class="text-xs text-text-muted px-2 py-1.5 flex items-center justify-between">
             <span>选 Script</span>
@@ -200,16 +197,13 @@ async function triggerGen() {
           </ul>
         </aside>
 
-        <!-- 右:工作区 -->
         <div>
           <div v-if="!selected" class="card p-12 text-center text-text-muted text-sm">
             左侧选一个 script 开始配音
           </div>
 
           <div v-else class="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4">
-            <!-- 主区:状态 + 字幕预览 + 历史产物 -->
             <div class="space-y-4">
-              <!-- 状态卡 -->
               <div class="card p-5">
                 <div class="flex items-center justify-between mb-2">
                   <h2 class="text-base font-semibold flex items-center gap-2">
@@ -235,7 +229,6 @@ async function triggerGen() {
                 </p>
               </div>
 
-              <!-- 字幕样式预览 -->
               <div class="card p-5">
                 <h2 class="text-base font-semibold mb-3 flex items-center gap-2">
                   <Subtitles :size="15" class="text-accent" /> 字幕样式
@@ -258,7 +251,6 @@ async function triggerGen() {
                 </p>
               </div>
 
-              <!-- 历史产物 -->
               <div class="card p-5">
                 <div class="flex items-center justify-between mb-3">
                   <h2 class="text-base font-semibold">历史产物</h2>
@@ -306,7 +298,6 @@ async function triggerGen() {
               </div>
             </div>
 
-            <!-- 右栏:语音参数 -->
             <aside class="card p-5 space-y-4 self-start sticky top-[88px]">
               <h2 class="text-base font-semibold flex items-center gap-2">
                 <Play :size="14" class="text-accent" /> 语音参数
@@ -333,7 +324,6 @@ async function triggerGen() {
                   已手动选择 · {{ voiceLabelOf(voiceModel) }}
                 </p>
 
-                <!-- 试听 -->
                 <button
                   class="mt-2 w-full btn-ghost text-xs flex items-center justify-center gap-1.5"
                   :disabled="demoing"

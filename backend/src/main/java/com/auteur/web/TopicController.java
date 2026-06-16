@@ -72,8 +72,8 @@ public class TopicController {
     }
 
     /**
-     * 多级链路追溯 —— 沿 source_hook_id → hook.from_topic_id 向上回溯,列出全部祖先。
-     * 限深 20 防环 / 数据异常死循环。返回顺序:祖先在前,当前在末。
+     * 多级链路追溯 —— 沿 source_hook_id → hook.from_topic_id 向上回溯。
+     * 限深 20 防环。返回顺序:祖先在前,当前在末。
      */
     @GetMapping("/{id}/lineage")
     public List<LineageNode> lineage(@PathVariable Long id) {
@@ -127,9 +127,7 @@ public class TopicController {
             Long fromScriptId
     ) {}
 
-    /**
-     * 部分更新:body 里没传的字段不动。source / aiSuggestedSeries / 时间戳系统管,不开放。
-     */
+    /** 部分更新:body 里没传的字段不动。source / 时间戳系统管,不开放。 */
     @PatchMapping("/{id}")
     @Transactional
     public Topic patch(@PathVariable Long id, @Valid @RequestBody TopicUpdateRequest req) {
@@ -170,9 +168,8 @@ public class TopicController {
     }
 
     /**
-     * 真删。注意 schema 上 script / video_asset / hook_chain → topic 是 ON DELETE CASCADE,
-     * 直接删会连脚本/视频/钩链一起销毁 —— 所以这里先挡:有脚本 → 拒绝(409),让用户先归档(PATCH status=ARCHIVED)。
-     * pipeline_run.topic_id 没 FK,删完会变孤儿(append-only 历史,可接受)。
+     * 注意 schema 上 script / video_asset / hook_chain → topic 是 ON DELETE CASCADE。
+     * 有脚本则 409,要求先归档(PATCH status=ARCHIVED)。
      */
     @DeleteMapping("/{id}")
     @Transactional
@@ -192,7 +189,6 @@ public class TopicController {
         return scriptService.generate(id);
     }
 
-    /** 异步脚本生成,立即返回 runId,前端轮询 GET /api/runs/{runId},DONE 后用 run.scriptId 跳详情。 */
     @PostMapping("/{id}/scripts/generate-async")
     public Map<String, Object> generateScriptAsync(@PathVariable Long id) {
         Long runId = scriptService.generateAsync(id, "API");
@@ -200,8 +196,7 @@ public class TopicController {
     }
 
     /**
-     * 导演笔记 "AI 智能填充":用户在 DirectorNoteDrawer 里描述对当前笔记的诉求,LLM 综合
-     * 已填内容(可能含未保存草稿)+ 用户诉求重写整份 DirectorNote。不落库,只返回建议。
+     * 导演笔记 "AI 智能填充":LLM 综合已填内容 + 用户诉求重写整份 DirectorNote。不落库,只返回建议。
      */
     @PostMapping("/{id}/director-note/optimize")
     public DirectorNoteOptimizeService.OptimizeResponse optimizeDirectorNote(

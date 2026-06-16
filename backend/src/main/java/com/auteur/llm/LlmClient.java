@@ -120,14 +120,13 @@ public class LlmClient {
     }
 
     /**
-     * 本地 /api/files/image/ 路径无法被外部视觉模型访问，转为 base64 data URI。
-     * TOS 图片已是 https URL，直接透传；旧本地路径兜底转 base64（历史数据）。
+     * 本地 /api/files/image/ 路径无法被外部视觉模型访问,转为 base64 data URI。
+     * TOS 图片已是 https URL,直接透传;旧本地路径兜底转 base64(历史数据)。
      */
     private String resolveImageUrl(String imageUrl) {
         if (imageUrl == null) return null;
         if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")
                 || imageUrl.startsWith("data:")) return imageUrl;
-        // 旧本地路径兜底（历史数据）
         if (imageUrl.startsWith("/api/files/image/")) {
             String filename = imageUrl.substring("/api/files/image/".length());
             Path local = Paths.get("./storage/image").toAbsolutePath().resolve(filename);

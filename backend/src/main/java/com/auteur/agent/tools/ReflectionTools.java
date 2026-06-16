@@ -23,14 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * D 档 · 反思与洞察工具:把 Auteur 业务层既有的 critic / insight / weekly-review 等组件包成 tool。
- *
- * 5 个工具:
- *   - list_critic_logs       (READ)   读 critic_log 表 — 让 LLM 看到历史自审分,而不是重跑(贵)
- *   - get_top_bottom_videos  (READ)   InsightService.topBottom — 列前 N / 后 N
- *   - get_dimension_weights  (READ)   InsightService.dimensionWeights — 哪些维度对完播相关性最高
- *   - generate_weekly_review (ACTION) WeeklyReviewService.generate — 跑 LLM 出周报,贵
- *   - extract_series_hook    (WRITE)  HookExtractor.extract — 从已发布脚本反提下集 hook,写 series_hook 表
+ * 反思与洞察工具:critic / insight / weekly-review / hook 等组件的工具封装。
  */
 @Slf4j
 @Component
@@ -52,7 +45,6 @@ public class ReflectionTools {
         registry.register(new ExtractSeriesHook());
     }
 
-    // ============ list_critic_logs ============
     private class ListCriticLogs implements ToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -96,7 +88,6 @@ public class ReflectionTools {
         }
     }
 
-    // ============ get_top_bottom_videos ============
     private class GetTopBottomVideos implements ToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -126,7 +117,6 @@ public class ReflectionTools {
         }
     }
 
-    // ============ get_dimension_weights ============
     private class GetDimensionWeights implements ToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -157,7 +147,6 @@ public class ReflectionTools {
         }
     }
 
-    // ============ generate_weekly_review ============
     private class GenerateWeeklyReview implements ActionToolHandler {
 
         @Override
@@ -187,7 +176,6 @@ public class ReflectionTools {
         }
     }
 
-    // ============ extract_series_hook ============
     private class ExtractSeriesHook implements WriteToolHandler {
 
         @Override

@@ -19,14 +19,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * 火山 V3 异步任务 TTS 客户端。
- *
- * 提交后轮询 query,服务端合成完整 mp3 后返回 audio_url + sentences,我方下载 mp3。
- * 优点:无流式 chunk 截断/close 时序问题,音频一定完整;缺点:延迟高(7 分钟脚本约 30-60 秒)。
- *
- * 鉴权差异:V3 异步用 X-Api-App-Id + X-Api-Access-Key(老版),不接受 X-Api-Key(新版)。
- *
- * 返回 VolcanoTtsHttpClient.Result,接口与单向流式一致,上层透明切换。
+ * 火山 V3 异步任务 TTS 客户端。提交后轮询 query,服务端合成完整 mp3 后返回 audio_url + sentences。
+ * 无流式截断风险;鉴权用 X-Api-App-Id + X-Api-Access-Key(不接受 X-Api-Key)。
  */
 @Slf4j
 public class VolcanoTtsAsyncClient {
@@ -53,8 +47,7 @@ public class VolcanoTtsAsyncClient {
         audioParams.put("format", "mp3");
         audioParams.put("sample_rate", 24000);
         audioParams.put("speech_rate", speechRate);
-        // 异步接口 audio_params 字段表只有 enable_timestamp,没有 enable_subtitle(那是双向流式/WebSocket 才有)。
-        // 不论 1.0/2.0 音色统一用 enable_timestamp。
+        // 异步接口 audio_params 字段表只有 enable_timestamp,没有 enable_subtitle。
         audioParams.put("enable_timestamp", true);
 
         Map<String, Object> reqParams = new LinkedHashMap<>();
@@ -131,7 +124,7 @@ public class VolcanoTtsAsyncClient {
         }
     }
 
-    /** 轮询 query 直到 task_status=2(Success),拿 audio_url+sentences,下载 mp3,组装 Result。 */
+    /** 轮询 query 直到 task_status=2(Success)。 */
     private VolcanoTtsHttpClient.Result pollAndDownload(String taskId, String voiceType) {
         URI queryUri = URI.create(cfg.getBaseUrl() + "/api/v3/tts/query");
         String resourceId = resolveResourceId(voiceType);
@@ -247,7 +240,6 @@ public class VolcanoTtsAsyncClient {
         }
     }
 
-    /** sentences[i] = {text, startTime/endTime(秒,float), words: [...]} → Sentence(text, beginMs, endMs)。 */
     private List<VolcanoTtsHttpClient.Sentence> parseSentences(JsonNode sentencesNode) {
         List<VolcanoTtsHttpClient.Sentence> out = new ArrayList<>();
         if (sentencesNode == null || !sentencesNode.isArray()) return out;
@@ -264,7 +256,6 @@ public class VolcanoTtsAsyncClient {
         return out;
     }
 
-    /** 同 VolcanoTtsHttpClient.resolveResourceId。 */
     private String resolveResourceId(String voiceType) {
         if (voiceType != null) {
             if (voiceType.endsWith("_uranus_bigtts")) return "seed-tts-2.0";

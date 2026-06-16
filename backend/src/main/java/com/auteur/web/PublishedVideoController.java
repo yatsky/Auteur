@@ -18,10 +18,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 已发布视频指标 CRUD + 批量 CSV 导入。
- * 数据复盘看板的数据源(手填 + 浏览器插件回写)。
- */
+/** 已发布视频指标 CRUD + 批量 CSV 导入。 */
 @Slf4j
 @RestController
 @RequestMapping("/api/published-videos")
@@ -37,10 +34,7 @@ public class PublishedVideoController {
         return repo.findAllByOrderByPublishedAtDesc().stream().map(PublishedVideoDto::from).toList();
     }
 
-    /**
-     * 一键去重 —— 按 (platform, title, publishedAt) 分组,保留 ID 最小那条并把另几条字段 merge 进来,删多余行。
-     * dryRun=true(默认) 只列清单,不动数据;dryRun=false 真删。
-     */
+    /** dryRun=true(默认) 只列清单不动数据;dryRun=false 真删。 */
     @PostMapping("/dedupe")
     public PublishedDedupeService.DedupeResult dedupe(
             @RequestParam(defaultValue = "true") boolean dryRun) {
@@ -70,10 +64,7 @@ public class PublishedVideoController {
         return PublishedVideoDto.from(saved);
     }
 
-    /**
-     * 批量导入(CSV / xlsx 解析后前端打包成 JSON 数组)。
-     * Merge 语义全部走 PublishedVideoUpsertService.upsert,字段错的塞 errors 里继续(不整批 rollback)。
-     */
+    /** Merge 语义走 PublishedVideoUpsertService.upsert,字段错的塞 errors 里继续。 */
     @PostMapping("/bulk")
     public BulkResult bulk(@RequestBody List<PublishedVideoUpsertRequest> rows) {
         if (rows == null || rows.isEmpty()) {

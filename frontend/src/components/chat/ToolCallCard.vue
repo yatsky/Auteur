@@ -1,12 +1,4 @@
 <script setup lang="ts">
-/**
- * 工具调用结果卡片。默认折叠,点击 chip 展开看完整 args / result。
- * 状态可视化(toolStatus):
- *   - OK         绿勾,正常完成
- *   - ERROR      红框 + 警告图标,内部异常
- *   - REJECTED   橙框 + 拦截图标,用户审批拒绝(或 60s 超时按拒绝处理)
- *   - CANCELLED  灰框 + 圆圈图标,整轮被取消时给孤立 tool_call 补的 placeholder
- */
 import { ref, computed } from 'vue'
 import type { AgentMessage } from '../../api/agent'
 import { ChevronRight, ChevronDown, Wrench, AlertCircle, CheckCircle2, ShieldOff, CircleSlash } from 'lucide-vue-next'

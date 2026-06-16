@@ -34,7 +34,7 @@ export async function getTopicLineage(id: number): Promise<LineageNode[]> {
   return data
 }
 
-// PATCH:全字段 optional;后端只 apply 非 null 字段
+// 全字段 optional;后端只 apply 非 null 字段
 export interface TopicUpdate {
   title?: string
   projectName?: string | null
@@ -62,12 +62,11 @@ export async function updateTopic(id: number, patch: TopicUpdate): Promise<Topic
   return data
 }
 
-// 真删:有脚本会被后端 409 拒绝,提示走归档(PATCH status=ARCHIVED)
+// 有脚本会被后端 409 拒绝,提示走归档(PATCH status=ARCHIVED)
 export async function deleteTopic(id: number): Promise<void> {
   await http.delete(`/topics/${id}`)
 }
 
-// 跟后端 BrainstormRequest 字段一一对应
 export interface BrainstormRequest {
   /** 必填:走 preset.brainstorm_prompt_yaml 渲染。 */
   presetId: number
@@ -99,7 +98,7 @@ export async function generateScript(topicId: number): Promise<Script> {
   return data
 }
 
-// 异步路径:立即返回 runId,前端轮询 GET /api/runs/{runId},DONE 后用 run.scriptId 跳详情
+// 立即返回 runId,前端轮询 GET /api/runs/{runId},DONE 后用 run.scriptId 跳详情
 export async function generateScriptAsync(topicId: number): Promise<{ runId: number }> {
   const { data } = await http.post<{ runId: number }>(`/topics/${topicId}/scripts/generate-async`)
   return data

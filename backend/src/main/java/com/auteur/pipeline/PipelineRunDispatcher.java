@@ -26,9 +26,7 @@ import java.util.Map;
 
 /**
  * 把 stage 派发到对应 service。rerun 和 resume 都从这里走。
- *
- * 设计动机：避免 PipelineRunController 直接耦合 6 个 service，所有"按 stage 选 service"的逻辑集中在这。
- * 派发参数：尽量用 run.topicId / scriptId 当主键；只有 brainstorm 需要从 params_json 反序列化原参数。
+ * 派发参数:尽量用 run.topicId / scriptId 当主键;只有 brainstorm 需要从 params_json 反序列化原参数。
  */
 @Slf4j
 @Component
@@ -48,12 +46,12 @@ public class PipelineRunDispatcher {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
-     * Rerun：按原 stage 重新触发。force 默认 true（用户既然主动 rerun 一般就想覆盖）。
-     * 短任务（brainstorm/script/storyboard/factcheck）同步跑，长任务（imagegen/imageaudit）异步。
+     * Rerun:按原 stage 重新触发。force 默认 true(用户既然主动 rerun 一般就想覆盖)。
+     * 短任务(brainstorm/script/storyboard/factcheck)同步跑,长任务(imagegen/imageaudit)异步。
      *
-     * 同步 stage 内部各自 start/markDone 一行新 run；rerun 完成后查最近一条同 (stage, scriptId/topicId)
-     * 的 run id 返回给前端，让前端点进新 run 看结果，而不是回到 src 这条历史行。
-     * brainstorm 没有 topicId 锚点，按 stage 全表最近一行兜底。
+     * 同步 stage 内部各自 start/markDone 一行新 run;rerun 完成后查最近一条同 (stage, scriptId/topicId)
+     * 的 run id 返回给前端,让前端点进新 run 看结果,而不是回到 src 这条历史行。
+     * brainstorm 没有 topicId 锚点,按 stage 全表最近一行兜底。
      */
     public Long rerun(PipelineRun src) {
         Map<String, Object> params = parseParams(src.getParamsJson());
@@ -63,7 +61,6 @@ public class PipelineRunDispatcher {
                 req.setN(((Number) params.getOrDefault("n", 5)).intValue());
                 req.setArchiveHint((String) params.getOrDefault("archive_hint", ""));
                 req.setDoneTopics((String) params.getOrDefault("done_topics", ""));
-                // rerun 沿用原 preset
                 Object pid = params.get("preset_id");
                 if (pid instanceof String s && !s.isBlank()) {
                     try {
@@ -127,8 +124,8 @@ public class PipelineRunDispatcher {
     }
 
     /**
-     * Resume：仅 IMAGEGEN/IMAGEAUDIT 支持（其他短 stage 一次性完成，没有"未完成的中间状态"）。
-     * 调用方先确认 run.status==PAUSED，再走这里；这里不再校验 status。
+     * Resume:仅 IMAGEGEN/IMAGEAUDIT 支持(其他短 stage 一次性完成,没有"未完成的中间状态")。
+     * 调用方先确认 run.status==PAUSED,再走这里;这里不再校验 status。
      */
     public void resume(PipelineRun run, int startIndex) {
         if (run.getStage() == PipelineStage.IMAGEGEN) {

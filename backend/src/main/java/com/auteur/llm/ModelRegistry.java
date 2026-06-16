@@ -10,10 +10,9 @@ import java.util.List;
 
 /**
  * 流水线步骤模型注册表 — 每个 step 对应 app_config 里 auteur.model.&lt;step&gt; 一行,
- * 由前端「AI 模型」页面统一编辑,V8__model_config.sql 注入默认 seed。
+ * 由前端「AI 模型」页面统一编辑。
  *
- * 项目内严禁在代码里硬编码模型 ID(prompts/*.yaml 的 model 字段、private static final
- * String MODEL = "..."),所有 LLM/图像/Agent 模型必须经此服务读取。
+ * 项目内严禁在代码里硬编码模型 ID;所有 LLM/图像/Agent 模型必须经此服务读取。
  *
  * 两个入口:
  *   modelFor(step)               — 必填,DB 缺值抛 IllegalStateException(给 BgmMoodTagger 这类
@@ -58,8 +57,7 @@ public class ModelRegistry {
     }
 
     /**
-     * 必填读取。step 没在 KNOWN_STEPS 里也允许(便于未来加新 step 时不必改本类),
-     * 但 DB 里必须有值,否则抛异常引导用户去 UI 配置。
+     * 必填读取。step 没在 KNOWN_STEPS 里也允许,但 DB 里必须有值,否则抛异常引导用户去 UI 配置。
      */
     public String modelFor(String step) {
         String value = runtimeConfig.get(KEY_PREFIX + step);

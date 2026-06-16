@@ -1,13 +1,4 @@
 <script setup lang="ts">
-// PendingHooksBanner —— TopicList 顶部"上一集留了 N 条坑没还"提示卡片。
-// 父组件传入 hooks(后端已按 fromScriptId dedupe),空数组时不渲染。
-//
-// 用户操作:
-//   [填坑] → emit fulfill(hook),父组件打开 FulfillHookDialog
-//   [忽略] → emit dismiss(id),父组件调 API 后从本地数组 splice 该条
-//
-// 强弱分区:
-//   STRONG 区默认展开,显示前 PREVIEW 条,超出折叠;WEAK 区默认整体折叠(信号弱,不打扰主流程)。
 import { computed, ref } from 'vue'
 import { ChevronDown, ChevronUp, Link2, X } from 'lucide-vue-next'
 import type { SeriesHook } from '../types'

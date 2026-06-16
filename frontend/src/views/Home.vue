@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// 工作台首页 —— 顶部 AI 选题入口 + 4 KPI + 选题状态分布 + 近期活动
-// 数据源:listTopics × 5 状态 + listPublishedVideos
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowRight, ArrowUp, ArrowDown, Minus, Sparkles, FileText, Film, LayoutDashboard, Lightbulb, Layers } from 'lucide-vue-next'
@@ -162,7 +160,6 @@ function gotoBrainstorm() {
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex flex-col gap-1">
         <div class="flex items-center gap-4 flex-wrap">
@@ -186,7 +183,6 @@ function gotoBrainstorm() {
     <div class="px-8 py-5 max-w-[1400px] mx-auto">
       <ErrorBanner :msg="errorMsg" />
 
-      <!-- AI 选题入口 Banner -->
     <div class="card p-4 mb-4 flex items-center gap-4 bg-accent-soft border-accent/30">
       <div class="w-9 h-9 rounded-lg bg-surface-primary flex items-center justify-center shrink-0">
         <Sparkles :size="16" class="text-accent" />
@@ -202,7 +198,6 @@ function gotoBrainstorm() {
       </button>
     </div>
 
-    <!-- 4 KPI 卡 -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
       <div class="card p-4">
         <div class="text-xs text-text-muted flex items-center gap-1.5">
@@ -251,7 +246,6 @@ function gotoBrainstorm() {
       </div>
     </div>
 
-    <!-- 选题状态分布 + 近期活动 -->
     <div class="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-4">
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3">

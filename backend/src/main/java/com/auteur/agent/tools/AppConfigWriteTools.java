@@ -16,8 +16,6 @@ import java.util.Map;
 /**
  * 系统配置写入工具。
  *
- *   - set_app_config:    单 key 写入(空字符串=清空走 yml 兜底)
- *
  * 注:secret 字段(api-key 之类)前端列表时已经 mask;LLM 不会看到原值,
  *    所以"改密钥"的能力依赖用户在对话里显式提供新密钥。LLM 不应该用 mask 占位回写。
  */

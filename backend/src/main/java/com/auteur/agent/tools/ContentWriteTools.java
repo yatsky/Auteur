@@ -28,10 +28,9 @@ import java.util.Map;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 /**
- * 圈三:业务内容写入工具(直接改脚本/分镜/品牌包)。
+ * 业务内容写入工具(直接改脚本/分镜/品牌包)。
  *
- * 全部走 HITL 审批,且实现 PreviewableHandler 让用户在审批卡上看到 diff(before/after),
- * 而不是只看一个 args JSON — 这是圈三跟圈一/二的关键区别。
+ * 全部走 HITL 审批,且实现 PreviewableHandler 让用户在审批卡上看到 diff(before/after)。
  *
  * apply_factcheck_fix 例外:内部要跑 LLM 决定替换串,无法干净分成 preview/execute 两步,
  * 用普通 WRITE risk(用户在审批卡上看到 issueId,自己去前端查 issue 详情)。
@@ -57,7 +56,6 @@ public class ContentWriteTools {
         registry.register(new ApplyFactcheckFix());
     }
 
-    // ============ update_script_section ============
     private class UpdateScriptSection implements PreviewableHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -126,7 +124,6 @@ public class ContentWriteTools {
         }
     }
 
-    // ============ update_shot_prompt ============
     private class UpdateShotPrompt implements PreviewableHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -201,7 +198,6 @@ public class ContentWriteTools {
         }
     }
 
-    // ============ update_brand_identity ============
     private class UpdateBrandIdentity implements PreviewableHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -295,7 +291,6 @@ public class ContentWriteTools {
         }
     }
 
-    // ============ apply_factcheck_fix ============
     private class ApplyFactcheckFix implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {

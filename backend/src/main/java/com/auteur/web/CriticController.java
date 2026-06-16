@@ -17,14 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 编剧/摄影自审看板 — 看 critic_log 在指定窗口内的分布:
- *  - 按 role + decision 分组的次数 + 平均分
- *  - 高频 issue Top 10(基于 issues_json 字符串聚合,粗粒度)
- *
- * 走读源:
- *  GET /api/critic/stats?days=30 → { sinceDays, summary[{role,decision,count,avgScore}], topIssues[{issues,count}] }
- */
+/** 编剧/摄影自审看板 — 看 critic_log 在指定窗口内的分布。 */
 @Slf4j
 @RestController
 @RequestMapping("/api/critic")

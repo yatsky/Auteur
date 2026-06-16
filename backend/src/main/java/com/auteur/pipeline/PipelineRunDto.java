@@ -6,7 +6,6 @@ import com.auteur.domain.PipelineStage;
 
 import java.time.LocalDateTime;
 
-/** Pipeline run 暴露给前端的扁平视图。直接把实体序列化也可以，但显式 DTO 隔离 schema 演化。 */
 public record PipelineRunDto(
         Long id,
         Long topicId,

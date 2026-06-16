@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// 系列管理:CRUD 入口。挂在 /series。
-// 替换原来基于 MOCK_VIDEOS 的"系列分析视图" —— 那个版本永远只是占位,现在切到真接口。
 import { onMounted, ref } from 'vue'
 import { ArrowLeft, Layers, Loader2, Pencil, Plus, Trash2, X } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
@@ -89,7 +87,6 @@ onMounted(load)
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex flex-col gap-1">
         <div class="flex items-center gap-4 flex-wrap">

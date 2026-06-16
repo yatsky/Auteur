@@ -30,10 +30,6 @@ import java.util.Map;
 /**
  * 钩子抽取服务 —— 读 script E 段全文,LLM 判 STRONG/WEAK,落 series_hook.
  *
- * 两种入口:
- *  - {@link #extractAsync(Long)} 给 ScriptService 钩在 doGenerate 末尾用,失败只 log 不抛
- *  - {@link #extract(Long)} 给 POST /api/scripts/{id}/extract-hook 用,失败抛异常,返回新行
- *
  * Phase 1 不做去重 —— 反复跑会插多行,prompt 调试期反而方便对比.
  * Phase 2 走 fulfill 时再做"同 from_topic_id 多 hook 合并"逻辑.
  */
@@ -52,7 +48,7 @@ public class HookExtractor {
     private final SeriesHookRepository hookRepo;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    /** 异步入口:任何异常吞掉只 log。主流程不能被钩子抽取拖死。 */
+    /** 主流程不能被钩子抽取拖死,任何异常吞掉只 log。 */
     public void extractAsync(Long scriptId) {
         try {
             extract(scriptId);
@@ -61,7 +57,6 @@ public class HookExtractor {
         }
     }
 
-    /** 测试触发用,失败抛异常。返回新落库的 SeriesHook。 */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public SeriesHook extract(Long scriptId) {
         long t0 = System.currentTimeMillis();

@@ -26,11 +26,7 @@ import java.util.Map;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 /**
- * 补全创作链路最前两环:
- *   选题脑暴 → 选题列表/详情 → 从某 topic 第一次生成脚本
- *
- * 之前的圈二只覆盖"已有 script 之后"(regenerate_script / generate_storyboard / ...),
- * 没有从零起点的入口,导致"对话式"的完整闭环断掉。
+ * 选题脑暴 → 选题列表/详情 → 从某 topic 第一次生成脚本。
  */
 @Slf4j
 @Component
@@ -72,7 +68,6 @@ public class TopicTools {
         return m;
     }
 
-    // ============ list_topics ============
     private class ListTopics implements ToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -109,7 +104,6 @@ public class TopicTools {
         }
     }
 
-    // ============ get_topic ============
     private class GetTopic implements ToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -142,7 +136,6 @@ public class TopicTools {
         }
     }
 
-    // ============ create_topic ============
     /**
      * 直接插入一条选题(不跑脑暴 LLM)。前端没有这个按钮 — 网页上选题只通过脑暴/hook 兑现产生。
      * 但 agent 场景下用户经常说"我想做 X 这个选题",每次都跑 brainstorm 太贵。直接落库一条 DRAFT 即可。
@@ -277,7 +270,6 @@ public class TopicTools {
         }
     }
 
-    // ============ brainstorm_topics ============
     private class BrainstormTopics implements ToolHandler {
         @Override public Risk risk() { return Risk.ACTION; }
         @Override
@@ -326,7 +318,6 @@ public class TopicTools {
         }
     }
 
-    // ============ generate_script_from_topic ============
     private class GenerateScriptFromTopic implements ToolHandler {
         @Override public Risk risk() { return Risk.ACTION; }
         @Override

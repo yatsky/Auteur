@@ -48,8 +48,7 @@ public class GlobalExceptionHandler {
 
     /**
      * 浏览器在下载中关连接 (用户暂停 video / 跳走 / HMR 刷新)。
-     * 响应已经在写,channel 关了,服务端没法再回任何 body —— 不算错误,降到 debug 级别静默吃掉。
-     * 不处理的话: 1) 误打成 ERROR 噪日志 2) generic() 想包成 JSON 又撞上 'video/mp4' 触发二次 HMNW.
+     * 响应已经在写,channel 关了,服务端没法再回任何 body — 不算错误,降到 debug 级别静默吞掉。
      */
     @ExceptionHandler(ClientAbortException.class)
     public void clientAbort(ClientAbortException e) {
@@ -57,9 +56,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * SSE / async 请求里:用户切页/刷新/调 cancel 端点 → fetch abort → socket 已断,
-     * 但 Spring 在 dispatch 阶段才发现并抛 AsyncRequestNotUsableException。这是正常取消路径,
-     * 不算错误。如果 generic() 接住会再一次因 Content-Type=text/event-stream 没 converter 二次报错。
+     * SSE / async 请求里:用户切页/刷新/调 cancel 端点 → fetch abort → socket 已断。
      * 跟 ClientAbortException 同处理:debug 日志静默吞掉。
      */
     @ExceptionHandler(AsyncRequestNotUsableException.class)
@@ -68,9 +65,8 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 客户端断开时除了 AsyncRequestNotUsableException,Spring 还可能直接冒泡 java.io.IOException(Broken pipe / Connection reset)
-     * 走 servlet 异常处理链。这种是网络层正常的"对端关闭",不是真错误,静默。
-     * 注意:只静默"客户端断"模式;别的真 IO 错误(磁盘读失败之类)按字面 message 不会匹配,会 fallthrough 给 generic()。
+     * 客户端断开时除了 AsyncRequestNotUsableException,Spring 还可能直接冒泡 java.io.IOException
+     * (Broken pipe / Connection reset)。这是网络层正常的"对端关闭",静默处理。
      */
     @ExceptionHandler(IOException.class)
     public ResponseEntity<Map<String, Object>> ioException(IOException e) {

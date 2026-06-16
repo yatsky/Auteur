@@ -1,5 +1,3 @@
-// 火山预训练音色目录(后端 VolcanoVoiceCatalog → /api/voice/catalog)。
-// 音色 select 从这里加载选项。
 import { http } from './client'
 
 export interface VolcanoVoice {
@@ -12,7 +10,6 @@ export interface VolcanoVoice {
 
 let cache: VolcanoVoice[] | null = null
 
-/** 拉一次缓存到内存,后续直接命中。 */
 export async function listVolcanoVoices(): Promise<VolcanoVoice[]> {
   if (cache) return cache
   const { data } = await http.get<VolcanoVoice[]>('/voice/catalog')
@@ -21,7 +18,6 @@ export async function listVolcanoVoices(): Promise<VolcanoVoice[]> {
 }
 
 /**
- * 试听:后端用配置的 demoText 合成 mp3,同 voiceType+speed 命中缓存零成本。
  * 仅 provider=volcano 可用,mock 时后端返回 500,前端兜底提示。
  */
 export async function previewVoice(voiceType: string, speed?: number): Promise<string> {

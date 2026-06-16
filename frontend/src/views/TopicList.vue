@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 选题池 —— 卡片网格 + 状态筛选 + 搜索 + 排序 + 待还钩子 banner + AI brainstorm
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {

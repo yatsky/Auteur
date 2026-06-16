@@ -1,6 +1,4 @@
-// useTheme —— 全局主题切换,持久化到 localStorage.auteur.theme
-// 存的是"用户偏好"(dark/light/auto),实际生效的 effective 主题在 auto 时跟随 prefers-color-scheme
-// 默认深色(.light 类不挂);切到浅色时给 <html> 加 .light 类,Tailwind 的 CSS 变量在 style.css 里跟着变
+// 切到浅色时给 <html> 加 .light 类,Tailwind 的 CSS 变量在 style.css 里跟着变。
 import { computed, ref, watch } from 'vue'
 
 export type Theme = 'dark' | 'light'
@@ -52,7 +50,7 @@ export function useTheme() {
     theme,
     pref,
     toggle() {
-      // sidebar 按钮:基于当前 effective 翻转,固化为显式 dark/light(覆盖 auto)
+      // 基于当前 effective 翻转,固化为显式 dark/light(覆盖 auto)
       pref.value = theme.value === 'dark' ? 'light' : 'dark'
     },
     set(p: ThemePref) {

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 封面工作台 —— sticky 顶栏 + script picker + 嵌入 CoverDesigner
 import { computed, ref } from 'vue'
 import { ArrowLeft, Loader2, Wand2 } from 'lucide-vue-next'
 import { useRecentScripts } from '../composables/useRecentScripts'

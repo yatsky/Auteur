@@ -48,7 +48,7 @@ public class VideoAsset {
     @Column(name = "is_final", nullable = false)
     private Boolean isFinal = false;
 
-    /** V30: 渲染时采用的 bgm_track,NULL = 无 BGM。不建 FK 让历史视频在 bgm_track 被清后仍存。 */
+    /** 渲染时采用的 bgm_track,NULL = 无 BGM。不建 FK 让历史视频在 bgm_track 被清后仍存。 */
     @Column(name = "bgm_track_id")
     private Long bgmTrackId;
 

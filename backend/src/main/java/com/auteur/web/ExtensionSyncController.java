@@ -17,9 +17,8 @@ import java.util.Map;
 
 /**
  * 浏览器插件回写已发布视频 KPI 的端点。
- *
- * 鉴权:ExtensionTokenFilter 通过 X-Extension-Token 校验,本控制器到这一步只信任请求体本身。
- * 语义:复用 PublishedVideoUpsertService.upsert 的字段级 merge,逐行 try/catch,部分失败不影响其余行。
+ * 鉴权:ExtensionTokenFilter 通过 X-Extension-Token 校验。
+ * 语义:复用 PublishedVideoUpsertService.upsert 字段级 merge,逐行 try/catch 部分失败不影响其余行。
  */
 @Slf4j
 @RestController

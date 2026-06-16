@@ -27,17 +27,7 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 /**
- * P2 - 资产/发布/试听 工具集:
- *
- *   - recommend_bgm           (ACTION) 拉 Jamendo 候选曲(可能调外部 API)
- *   - select_bgm              (WRITE)  选定曲并下载到本地(写 script_bgm_choice + 文件)
- *   - audit_image_asset       (ACTION) 单图重审(异步,返 runId)
- *   - generate_voice_demo     (ACTION) 试听 voice 音色(可能合成新 mp3 缓存)
- *   - create_published_video  (WRITE)  录入已发布视频
- *   - bulk_create_published_videos (WRITE) 批量录入(merge 语义,不整批 rollback)
- *   - delete_published_video  (WRITE)  删已发布视频
- *
- * 多数是单 entity save 或调现有 @Transactional 的 service,不需要外层事务。
+ * 资产/发布/试听 工具集。
  */
 @Slf4j
 @Component
@@ -62,7 +52,6 @@ public class AssetAndPublishedTools {
         registry.register(new DeletePublishedVideo());
     }
 
-    // ============ recommend_bgm ============
     private class RecommendBgm implements ActionToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -86,7 +75,6 @@ public class AssetAndPublishedTools {
         }
     }
 
-    // ============ select_bgm ============
     private class SelectBgm implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -118,7 +106,6 @@ public class AssetAndPublishedTools {
         }
     }
 
-    // ============ audit_image_asset ============
     private class AuditImageAsset implements ActionToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -142,7 +129,6 @@ public class AssetAndPublishedTools {
         }
     }
 
-    // ============ generate_voice_demo ============
     private class GenerateVoiceDemo implements ActionToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -170,7 +156,6 @@ public class AssetAndPublishedTools {
         }
     }
 
-    // ============ create_published_video ============
     private class CreatePublishedVideo implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -245,7 +230,6 @@ public class AssetAndPublishedTools {
         );
     }
 
-    // ============ bulk_create_published_videos ============
     private class BulkCreatePublishedVideos implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -288,7 +272,6 @@ public class AssetAndPublishedTools {
         }
     }
 
-    // ============ delete_published_video ============
     private class DeletePublishedVideo implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {

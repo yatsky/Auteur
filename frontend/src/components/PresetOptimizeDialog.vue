@@ -1,9 +1,4 @@
 <script setup lang="ts">
-// PresetOptimizeDialog —— 预设编辑器各 tab 顶部的"AI 优化"对话框。
-// 用户描述对当前 section 的不满,后端调 LLM 重新生成该 section 涉及的字段,
-// 用户可预览 explanation,选择"应用"覆盖编辑器 draft 或"再来一次"换说法重投。
-//
-// 不直接落库 — 应用后字段写回父组件 draft,父组件依旧需要点"保存"才落 DB。
 import { computed, ref, watch } from 'vue'
 import { Loader2, Sparkles, X, Check, RotateCcw } from 'lucide-vue-next'
 import { optimizePreset } from '../api/presets'
@@ -118,7 +113,6 @@ function previewValue(key: string): string {
         {{ error }}
       </div>
 
-      <!-- 输入阶段 -->
       <template v-if="!result">
         <label class="flex flex-col gap-1">
           <span class="text-xs text-text-muted">你希望怎么改?(越具体越好)</span>
@@ -151,7 +145,6 @@ function previewValue(key: string): string {
         </div>
       </template>
 
-      <!-- 预览阶段 -->
       <template v-else>
         <div class="card p-3 mb-3 bg-accent-soft border-accent/30 text-sm">
           <div class="text-xs text-text-muted mb-1 flex items-center gap-1.5">

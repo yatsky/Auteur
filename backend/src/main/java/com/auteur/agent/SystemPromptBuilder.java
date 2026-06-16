@@ -15,9 +15,7 @@ import java.nio.charset.StandardCharsets;
  *
  * 拼接两部分:
  *   1. classpath:agent/system_prompt.md — 通用规则、角色、工具速查
- *   2. SkillRegistry.buildCatalog() — 任务剧本目录(每个 skill 一行 name+summary,按需 read_skill 读全文)
- *
- * 第二部分让 system prompt 不会被 4 个 skill 全文塞满几千 token,只放目录。
+ *   2. SkillRegistry.buildCatalog() — 任务剧本目录(每个 skill 一行 name+summary)
  */
 @Slf4j
 @Component

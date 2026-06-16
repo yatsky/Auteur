@@ -14,18 +14,13 @@ import java.util.Map;
 /**
  * 解析 storyboard 阶段产出的镜头时长 → ffmpeg 实际烧入的镜头时长。
  *
- * 核心问题:LLM 估算的 duration_seconds 是规划值,与 TTS 实际播放速度无关。
- * 一律按规划值喂 ffconcat 会导致总时长不等于音频时长,声画错位。
- *
  * 三档策略,自上而下回落:
- *   PRECISE_BY_CUE   每 shot 的 anchor_cue_start/end 给出 cue 区间,直接用 cues 时间戳算时长
- *   PRECISE_BY_SECTION  script_section 文本流与 SRT cue 文本流字符位置等比例对齐 → 每段真实起止毫秒;
- *                       同 section 内的 shot 按 LLM 估算占比分配
- *   UNIFORM_SCALE    voiceDurationSec 已知时,所有 shot 时长按 voiceDur/rawTotal 等比缩放
- *   RAW              没有音频时长信息时,LLM 估算原样使用
+ *   PRECISE_BY_CUE      每 shot 的 anchor_cue_start/end 给出 cue 区间,直接用 cues 时间戳算时长
+ *   PRECISE_BY_SECTION  script_section 文本流与 SRT cue 文本流字符位置等比例对齐;同 section 内 shot 按 LLM 估算占比分配
+ *   UNIFORM_SCALE       voiceDurationSec 已知时,所有 shot 时长按 voiceDur/rawTotal 等比缩放
+ *   RAW                 没有音频时长信息时,LLM 估算原样使用
  *
  * PRECISE 拒绝条件:sections/cues 空、shot 缺 sectionCode、cueChars/sectionChars 越界 [0.6, 1.6]。
- * 字符等比例映射在中文语料上很精准:1 字 ≈ 1 音节,语速恒定时字符位置 ≈ 时间位置。
  */
 @Slf4j
 public final class ShotTimingResolver {
@@ -36,14 +31,11 @@ public final class ShotTimingResolver {
 
     /**
      * introSec: SRT 第一条 cue 开始时间(秒)。PRECISE 时 > 0 表示音频有前置静音/intro,
-     * 调用方应把这段时间加到第一个可渲染 clip 的 duration 上。UNIFORM_SCALE / RAW 时为 0.0。
+     * 调用方应把这段时间加到第一个可渲染 clip 的 duration 上。
      */
     public record Resolution(List<Double> durations, Strategy strategy, String reason, double introSec) {}
 
-    /**
-     * 仅做 section 级 SRT 对齐(给"对齐画面"按钮用):脚本 sections 与 SRT cue 字符位置等比例对齐,
-     * 返回每个 section 的真实起止毫秒。失败原因同 PRECISE 拒绝条件,失败时返回 empty Optional。
-     */
+    /** section 级 SRT 对齐(给"对齐画面"按钮用)。失败时返回 empty Optional。 */
     public static java.util.Optional<java.util.LinkedHashMap<String, double[]>> resolveSectionRangesBySrt(
             List<ScriptSection> sectionsInOrder,
             List<SrtParser.Cue> cues) {
@@ -121,15 +113,9 @@ public final class ShotTimingResolver {
     }
 
     /**
-     * PRECISE_BY_CUE:每 shot 的 anchor_cue_start / anchor_cue_end 给出 SRT cue 区间(1 起,inclusive),
-     * 直接用 cues 时间戳算时长。
-     *
-     * shot[i] 时长 = cue[next.start-1].startMs - cue[i.start-1].startMs(中间镜延伸到下个 shot 的 cue 起点),
-     * 末镜止于自己 cue 末。这样消化 cue 间换气间隙,画面在每个 cue 起点切换,跟字幕完美同步。
-     *
-     * introSec(cue[0].startMs 之前的开头静音)由 VideoAssemblyService 单独加给第一镜,这里 result 不含。
-     *
-     * 拒绝条件:cues 空、shot 缺 anchor、anchor 区间越界/倒序/不连续。
+     * PRECISE_BY_CUE:每 shot 的 anchor_cue_start / anchor_cue_end 给出 SRT cue 区间,直接用 cues 时间戳算时长。
+     * shot[i] 时长 = cue[next.start-1].startMs - cue[i.start-1].startMs;末镜止于自己 cue 末。
+     * introSec(cue[0].startMs 之前的开头静音)由 VideoAssemblyService 单独加给第一镜。
      */
     private static Resolution tryPreciseByCue(List<StoryboardShot> shotsInOrder,
                                               List<SrtParser.Cue> cues) {
@@ -243,11 +229,10 @@ public final class ShotTimingResolver {
             sectionCharCum = sectionEndChar;
         }
 
-        // 末段 endMs 兜底:SRT 末尾可能比 voice 早收(火山 sentence text 内嵌 \n 导致末段 SRT 块被
-        // SrtParser drop;或 voice 末尾自然收尾静音不在 SRT 里)。
+        // 末段 endMs 兜底:SRT 末尾可能比 voice 早收。
         //   ≤ 2s   :voice 自然收尾余音,不动
         //   2-10s  :小尾部静音,把多出时间扩展到末段 endMs,均摊到该段所有 shot
-        //   > 10s  :SRT 数据严重缺失,不扩展(否则末段画面过慢);log warn 提示重跑 voice
+        //   > 10s  :SRT 数据严重缺失,不扩展;log warn
         double lastCueEndMs = cues.get(cues.size() - 1).endMs();
         if (voiceDurationSec != null && voiceDurationSec > 0) {
             double voiceMs = voiceDurationSec * 1000.0;

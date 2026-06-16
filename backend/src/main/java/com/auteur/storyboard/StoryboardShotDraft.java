@@ -37,17 +37,14 @@ public class StoryboardShotDraft {
     @JsonProperty("negative_prompt")
     private String negativePrompt;
 
-    /**
-     * 字面锚定。LLM 必须从 script.full_text 摘一个 6-15 字的连续短语,
-     * StoryboardService 会 validate 它是否在 fullText 里命中。
-     */
+    /** 字面锚定。LLM 从 script.full_text 摘 6-15 字短语,StoryboardService 校验它在 fullText 命中。 */
     @JsonProperty("anchor_text")
     private String anchorText;
 
     /**
      * 该 shot 对应的 SRT cue 序号区间(1 起,inclusive)。
      * 所有 shot 的区间必须严格升序、相邻不重叠不缺失,合并起来覆盖 [1, cuesSize]。
-     * PRECISE_BY_CUE 模式下强制要求,其它模式可空。
+     * PRECISE_BY_CUE 模式下强制要求。
      */
     @JsonProperty("anchor_cue_indices")
     private java.util.List<Integer> anchorCueIndices;

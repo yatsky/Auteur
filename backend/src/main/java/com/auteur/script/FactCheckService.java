@@ -74,17 +74,12 @@ public class FactCheckService {
         }
     }
 
-    /**
-     * 异步事实核查:立即返回 runId,worker 在 pipelineExecutor 跑。
-     * 适合 grok 联网核证不收敛延迟的场景。
-     */
     public Long factCheckAsync(Long scriptId, String triggeredBy) {
         Map<String, Object> params = Map.of("scriptId", scriptId, "mode", "async");
         return runService.runAsync(PipelineStage.FACTCHECK, null, scriptId, params, triggeredBy, "FactCheck",
                 runId -> doFactCheck(scriptId, runId).size());
     }
 
-    /** runId 用来回写进度 (lastCompletedIndex / totalItems)。 */
     private List<FactCheckIssue> doFactCheck(Long scriptId, Long runId) {
         long t0 = System.currentTimeMillis();
         Script script = scriptRepository.findById(scriptId)
@@ -132,7 +127,6 @@ public class FactCheckService {
             return List.of();
         }
 
-        // Pass 1 完了,把 Pass 2 总条数告诉 run —— UI 能拿来画进度条
         if (runId != null) runService.updateProgress(runId, 0, drafts.size());
 
         // Pass 2:grok 联网逐条核证

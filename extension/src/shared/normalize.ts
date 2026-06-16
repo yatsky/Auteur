@@ -1,10 +1,3 @@
-/**
- * 把 4 个平台原始接口响应 JSON 转成 PublishedVideoUpsert[]。
- * 每个平台一个 normalizer,识别不出返回 [],让 background 无脑 concat。
- *
- * 4 个 normalizer 形态高度同构(提数组 → 逐项转换 → push),用 createNormalizer 工厂生成,
- * 平台特异逻辑只剩"怎么取行 / 怎么取必填三件套 / 怎么映射选填字段"三块。
- */
 import type { Platform, PublishedVideoUpsert } from './types'
 
 export interface RawCapture {
@@ -36,10 +29,7 @@ function toStr(v: unknown): string | null {
   return String(v)
 }
 
-/**
- * 0~1 浮点比率 → 0~100 百分数,保留两位小数。
- * 容错:已是 1~100 的百分数(老接口偶发)原样返回。
- */
+/** 0~1 浮点比率 → 0~100 百分数。容错:已是 1~100 的百分数(老接口偶发)原样返回。 */
 function ratioToPct(v: unknown): number | null {
   const n = toNum(v)
   if (n === null) return null
@@ -83,10 +73,6 @@ interface NormalizerConfig {
   optional: (item: Obj) => Partial<PublishedVideoUpsert>
 }
 
-/**
- * 工厂:把"提行 → 必填校验 → 选填映射 → push"的循环骨架抽出来,
- * 平台 normalizer 只声明 4 块差异(平台名/取行/必填取法/选填映射)。
- */
 function createNormalizer(cfg: NormalizerConfig): (raw: unknown) => PublishedVideoUpsert[] {
   return (raw: unknown): PublishedVideoUpsert[] => {
     if (!raw || typeof raw !== 'object') return []

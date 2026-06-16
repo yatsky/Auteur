@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 /**
- * 校验浏览器插件请求里的 X-Extension-Token,保护 /api/extension/** 不被任意来源调用。
+ * 校验 X-Extension-Token,保护 /api/extension/** 不被任意来源调用。
  * 每次请求从 RuntimeConfig 拿 token(纯 DB),允许 UI 改 token 立即生效。
  */
 @Slf4j

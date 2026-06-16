@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// 文件批量导入对话框:.xlsx / .xls / .csv → bulkImport (单视频通道) 或 bulkImportGenreStats (聚合表)
-// 父用 v-model:open 控制开关,传可选 scripts 列表给关联脚本下拉。
 import { ref, watch } from 'vue'
 import { FileSpreadsheet, Loader2, Upload, X } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
@@ -19,7 +17,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:open', value: boolean): void
-  (e: 'imported'): void  // 单视频通道导入完成后通知父刷新列表
+  (e: 'imported'): void
 }>()
 
 const router = useRouter()
@@ -48,7 +46,6 @@ const csvAggregateResult = ref<GenreStatBulkResult | null>(null)
 const pendingAggregateRows = ref<GenreStatUpsert[] | null>(null)
 const pendingAggregateWarnings = ref<string[]>([])
 
-// 打开时重置全部状态
 watch(
   () => props.open,
   (open) => {

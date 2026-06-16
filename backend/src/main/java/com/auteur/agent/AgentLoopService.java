@@ -25,19 +25,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
- * Agent Loop 核心。
- *
- * turn(sessionId, userText, emitter):
- *   1) 落 user 消息 → 推 user_saved
- *   2) 重放 (system + 历史) 给 LLM,带上注册的工具
- *   3) LLM 返回:
- *        - 含 tool_calls → 落 assistant 行(带 tool_calls_json)→ 推 assistant_done
- *                       → 逐个执行工具(每个落一行 tool 消息 + 推 tool_call/tool_result)
- *                       → 回到 step 2(让 LLM 看到结果)
- *        - 纯文本     → 落 assistant 终消息 → 推 assistant_done + done,完
- *   4) 兜底:循环超过 MAX_TURNS(8)推 error 终止
- *
- * 持久化全部委托给 AgentMessagePersister,本类只编排流程,不直接持库。
+ * Agent Loop 核心。turn(sessionId, userText, emitter) 编排一轮 LLM ↔ 工具调用循环。
+ * 持久化全部委托给 AgentMessagePersister。
  *
  * 协议守恒:assistant.tool_calls 必须与 tool message 一一对齐,缺一个 LLM 下次重放就 400。
  *   所有可能跳过 tool 执行的分支(取消/超时/审批 cancelled/审批通过后立刻被取消)
@@ -58,8 +47,7 @@ public class AgentLoopService {
      */
     private static final int K_RECENT_USER_TURNS_DEFAULT = 6;
 
-    /** 重放给 LLM 时单条消息的字符上限。超过则用 surrogate-safe 截断 + 标记尾巴。
-     *  这是"控制 token 成本"的最后防线;DB 持久化不再截断,所以原文永远在库里。 */
+    /** 重放给 LLM 时单条消息的字符上限。DB 持久化原文,这里只控 token 成本。 */
     private static final int REPLAY_MAX_CHARS_DEFAULT = 32_000;
 
     /** 审批 future.get 的本地超时,稍大于 ApprovalGate 的 decision-timeout(默认 300s),留 5s 兜底。 */
@@ -138,7 +126,6 @@ public class AgentLoopService {
                     continue;
                 }
 
-                // 纯文本回复:落库 → 推 done → 完
                 AgentMessage assistantRow = persister.saveAssistantText(session, result);
                 sink.accept(AgentEvent.of("assistant_done", Map.of(
                         "messageId", assistantRow.getId(),
@@ -190,7 +177,7 @@ public class AgentLoopService {
 
     /**
      * 为未执行的 tool_call 补 CANCELLED placeholder,保护 OpenAI 协议(assistant.tool_calls ↔ tool message 必须一对一)。
-     * 也推一条 tool_result 事件给前端,UI 会把对应的 ApprovalCard/loading 状态切到"已取消"。
+     * 也推一条 tool_result 事件给前端。
      */
     private void fillCanceledToolPlaceholders(AgentSession session,
                                               List<ChatRequest.ToolCall> calls,
@@ -277,7 +264,6 @@ public class AgentLoopService {
 
     /**
      * 重放给 LLM 前把单条消息按字符上限截断,surrogate-safe(不切碎 emoji/扩展平面字符)。
-     * DB 里持久化的是原文,这里只是给 LLM 的副本节省 token。
      */
     String truncateForReplay(String s) {
         int max = replayMaxChars();
@@ -294,7 +280,6 @@ public class AgentLoopService {
      * 折叠老消息生成的占位 summary。不调 LLM 二次摘要(避免成本),用结构化拼接:
      *   - 用户问题首句列表(surrogate-safe 截断)
      *   - 期间调用过的工具名 + 状态(OK/ERROR/REJECTED/CANCELLED)分桶聚合
-     * 给 LLM 提供"知道之前发生过什么"的最小上下文,如需细节让它向用户问。
      */
     private String buildFoldedSummary(List<AgentMessage> folded) {
         List<String> userQuestions = new ArrayList<>();
@@ -481,8 +466,6 @@ public class AgentLoopService {
      *   - ApprovalGate.register 的 future 自带 60s completeOnTimeout,正常路径下到点会以 rejected 完成。
      *   - AgentCancellationRegistry.cancel 会同步调 ApprovalGate.cancelSession,该 sessionId 的所有挂起 future 立刻 cancelled 完成。
      *   - 因此 future.get(65s) 总会很快返回,不需要 500ms 轮询。
-     *
-     * preview 可空;非空时把 fieldName/before/after/summary 一并塞进 SSE event,前端用 DiffView 渲染。
      */
     private ApprovalGate.ApprovalDecision waitForApproval(
             Long sessionId, String toolCallId, String toolName, String argsJson,

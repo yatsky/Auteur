@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// 共用组件 —— 选一个脚本进入下游详情页
-// StoryboardList / ImageList / FactCheckList / VideoAssemblyList 都靠它
 import { computed, ref } from 'vue'
 import { ArrowLeft, Layers, Loader2, Search } from 'lucide-vue-next'
 import { useRecentScripts } from '../composables/useRecentScripts'
@@ -12,11 +10,8 @@ import { STAGE_LABELS, type PipelineRunStatus } from '../types'
 const props = defineProps<{
   title: string
   subtitle?: string
-  /** 点击行跳转到 `${routePrefix}/${scriptId}` */
   routePrefix: string
-  /** 顶部下方的提示文案,可选 */
   hint?: string
-  /** 表格无数据时的文案,默认「还没有脚本相关的 pipeline run」 */
   emptyText?: string
 }>()
 
@@ -66,7 +61,6 @@ const TABS: { key: Tab; label: string }[] = [
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex flex-col gap-1">
         <div class="flex items-center gap-4 flex-wrap">

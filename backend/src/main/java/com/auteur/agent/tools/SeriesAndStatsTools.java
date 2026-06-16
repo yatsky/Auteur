@@ -35,18 +35,7 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 /**
- * P2 - 系列 / 体裁基准 / Insight 工具集:
- *
- *   - dismiss_series_hook       (WRITE) 软删 hook(设 dismissed_at)
- *   - undismiss_series_hook     (WRITE) 撤销忽略
- *   - fulfill_hook_with_new_topic (WRITE) hook → 新 Topic + 回填 toTopicId
- *   - create_series             (WRITE)
- *   - delete_series             (WRITE) 系列下还有选题时拒绝
- *   - create_genre_stat         (WRITE) 体裁基准快照单条
- *   - bulk_create_genre_stats   (WRITE) 批量(merge 语义)
- *   - delete_genre_stat         (WRITE)
- *   - recompute_potential_scores (ACTION) 重算所有 DRAFT 选题的 potential_score
- *   - attribute_video           (ACTION) 单视频归因 — LLM 算"为什么数据好/差"
+ * 系列 / 体裁基准 / Insight 工具集。
  */
 @Slf4j
 @Component
@@ -84,7 +73,6 @@ public class SeriesAndStatsTools {
         return (s == null || s.isBlank()) ? null : s.trim();
     }
 
-    // ============ dismiss_series_hook ============
     private class DismissSeriesHook implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -112,7 +100,6 @@ public class SeriesAndStatsTools {
         }
     }
 
-    // ============ undismiss_series_hook ============
     private class UndismissSeriesHook implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -142,7 +129,6 @@ public class SeriesAndStatsTools {
         }
     }
 
-    // ============ fulfill_hook_with_new_topic ============
     private class FulfillHookWithNewTopic implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -216,7 +202,6 @@ public class SeriesAndStatsTools {
         }
     }
 
-    // ============ create_series ============
     private class CreateSeries implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -255,7 +240,6 @@ public class SeriesAndStatsTools {
         }
     }
 
-    // ============ delete_series ============
     private class DeleteSeries implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -285,7 +269,6 @@ public class SeriesAndStatsTools {
         }
     }
 
-    // ============ create_genre_stat ============
     private class CreateGenreStat implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -362,7 +345,6 @@ public class SeriesAndStatsTools {
         );
     }
 
-    // ============ bulk_create_genre_stats ============
     private class BulkCreateGenreStats implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -414,7 +396,6 @@ public class SeriesAndStatsTools {
         }
     }
 
-    // ============ delete_genre_stat ============
     private class DeleteGenreStat implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -440,7 +421,6 @@ public class SeriesAndStatsTools {
         }
     }
 
-    // ============ recompute_potential_scores ============
     private class RecomputePotentialScores implements ActionToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -467,7 +447,6 @@ public class SeriesAndStatsTools {
         }
     }
 
-    // ============ attribute_video ============
     private class AttributeVideo implements ActionToolHandler {
         @Override
         public ChatRequest.Tool definition() {

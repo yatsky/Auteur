@@ -1,10 +1,5 @@
 <script setup lang="ts">
-/**
- * 简易 line-based diff 视图。不引入 diff 库,自己做 LCS 找最长公共子序列,标 added/removed/equal。
- *
- * 算法:经典 DP 求 LCS,然后回溯输出三类行(equal/add/del)。
- * 长文本(>500 行)性能 O(N*M) 可能慢,加个上限 fallback 到"上下并列"双块视图。
- */
+// 长文本(>500 行)性能 O(N*M) 可能慢,加上限 fallback 到上下并列双块视图。
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -43,11 +38,6 @@ const stats = computed(() => {
   return { add, del }
 })
 
-/**
- * LCS-based diff:
- *   1. 标准 DP 求最长公共子序列长度矩阵
- *   2. 回溯生成 (equal/add/del) 序列
- */
 function computeLcsDiff(a: string[], b: string[]): DiffLine[] {
   const n = a.length, m = b.length
   const dp: number[][] = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0))

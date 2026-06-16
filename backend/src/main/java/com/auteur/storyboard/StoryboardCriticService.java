@@ -18,10 +18,10 @@ import java.util.Set;
 /**
  * 摄影自审编辑 / Storyboard Critic
  *
- * 摄影出稿后的自审,只用硬规则:
- *   1. shot_type 多样性  — 30 镜不能全是中近景
- *   2. 极特写镜头数      — 至少 2(强调情绪定格)
- *   3. 中近景占比        — 不超过 60%
+ * 硬规则:
+ *   1. shot_type 多样性
+ *   2. 极特写镜头数
+ *   3. 中近景占比
  *   4. prompt_zh 重复检测
  *
  * 范围:仅 PRECISE_BY_CUE 模式启用,其它直接 PASS。
@@ -36,13 +36,8 @@ public class StoryboardCriticService {
     private final com.auteur.runtimeconfig.RuntimeConfig runtimeConfig;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    /** shot_type 至少出现的不同种类数。默认 4,通过 RuntimeConfig 读 DB 覆盖。 */
     private static final int MIN_SHOT_TYPE_VARIETY_DEFAULT = 4;
-
-    /** 中近景占比上限。默认 0.60。 */
     private static final double MAX_MID_RATIO_DEFAULT = 0.60;
-
-    /** 完全重复 prompt_zh 的最大允许组数(任意 group >= 2 即触发)。默认 0。 */
     private static final int MAX_DUPLICATE_GROUPS_DEFAULT = 0;
 
     private int minShotTypeVariety() { return runtimeConfig.getInt("auteur.storyboard.critic.min-shot-type-variety", MIN_SHOT_TYPE_VARIETY_DEFAULT); }
@@ -54,10 +49,7 @@ public class StoryboardCriticService {
 
     private static final Set<String> MID_KEYWORDS = Set.of("中近景", "中景", "近景");
 
-    /**
-     * 自审入口。返回的 decision = PASS / REWRITE。
-     * scriptId 仅用于 critic_log 落库追溯,可空。
-     */
+    /** scriptId 仅用于 critic_log 落库追溯,可空。 */
     public StoryboardCriticResult audit(List<StoryboardShotDraft> drafts, Topic topic, Long scriptId) {
         StoryboardCriticResult result = doAudit(drafts, topic);
         writeLog(result, topic, scriptId);

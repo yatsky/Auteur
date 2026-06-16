@@ -22,9 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * BGM 业务核心:recommend / loadMore 拉 mood → 调 Jamendo → upsert bgm_track;select 落 script_bgm_choice + 上 TOS。
- */
 @Slf4j
 @Service
 public class BgmService {
@@ -32,6 +29,7 @@ public class BgmService {
     private static final int RECOMMEND_LIMIT = 3;
     /** 第一次内部多拉点缓存进 bgm_track,后续"换一批"基本不打 Jamendo。 */
     private static final int FETCH_BUFFER = 9;
+
 
     private final BgmMoodTagger moodTagger;
     private final JamendoClient jamendoClient;
@@ -74,7 +72,6 @@ public class BgmService {
     public record ChoiceDto(Long scriptId, Long bgmTrackId, BigDecimal volume,
                             String trackName, String trackArtist) {}
 
-    /** 首次进 BgmPicker:打 mood + 拉 Jamendo + 返回前 3 条。 */
     @Transactional
     public List<BgmTrackDto> recommend(Long scriptId) {
         if (!scriptRepository.existsById(scriptId)) {
@@ -84,7 +81,6 @@ public class BgmService {
         return fetchAndUpsert(mood, RECOMMEND_LIMIT, 0);
     }
 
-    /** "换一批":复用已缓存的 mood,Jamendo 分页拉 +offset 条。 */
     @Transactional
     public List<BgmTrackDto> loadMore(Long scriptId, int offset) {
         if (!scriptRepository.existsById(scriptId)) {
@@ -117,7 +113,7 @@ public class BgmService {
         return persisted.stream().limit(limit).map(BgmTrackDto::of).toList();
     }
 
-    /** 用户选定:upsert script_bgm_choice + 按需下 mp3 上 TOS。volume 越界 clamp 到 [0.05, 0.6]。 */
+    /** volume 越界 clamp 到 [0.05, 0.6]。 */
     @Transactional
     public ChoiceDto select(Long scriptId, Long bgmTrackId, BigDecimal volume) {
         if (!scriptRepository.existsById(scriptId)) {
@@ -149,7 +145,6 @@ public class BgmService {
         return new ChoiceDto(scriptId, bgmTrackId, vol, track.getName(), track.getArtistName());
     }
 
-    /** script 当前选定的 BGM(可能没选)。 */
     public Optional<ScriptBgmChoice> getChoice(Long scriptId) {
         return choiceRepository.findById(scriptId);
     }
@@ -160,10 +155,7 @@ public class BgmService {
                 .orElse(false);
     }
 
-    /**
-     * 给 RemotionVideoRenderer 用的 BGM TOS https URL(Remotion 浏览器不支持 file://)。
-     * 缺记录或 local_path 不是 https(历史本地路径)→ null。
-     */
+    /** Remotion 浏览器不支持 file://;缺记录或非 https → null。 */
     public String tosUrl(Long bgmTrackId) {
         return trackRepository.findById(bgmTrackId)
                 .map(BgmTrack::getLocalPath)

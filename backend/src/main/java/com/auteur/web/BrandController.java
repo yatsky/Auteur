@@ -9,12 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 账号品牌包配置 API,单行模型。
- *  - GET /api/brand-identity   取当前(没有就返回默认)
- *  - PUT /api/brand-identity   全量保存(空串 = 清空对应字段;颜色字段不接受空值)
- * logo 上传走前端转 base64 后塞 logoDataUrl(不开 multipart 端点)。
- */
+/** 账号品牌包配置 API,单行模型。logo 走 base64 dataUrl,不开 multipart 端点。 */
 @RestController
 @RequestMapping("/api/brand-identity")
 @RequiredArgsConstructor

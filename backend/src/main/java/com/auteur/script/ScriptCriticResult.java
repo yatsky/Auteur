@@ -9,8 +9,6 @@ import java.util.List;
 /**
  * 编剧自审产物。Layer 1(硬规则)和 Layer 2(LLM)合并后的统一结果。
  * decision 决定 ScriptService 是否触发"带反馈重投"。
- *
- * 字段 schema 与 ImageAuditResult 对齐(score/decision/issues),便于将来抽公共基类。
  */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -22,10 +20,9 @@ public class ScriptCriticResult {
     /** PASS / REWRITE。失败放行后由调用方降级。 */
     private String decision;
 
-    /** 扣分点 / 硬规则失败项,展示用。 */
     private List<String> issues;
 
-    /** 给"重写"用的反馈段落,会拼到原 user prompt 末尾。LLM 段输出。 */
+    /** 给"重写"用的反馈段落,会拼到原 user prompt 末尾。 */
     @JsonProperty("feedback_for_rewrite")
     private String feedbackForRewrite;
 }

@@ -1,13 +1,4 @@
 <script setup lang="ts">
-// CoverDesigner —— per-script 封面设计页。后端 Java2D 渲染接管。
-// 流程:
-//   1. onMounted:listCovers + getCoverDefaults + listShots/listImages
-//      - 已有 cover_asset → 表单从最新一行反构(用户改完再点"重新生成")
-//      - 否则用 defaults 回填(topic.title + 钩子段)
-//   2. 用户改文案/选模板/挑 hero
-//   3. 点"生成 3 张封面" → POST generate-async → 拿 runId → 3s 轮询 → DONE 后再 listCovers
-//   4. 右侧三比例区域:有 cover_asset 就显示 <img>,否则显示 CoverCanvas live 预览(让用户在生成前先看大概)
-// embedded=true 模式给 CoverList 套娃用 —— 隐藏返回按钮 + 顶部 chrome
 import { computed, onMounted, ref, watch } from 'vue'
 import { ArrowLeft, Download, Image as ImageIcon, Loader2, RefreshCw, Sparkles } from 'lucide-vue-next'
 import ErrorBanner from '../components/ErrorBanner.vue'
@@ -242,7 +233,7 @@ onMounted(load)
 
 <template>
   <div :class="[embedded ? '' : 'min-h-full']">
-    <!-- 非嵌入:sticky 顶栏 -->
+    <!-- 非嵌入 -->
     <div v-if="!embedded" class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex flex-col gap-1">
         <div class="flex items-center gap-4 flex-wrap">
@@ -269,7 +260,6 @@ onMounted(load)
       </div>
 
       <template v-else>
-        <!-- 操作条 -->
         <div class="card p-3 mb-4 flex items-center justify-between flex-wrap gap-3">
           <div class="text-sm flex items-center gap-2 flex-wrap">
             <span class="text-text-secondary">{{ scriptTitle || `script ${scriptId}` }}</span>
@@ -296,7 +286,6 @@ onMounted(load)
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4">
-        <!-- 左侧编辑表单 -->
         <div class="space-y-4">
           <div class="card p-5">
             <h2 class="text-base font-semibold mb-3">文案</h2>
@@ -396,7 +385,6 @@ onMounted(load)
           </div>
         </div>
 
-        <!-- 右侧三比例 —— 后端图优先,否则 canvas live 预览 -->
         <div class="space-y-4">
           <div class="card p-5">
             <h2 class="text-base font-semibold mb-4">三比例预览</h2>
@@ -412,13 +400,11 @@ onMounted(load)
                     <template v-else-if="r === '4:3'">1440×1080</template>
                     <template v-else>1920×1080</template>
                   </div>
-                  <!-- 已有后端图 -->
                   <img v-if="coversByRatio[r]"
                        :src="coversByRatio[r]!.fileUrl"
                        :alt="`cover ${r}`"
                        class="rounded border border-border-subtle bg-surface-tertiary"
                        :style="{ width: r === '3:4' ? '280px' : (r === '4:3' ? '320px' : '420px') }" />
-                  <!-- 未生成 → live canvas 预览 -->
                   <CoverCanvas v-else
                     :ref="(el: any) => { if (r === '3:4') canvas34 = el; else if (r === '4:3') canvas43 = el; else canvas169 = el }"
                     :ratio="r" :brand="brand" :design="design"

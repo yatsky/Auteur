@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 左侧分镜网格的单张卡片。selected/blocked/missing 状态边框由 props 决定。
 import { computed } from 'vue'
 import { ImageIcon, ImageOff, ShieldAlert, Sparkles } from 'lucide-vue-next'
 import type { ImageAsset, StoryboardShot } from '../../types'

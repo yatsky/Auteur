@@ -35,7 +35,6 @@ import java.util.TreeMap;
  *  - SRT 真实对齐(优先):script 已生成过 voice 且 subtitle_url 能解析时,用 SRT cue 文本流字符位置等比例对齐
  *  - 字数估算(回落):没 voice / SRT 缺失 / SRT 与脚本字数偏差过大时,按 CHARS_PER_SEC 估算
  *
- * shot 级再分配:每个 section 的新时长按段内 shot 旧 duration_seconds 占比切分。
  * 不重新生成 voice / 不重新渲染 video / 不动 image_asset —— 只刷数字。
  */
 @Slf4j

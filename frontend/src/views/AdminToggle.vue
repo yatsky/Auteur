@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// Admin 模式切换页 — 访问 /admin?token=<your-token> 启用,/admin?logout=1 关闭。
-// 这不是真鉴权,只是 UI 层把私有 preset 隔离开。
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ShieldCheck, ShieldOff, ArrowLeft } from 'lucide-vue-next'
@@ -21,6 +19,7 @@ onMounted(() => {
   if (typeof q.token === 'string' && q.token.length > 0) {
     // 任何非空 token 都启用 — 没有真校验
     const ownerName = typeof q.owner === 'string' ? q.owner : '我'
+
     enableAdmin(ownerName)
     status.value = 'enabled'
     owner.value = ownerName

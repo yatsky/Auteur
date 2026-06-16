@@ -19,6 +19,12 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  // dev 模式下显式让 esbuild 预打包 lucide-vue-next:它含 3000+ 个独立 ESM 图标文件,
+  // 不预打包浏览器会逐个请求,40+ 组件叠加首屏要 30-60s。include 后会被打成单 chunk,
+  // 浏览器只请求 1 次,首屏 / 切页都恢复正常。
+  optimizeDeps: {
+    include: ['lucide-vue-next'],
+  },
   build: {
     rollupOptions: {
       output: {

@@ -1,12 +1,4 @@
 <script setup lang="ts">
-/**
- * 系统设置 — UI 编辑第三方密钥、对象存储、中转站等配置,落库到 app_config 表。
- *
- * 设计:
- *  - 按 category 分组(llm / tos / voice / bgm / extension),每组一个 card
- *  - secret 字段:initial value 是 mask(abcd****wxyz),用户点编辑才进入"输入新值"模式
- *  - 一次保存所有改动,只 PUT 用户实际改过的字段(避免把 mask 占位写回 DB)
- */
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, Loader2, Save, Settings, Eye, EyeOff, RotateCcw } from 'lucide-vue-next'
@@ -178,7 +170,6 @@ function isDirty(key: string): boolean {
             <span v-if="isDirty(item.configKey)" class="chip text-[9px] bg-amber-500/15 text-amber-700">已改动</span>
           </label>
 
-          <!-- secret 未展开:显示 mask + 编辑按钮 -->
           <div v-if="item.secret && !editingSecret[item.configKey]" class="flex gap-2 items-center">
             <input
               type="text"
@@ -191,7 +182,6 @@ function isDirty(key: string): boolean {
             </button>
           </div>
 
-          <!-- secret 展开 OR 非 secret:显示输入框 -->
           <div v-else class="flex gap-2 items-center">
             <input
               type="text"

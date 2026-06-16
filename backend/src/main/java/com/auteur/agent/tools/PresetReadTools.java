@@ -19,11 +19,6 @@ import java.util.Map;
 /**
  * 预设只读工具集。
  *
- * - list_presets:        摘要列表(不返 prompt yaml 等大字段,LLM 想看详情再调 get_preset)
- * - get_preset:          按 id 取完整字段(yaml 过长会截断成 first 4000 字 + 标注)
- * - get_preset_by_name:  按 name 取
- * - list_preset_versions: 历史版本列表
- *
  * 全部走 admin 视角(adminMode=true, ownerName=null) — Agent 控制台默认拥有完整可见性。
  */
 @Slf4j
@@ -93,7 +88,6 @@ public class PresetReadTools {
         );
     }
 
-    // -------- list_presets --------
     private class ListPresets implements ToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -128,7 +122,6 @@ public class PresetReadTools {
         }
     }
 
-    // -------- get_preset --------
     private class GetPreset implements ToolHandler {
         @Override
         public ChatRequest.Tool definition() {

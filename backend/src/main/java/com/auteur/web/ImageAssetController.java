@@ -15,11 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Image asset 级别(单张图)的精细化操作。批量操作仍走 ScriptController。
- *  - 单图重审:POST /api/images/{assetId}/audit-async
- *  - 选定为 final:POST /api/images/{assetId}/select-final  ← V42:点哪张用哪张
- */
+/** Image asset 级别(单张图)的精细化操作。批量操作仍走 ScriptController。 */
 @RestController
 @RequestMapping("/api/images")
 @RequiredArgsConstructor
@@ -28,17 +24,13 @@ public class ImageAssetController {
     private final ImageAuditService imageAuditService;
     private final ImageAssetRepository imageAssetRepository;
 
-    /** 单图重审,立即返回 runId,前端轮询 GET /api/runs/{runId},DONE 后刷新该镜下图片列表。 */
     @PostMapping("/{assetId}/audit-async")
     public Map<String, Object> auditAssetAsync(@PathVariable Long assetId) {
         Long runId = imageAuditService.auditAssetAsync(assetId, "API");
         return Map.of("runId", runId);
     }
 
-    /**
-     * 把这张 asset 设为本镜的 final(用于视频合成时挑图)。同 shot 下其他 asset 全部 unset。
-     * 用户点击图片卡片直接触发,无需走重生流程 — 历史 asset 都是合格候选,选哪张用哪张。
-     */
+    /** 把这张 asset 设为本镜的 final。同 shot 下其他 asset 全部 unset。 */
     @PostMapping("/{assetId}/select-final")
     @Transactional
     public Map<String, Object> selectAsFinal(@PathVariable Long assetId) {

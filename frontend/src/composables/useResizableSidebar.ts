@@ -1,24 +1,7 @@
 /**
  * 可拖拽宽度的侧边栏 composable。
  *
- * 用法:
- *   const { width, collapsed, dragging, startDrag } = useResizableSidebar({
- *     storageKey: 'auteur.app-sidebar',
- *     defaultWidth: 240,
- *     minWidth: 160,
- *     maxWidth: 360,
- *     collapseAtWidth: 130,
- *     collapsedStripWidth: 36,
- *     side: 'left',
- *   })
- *
- * - 展开态拖拽:实时改 width(像素值)。松手时若 width < collapseAtWidth,自动 collapsed=true 并把
- *   width 还原成 defaultWidth(下次展开恢复合理宽度);否则钳到 [minWidth, maxWidth]。
- * - 折叠态拖拽:从窄条边缘开始拖,只要往展开方向拖了几像素就立即展开,宽度跟手到 next。
- *   用户中途又拖回去太窄,松手时按展开态的判定再次决定是否折叠。
- * - width 与 collapsed 都持久化到 localStorage,key 派生自 storageKey。
- *
- * side='left' 表示侧栏在左,拖手在右边(向右拖变宽);'right' 反之。
+ * side='left' 侧栏在左,拖手在右边(向右拖变宽);'right' 反之。
  */
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 
@@ -28,7 +11,7 @@ export interface ResizableSidebarOptions {
   minWidth: number
   maxWidth: number
   collapseAtWidth: number
-  /** 折叠后窄条的宽度(px),用于折叠态拖拽时计算起始宽度。默认 36(对应 Tailwind w-9)。 */
+  /** 折叠后窄条的宽度(px),默认 36(对应 Tailwind w-9)。 */
   collapsedStripWidth?: number
   side: 'left' | 'right'
 }
@@ -118,7 +101,7 @@ export function useResizableSidebar(opts: ResizableSidebarOptions) {
     }
   }
 
-  // 组件卸载时若还在拖,清理监听器
+  // 卸载时若还在拖,清理监听器
   onBeforeUnmount(() => {
     if (cleanup) cleanup()
   })

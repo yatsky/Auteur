@@ -16,12 +16,9 @@ import java.util.regex.Pattern;
 /**
  * SRT cues → ASS subtitle 转换器。SRT 不支持 inline 颜色 tag,关键词高亮必须走 ASS。
  *
- * 关键词抽取规则三类:数字+量词、书名号/引号短引文、朝代/帝号字典。命中区间合并去重后插入 inline tag。
- *
  * 软断行先 wrap 再插 tag,避免 {\c...} 被换行切断。ASS 换行用 \N。
  *
- * libass 默认 PlayResY=288,fontsize/marginV 在该坐标系下与 SRT force_style 视觉一致
- * (fontSize=11 → 1920p 下约 73px;marginV=50 → 距底约 333px)。
+ * libass 默认 PlayResY=288,fontsize/marginV 在该坐标系下与 SRT force_style 视觉一致。
  */
 @Slf4j
 public final class AssSubtitleWriter {
@@ -31,7 +28,7 @@ public final class AssSubtitleWriter {
     /** ASS 颜色字面是 &HAABBGGRR(BGR 顺序);#FFD700 在 ASS 里是 0000D7FF。 */
     private static final String GOLD_BGR = "&H0000D7FF";
 
-    /** 数字 + 量词。\\d+ 必须跟一个单位,避免裸数字误命中(年份/编号都能套上"年""号")。 */
+    /** 数字 + 量词。\\d+ 必须跟一个单位,避免裸数字误命中。 */
     private static final Pattern NUM_UNIT = Pattern.compile(
             "\\d+(?:\\.\\d+)?\\s*(?:年|岁|人|两|万|千|百|匹|斤|里|天|月|日|次|个|位|名|户|尺|寸|丈|斗|桶)|"
                     + "两万|十万|百万|千万|半年|半月|两年|三年|五年|十年|百年|千年|万人|十日|百日|千日");

@@ -1,9 +1,5 @@
 <script setup lang="ts">
-// CoverCanvas —— 通用封面 canvas 预览组件。
-// 接收 ratio + brand + design + heroImg + logoImg,内部按 native 像素绘制(1080×1440 等),
-// CSS 缩放到 displayWidth 显示。用 watch 监听任何输入变化重画。
-//
-// 父组件通过 expose() 拿到内部 canvas 引用,用于 toBlob 导出。
+// native 像素绘制(1080×1440 等),CSS 缩放到 displayWidth 显示。父组件通过 expose() 拿 canvas 用于 toBlob 导出。
 import { computed, onMounted, ref, watch } from 'vue'
 import type { BrandIdentity, CoverDesign, CoverRatio } from '../../types'
 import { COVER_RATIO_DIMENSIONS } from '../../types'
@@ -29,7 +25,6 @@ function redraw() {
   if (!canvas) return
   const ctx = canvas.getContext('2d')
   if (!ctx) return
-  // native 像素由模板渲染按比例绘制,CSS 用 width/height style 缩放
   canvas.width = dim.value.w
   canvas.height = dim.value.h
   const tpl = getTemplate(props.design.templateId)

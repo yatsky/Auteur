@@ -8,7 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 /**
- * critic_log — 编剧/摄影自审结果(V49)。
+ * critic_log — 编剧/摄影自审结果。
  *
  * - role:SCRIPT / STORYBOARD,后续可扩 VOICE / COVER。
  * - score:0-100,Layer 1 硬规则失败固定 0,Layer 2 LLM 给的真实分。

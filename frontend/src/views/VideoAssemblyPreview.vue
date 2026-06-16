@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 视频组装预览 —— sticky 顶栏 + 预览/渲染面板 + 时间轴 + 历史成片
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
@@ -204,7 +203,6 @@ onBeforeUnmount(stopPlay)
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex flex-col gap-1">
         <div class="flex items-center gap-4 flex-wrap">
@@ -241,7 +239,6 @@ onBeforeUnmount(stopPlay)
       </template>
 
       <template v-else>
-        <!-- 预览 + 渲染面板 -->
         <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 mb-4">
           <div class="card p-4">
             <div class="aspect-[9/16] max-h-[500px] mx-auto bg-black rounded-lg relative overflow-hidden flex items-center justify-center">
@@ -340,7 +337,6 @@ onBeforeUnmount(stopPlay)
           </aside>
         </div>
 
-        <!-- 时间轴 -->
         <div class="card p-5 mb-4">
           <h2 class="text-base font-semibold mb-3 flex items-center gap-2">
             <ImageIcon :size="15" class="text-accent" /> 时间轴
@@ -396,7 +392,6 @@ onBeforeUnmount(stopPlay)
           </table>
         </div>
 
-        <!-- 历史成片 -->
         <div class="card p-5">
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-base font-semibold flex items-center gap-2">
@@ -451,11 +446,9 @@ onBeforeUnmount(stopPlay)
                   <div class="font-mono">¥{{ v.costYuan != null ? Number(v.costYuan).toFixed(4) : '-' }}</div>
                 </div>
               </div>
-              <!-- 视频播放器:支持本地 /api/ 路径 + TOS https URL -->
               <video v-if="v.videoUrl && (v.videoUrl.startsWith('/api/') || v.videoUrl.startsWith('http'))"
                      :src="v.videoUrl" controls preload="none"
                      class="w-full max-w-[360px] mt-1 rounded-md bg-black" />
-              <!-- 下载按钮(支持本地 + TOS) -->
               <a
                 v-if="v.videoUrl"
                 :href="v.videoUrl"

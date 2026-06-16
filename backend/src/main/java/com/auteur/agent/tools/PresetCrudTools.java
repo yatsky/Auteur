@@ -17,11 +17,6 @@ import java.util.Map;
 
 /**
  * 预设 CRUD 工具:create / delete / duplicate。
- *
- * 圈一只覆盖了"修改已有预设字段",CRUD 操作前端"新建预设""复制""删除"按钮没对应工具,
- * 用户从零起步必须去网页 UI。
- *
- * duplicate_preset 是"先 GET 再 POST"的语义糖,LLM 自己也能拼,但工具内置一次性完成更短。
  */
 @Slf4j
 @Component
@@ -87,7 +82,6 @@ public class PresetCrudTools {
     private class CreatePreset implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
-            // schema 列出"必填"加部分关键可选;LLM 看到 description 知道全字段集合。
             return ChatRequest.Tool.of(
                     "create_preset",
                     "新建预设。必填:name(全局唯一,如 my_lifecopy)、scriptPromptYaml、storyboardPromptYaml、" +
@@ -150,7 +144,7 @@ public class PresetCrudTools {
         @Override
         public Object execute(JsonNode args) {
             long id = args.get("presetId").asLong();
-            Preset p = presetService.get(id); // 让 service 抛 404 + 用作 summary
+            Preset p = presetService.get(id);
             presetService.delete(id);
             log.info("[Agent] delete_preset id={} name={}", id, p.getName());
             return Map.of("ok", true, "id", id, "name", p.getName());
@@ -184,7 +178,6 @@ public class PresetCrudTools {
 
             Preset src = presetService.get(sourceId);
             Preset copy = new Preset();
-            // 字段照抄,但 id/name/version/timestamps 独立
             copy.setName(newName);
             copy.setDisplayName(newDisplayName != null ? newDisplayName
                     : (src.getDisplayName() == null ? newName : src.getDisplayName() + " 副本"));

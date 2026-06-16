@@ -1,9 +1,5 @@
 <script setup lang="ts">
-/**
- * 输入框。Enter 发送,Shift+Enter 换行;busy 时禁用 + 显示 loading 文案。
- *
- * 暴露 fillText(text) 让父组件预填(ActionPalette 点击模板时用)。
- */
+// 暴露 fillText(text) 让父组件预填(ActionPalette 点击模板时用)。
 import { ref, watch, nextTick } from 'vue'
 import { Send, Loader2 } from 'lucide-vue-next'
 

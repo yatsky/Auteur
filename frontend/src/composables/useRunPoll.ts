@@ -1,6 +1,3 @@
-// 异步 run 状态轮询 —— 业务页(factcheck/storyboard/voice/cover/video/topic-script-gen)反复用同一套:
-//   POST /xxx-async → 拿 runId → 立即 pollOnce → 每 3s 轮询 → DONE/FAILED/CANCELLED 时 stop 并回调
-// 这里抽出来,组件只关心 onDone 后干什么(reload 列表)/ onFailed 后显示什么提示。
 import { onBeforeUnmount, ref } from 'vue'
 import { getRun } from '../api/runs'
 import type { PipelineRun } from '../types'
@@ -12,7 +9,7 @@ export interface RunPollHandlers {
   intervalMs?: number
 }
 
-/** 启动一个独立的轮询。返回 stop 函数。组件级生命周期由调用方管。 */
+/** 启动独立轮询,返回 stop 函数。组件生命周期由调用方管。 */
 export function startRunPoll(runId: number, h: RunPollHandlers): () => void {
   const intervalMs = h.intervalMs ?? 3000
   let timer: number | null = null
@@ -43,7 +40,7 @@ export function startRunPoll(runId: number, h: RunPollHandlers): () => void {
   return stop
 }
 
-/** 单实例轮询 —— 持有 run + start/stop。组件 unmount 时自动 stop。 */
+/** 单实例轮询 —— unmount 时自动 stop。 */
 export function useRunPoll(handlers: RunPollHandlers = {}) {
   const run = ref<PipelineRun | null>(null)
   let stopFn: (() => void) | null = null

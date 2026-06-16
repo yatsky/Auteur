@@ -1,14 +1,4 @@
 <script setup lang="ts">
-/**
- * AI 模型 — 流水线每一步用到的模型在这里集中管理,落 app_config 表(category='model')。
- *
- * 设计:
- *  - 17 个 step 的 model 都是 KV 行 auteur.model.<step>,值就是模型 ID 字符串
- *  - 按用途分 5 组卡片(脚本/BGM 钩子/分镜审图/图像/Agent),每组 hard-coded 中文 label
- *  - 「脚本流程」「图像生成」组里的值仅作"预设未指定时的全局默认",顶部 banner 解释清楚
- *  - 复用 listAppConfig / updateAppConfig API,前端按 category==='model' 过滤
- *  - 改动 → 批量 PUT,只发用户改过的 key
- */
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, Loader2, Save, Cpu, RotateCcw } from 'lucide-vue-next'
@@ -26,10 +16,6 @@ const successMsg = ref<string | null>(null)
 /** key → 用户改后的新值。key 在表里 = 用户改过这一项 */
 const edits = ref<Record<string, string>>({})
 
-/**
- * 步骤分组定义。order 决定 UI 渲染顺序;每组 keys 列表里是 step 短名(对应 auteur.model.<step>)。
- * presetOverridable=true 的组在卡片顶部多一行说明:用户在预设里指定了就以预设为准,本页只是兜底。
- */
 const GROUPS: Array<{
   id: string
   label: string
@@ -71,7 +57,6 @@ const GROUPS: Array<{
 
 const KEY_PREFIX = 'auteur.model.'
 
-/** 把 listAppConfig 拿到的 items 按 step 短名建索引 */
 const byStep = computed<Record<string, AppConfigItem>>(() => {
   const m: Record<string, AppConfigItem> = {}
   for (const it of items.value) {

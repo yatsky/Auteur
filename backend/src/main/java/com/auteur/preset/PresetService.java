@@ -20,7 +20,6 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
  *   - update() 只覆盖当前版,不自动写 snapshot
  *   - saveAsNewVersion() 先 snapshot 当前 preset 到 preset_version,然后 currentVersion+1 + apply
  *   - rollback() 拿 snapshot_json 反序列化覆盖 preset 字段(不再写新 snapshot,避免循环)
- *   - imageConfig() / voiceConfig() 把 JSON 列解析成强类型
  *
  * visibility/owner_name 是软标记,无鉴权。
  */

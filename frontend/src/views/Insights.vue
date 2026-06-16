@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 数据洞察 —— 维度权重 / Top-Bottom / 重算潜力分。吃 /api/insights/*
 import { computed, onMounted, ref } from 'vue'
 import { ArrowLeft, RefreshCw, Sparkles, TrendingDown, TrendingUp, Zap } from 'lucide-vue-next'
 import {
@@ -192,7 +191,6 @@ onMounted(loadAll)
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex flex-col gap-1">
         <div class="flex items-center gap-4 flex-wrap">
@@ -217,7 +215,6 @@ onMounted(loadAll)
     </div>
 
     <div class="px-8 py-5 max-w-[1400px] mx-auto">
-      <!-- 顶部过滤 -->
       <div class="card p-3 mb-4 flex flex-wrap items-center gap-2">
         <span class="text-xs text-text-muted">平台</span>
         <button v-for="p in PLATFORMS" :key="p || 'all'"
@@ -243,7 +240,6 @@ onMounted(loadAll)
         ⚠️ {{ errMsg }}
       </div>
 
-      <!-- 总览卡 -->
       <div v-if="weightReport" class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 text-sm">
         <div class="card p-4">
           <div class="text-xs text-text-muted mb-1">样本视频</div>
@@ -260,7 +256,6 @@ onMounted(loadAll)
         </div>
       </div>
 
-      <!-- 维度权重表 -->
       <section class="card p-5 mb-4">
         <h2 class="text-base font-semibold mb-3 flex items-center gap-2">
           <Sparkles :size="16" class="text-accent" /> 维度权重 · 实测完播率
@@ -300,13 +295,11 @@ onMounted(loadAll)
         </div>
       </section>
 
-      <!-- Top / Bottom 双列 -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <section class="card p-5">
           <h2 class="text-base font-semibold mb-2 flex items-center gap-2">
             <TrendingUp :size="16" class="text-status-done" /> Top {{ tbReport?.n || 5 }} · 爆款基因
           </h2>
-          <!-- 多视角切换 —— 完播率主视角,后 4 个是抖音 list 接口富字段 -->
           <div class="flex items-center gap-1 mb-3 flex-wrap">
             <button v-for="m in TOP_METRICS" :key="m.key"
                     class="chip cursor-pointer text-[11px] transition-colors"

@@ -12,12 +12,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * HITL 审批闸门。
  *
- * 流程:
- *   AgentLoopService 准备执行 WRITE/ACTION 工具时调 register(toolCallId, sessionId) 拿一个 Future,
- *   再发 SSE tool_approval_request,然后阻塞等 Future。
- *   前端用户点"批准/拒绝" → POST /agent/sessions/{id}/approve → 调 resolve(toolCallId, sessionId, ...)
- *   60 秒内没决定 → completeOnTimeout 兜底,future 自带"已超时拒绝"值。
- *
  * 关键设计:
  *   - 单 future:register 把原始 future 放进 pending 同时返回它本身,resolve 完成的就是 caller 等的那个,
  *     杜绝"chained future 与原 f 分叉"的潜在 race。
@@ -44,7 +38,6 @@ public class ApprovalGate {
         return runtimeConfig.getInt("auteur.agent.approval-decision-timeout-seconds", (int) DECISION_TIMEOUT_SECONDS_DEFAULT);
     }
 
-    /** AgentLoopService 调:登记一个待审批 tool_call,返回 Future 用于阻塞等待。 */
     public CompletableFuture<ApprovalDecision> register(String toolCallId, Long sessionId) {
         CompletableFuture<ApprovalDecision> f = new CompletableFuture<>();
         pending.put(toolCallId, new Pending(sessionId, f));
@@ -61,9 +54,9 @@ public class ApprovalGate {
     }
 
     /**
-     * AgentController 调:用户响应到达,完成对应的 Future。
+     * 用户响应到达,完成对应的 Future。
      * 必须传 expectedSessionId,只有匹配 register 时绑定的 sessionId 才放行,
-     * 避免拿到 toolCallId 的人(任意用户/陈旧请求)对别会话的审批投票。
+     * 避免拿到 toolCallId 的人对别会话的审批投票。
      */
     public ResolveOutcome resolve(String toolCallId, Long expectedSessionId, boolean approved, String reason) {
         Pending p = pending.get(toolCallId);
@@ -86,7 +79,6 @@ public class ApprovalGate {
 
     /**
      * 主动取消某 session 的所有挂起审批,future 标 cancelled。
-     * AgentCancellationRegistry.cancel() 会调本方法,让审批等待能跟着 turn 取消立即抽身。
      */
     public void cancelSession(Long sessionId) {
         if (sessionId == null) return;

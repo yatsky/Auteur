@@ -15,12 +15,7 @@ import java.util.List;
 
 /**
  * 火山引擎 TTS。基于 VolcanoTtsHttpClient/AsyncClient 跑请求,拿完整 mp3 + 句级时间戳。
- *
  * 句级字幕转标准 SRT 上传 TOS,无字幕时下游 ShotTimingResolver 走 UNIFORM_SCALE 回落。
- *
- * 字段映射:
- *   speed → speech_rate(0.6-1.5 → -50~+50)
- *   pitch → pitch_rate(-6~+6 → -10~+10)
  */
 @Slf4j
 @Component
@@ -72,8 +67,7 @@ public class VolcanoVoiceClient implements VoiceClient {
             throw new RuntimeException("V3Http TTS returned empty audio");
         }
 
-        // 句级 cue 拆短:火山 sentence 平均 ~13s/句太长,按中文标点拆到目标 ~6s/cue,
-        // 让 storyboard 出更密的 shot;splitter 同时跳空文本 sentence。trimGaps=true 时启用。
+        // 句级 cue 拆短:trimGaps=true 时启用。
         if (req.trimGaps() && ttsResult.sentences() != null && !ttsResult.sentences().isEmpty()) {
             List<VolcanoTtsHttpClient.Sentence> split = VolcanoSentenceSplitter.split(ttsResult.sentences());
             if (split.size() != ttsResult.sentences().size()) {
@@ -152,7 +146,7 @@ public class VolcanoVoiceClient implements VoiceClient {
         for (VolcanoTtsHttpClient.Sentence s : sentences) {
             if (s.text() == null || s.text().isBlank()) continue;
             if (s.endMs() <= s.beginMs()) continue;
-            // 防御 sentence.text 内嵌换行/回车:火山某些 sentence text 里有 \n / \r,
+            // 防御 sentence.text 内嵌换行:火山某些 sentence text 里有 \n / \r,
             // 直接写到 SRT 块会被 SrtParser.split("\n\\s*\n") 错切成两半丢块。压缩成单空格。
             String text = s.text().trim()
                     .replace('\n', ' ')

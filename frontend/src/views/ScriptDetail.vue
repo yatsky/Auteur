@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 脚本详情 —— 顶部 sticky 工具条 + 左(KPI 条 + 分段卡)+ 右(下游导航 + 提示卡 + 元信息)
 import { computed, onMounted, ref } from 'vue'
 import {
   ArrowLeft, ChevronRight, Film, Image as ImageIcon, Info, Loader2, Mic,
@@ -26,13 +25,11 @@ function sectionLabel(_idx: number, code: string): string {
   return `[${code}]`
 }
 
-// 段落 inline 编辑状态
 const editingId = ref<number | null>(null)
 const draftText = ref('')
 const draftTitle = ref('')
 const saving = ref(false)
 
-// 重新生成 dialog 状态
 const regenOpen = ref(false)
 const regenAnchor = ref('')
 const regenSubmitting = ref(false)
@@ -45,7 +42,6 @@ async function load() {
     script.value = resp.script
     sections.value = resp.sections ?? []
     errorMsg.value = null
-    // 拉 topic 用于显示 presetId 等附加信息
     if (resp.script?.topicId) {
       try {
         topic.value = await getTopic(resp.script.topicId)
@@ -181,7 +177,6 @@ const downstream = computed<DownstreamStep[]>(() => script.value ? [
 
 <template>
   <div class="min-h-full">
-    <!-- sticky top bar -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex items-center gap-4 flex-wrap">
         <button
@@ -222,9 +217,7 @@ const downstream = computed<DownstreamStep[]>(() => script.value ? [
 
       <template v-else-if="script">
         <div class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4">
-          <!-- 左列 -->
           <div class="flex flex-col gap-4 min-w-0">
-            <!-- KPI 条 -->
             <div class="card p-5 flex items-stretch gap-5 flex-wrap">
               <div class="min-w-[100px]">
                 <div class="text-xs text-text-muted">字数</div>
@@ -255,7 +248,6 @@ const downstream = computed<DownstreamStep[]>(() => script.value ? [
               </div>
             </div>
 
-            <!-- 分段卡 -->
             <div class="card p-5">
               <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <div class="flex items-center gap-2">
@@ -334,9 +326,7 @@ const downstream = computed<DownstreamStep[]>(() => script.value ? [
             </details>
           </div>
 
-          <!-- 右列 -->
           <div class="flex flex-col gap-4">
-            <!-- 下游流程 -->
             <div class="card p-4">
               <div class="flex items-center gap-2 mb-3">
                 <Workflow :size="14" class="text-text-secondary" />
@@ -358,7 +348,6 @@ const downstream = computed<DownstreamStep[]>(() => script.value ? [
               </ul>
             </div>
 
-            <!-- 警告卡 -->
             <div class="card p-3.5 flex items-start gap-2.5"
                  style="background: rgba(245, 158, 11, 0.06); border-color: rgba(245, 158, 11, 0.3);">
               <Info :size="14" class="text-status-paused mt-0.5 shrink-0" />
@@ -367,7 +356,6 @@ const downstream = computed<DownstreamStep[]>(() => script.value ? [
               </p>
             </div>
 
-            <!-- 元信息 -->
             <div class="card p-4">
               <h3 class="text-sm font-semibold mb-3">版本与时间</h3>
               <dl class="flex flex-col gap-2 text-xs">
@@ -394,7 +382,6 @@ const downstream = computed<DownstreamStep[]>(() => script.value ? [
       </template>
     </div>
 
-    <!-- 重新生成 dialog -->
     <div v-if="regenOpen"
          class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
          @click.self="closeRegen">

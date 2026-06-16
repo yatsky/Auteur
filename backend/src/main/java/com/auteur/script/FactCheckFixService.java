@@ -24,8 +24,8 @@ import java.util.Map;
 /**
  * 事实核查的"采纳/忽略"闭环。
  *
- * <p>核心问题:LLM 写的 suggestion 是描述性散文,不是 ready-to-replace 的字符串。
- * <p>策略:再调一次便宜 LLM 把 suggestion 抽换成对 originalText 的精确替换,
+ * 核心问题:LLM 写的 suggestion 是描述性散文,不是 ready-to-replace 的字符串。
+ * 策略:再调一次便宜 LLM 把 suggestion 抽换成对 originalText 的精确替换,
  * 或 LLM 判定"原文成立、不用改" → 仅 dismiss。失败 → issue 不动。
  */
 @Slf4j
@@ -57,10 +57,7 @@ public class FactCheckFixService {
     public record ApplyResult(boolean applied, String action, String rationale,
                               String before, String after, Long sectionId, String sectionCode) {}
 
-    /**
-     * 跑 factcheck_apply LLM,根据建议生成替换串,落到 section,重建 fullText,标 resolved。
-     * applied=true = 真改了字 / applied=false 但 action=no_change = LLM 判定无需改。
-     */
+    /** applied=true 真改了字 / applied=false 但 action=no_change 即 LLM 判定无需改。 */
     @Transactional
     public ApplyResult applyFix(Long issueId) {
         FactCheckIssue issue = issueRepository.findById(issueId)
@@ -131,7 +128,6 @@ public class FactCheckFixService {
                 originalText, decision.replacement, target.getId(), target.getSectionCode());
     }
 
-    /** 不改文,只把 issue.resolved 翻成 true。 */
     @Transactional
     public FactCheckIssue dismiss(Long issueId) {
         FactCheckIssue issue = issueRepository.findById(issueId)
@@ -173,7 +169,7 @@ public class FactCheckFixService {
         }
     }
 
-    /** 按 contains 找首个匹配 section。原文已被改过 → 找不到 → 抛错让前端提示。 */
+    /** 原文已被改过 → 找不到 → 抛错让前端提示。 */
     private static ScriptSection findSectionContaining(List<ScriptSection> sections, String needle) {
         for (ScriptSection s : sections) {
             String t = s.getTextContent();
@@ -192,7 +188,6 @@ public class FactCheckFixService {
         return sb.toString();
     }
 
-    /** Jackson POJO,字段名匹配 prompt 里的 JSON key。 */
     public static class FixDecision {
         public String action;
         public String replacement;

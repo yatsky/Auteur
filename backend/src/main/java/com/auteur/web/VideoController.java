@@ -10,8 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 视频合成 API。POST 触发异步渲染,GET 列出该 script 已生成的 video_asset。
- * 真正的进度通过 GET /api/runs/{runId} 轮询(同 IMAGEGEN / VOICE 模式)。
+ * 视频合成 API。POST 触发异步渲染;真正的进度通过 GET /api/runs/{runId} 轮询。
  */
 @RestController
 @RequestMapping("/api/scripts/{scriptId}/video")

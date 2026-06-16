@@ -15,7 +15,7 @@ public interface ScriptRepository extends JpaRepository<Script, Long> {
     List<Script> findByTopicIdOrderByVersionDesc(Long topicId);
     long countByTopicId(Long topicId);
 
-    /** V42:每 topic 一脚本,生成新脚本前先 cascade 删除旧脚本(连带 sections/shots/images/voice/video/cover)。 */
+    /** 每 topic 一脚本,生成新脚本前先 cascade 删除旧脚本(连带 sections/shots/images/voice/video/cover)。 */
     @Modifying
     @Transactional
     @Query("DELETE FROM Script s WHERE s.topicId = :topicId")

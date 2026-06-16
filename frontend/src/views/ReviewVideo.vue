@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 单条视频复盘 —— 主信息从 /api/published-videos/{id} 拿;留存曲线/评论关键词改空状态(待 OAuth #7)
 import { computed, onMounted, ref } from 'vue'
 import { ArrowLeft, MessageCircle, Sparkles, TrendingDown } from 'lucide-vue-next'
 import { getPublishedVideo, type PublishedVideo } from '../api/publishedVideos'
@@ -11,7 +10,6 @@ const video = ref<PublishedVideo | null>(null)
 const loading = ref(true)
 const errMsg = ref('')
 
-// AI 归因独立状态:跟主视频加载解耦,主视频加载完用户自己点按钮触发
 const attribution = ref<VideoAttributionResult | null>(null)
 const attrLoading = ref(false)
 const attrError = ref('')
@@ -81,7 +79,6 @@ async function runAttribution() {
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex flex-col gap-1">
         <div class="flex items-center gap-4 flex-wrap">

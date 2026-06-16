@@ -18,14 +18,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Agent REST + SSE 入口。
- *
- *   POST   /api/agent/sessions              新建会话(可选 body { model? })
- *   GET    /api/agent/sessions              会话列表(按 updatedAt desc)
- *   GET    /api/agent/sessions/{id}         单会话元数据
- *   GET    /api/agent/sessions/{id}/messages 历史消息
- *   POST   /api/agent/sessions/{id}/chat    发用户消息,SSE 流式返回事件
- *   DELETE /api/agent/sessions/{id}         删会话(级联删消息)
- *   GET    /api/agent/tools                  工具清单(调试用)
  */
 @Slf4j
 @RestController
@@ -127,8 +119,7 @@ public class AgentController {
     }
 
     /**
-     * 显式取消正在跑的 turn。前端切会话/卸载/用户主动停止时调。
-     * 幂等:找不到对应 cancelSignal 不报错(可能已结束),返回 ok=false 提示。
+     * 显式取消正在跑的 turn。幂等:找不到对应 cancelSignal 不报错(可能已结束),返回 ok=false。
      */
     @PostMapping("/sessions/{id}/cancel")
     public Map<String, Object> cancel(@PathVariable Long id) {
@@ -146,7 +137,6 @@ public class AgentController {
 
     /**
      * HITL:用户对一个待审批 tool_call 给出决定。
-     * 前端在收到 SSE tool_approval_request 后,弹卡片让用户点"批准/拒绝",点完调本端点。
      *
      * 路径里的 {id} 必须与 toolCallId 注册时绑定的 sessionId 匹配,否则视为跨会话注入直接拒绝。
      */

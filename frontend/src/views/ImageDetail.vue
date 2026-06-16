@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 生图详情 —— sticky 顶栏 + KPI strip + 操作条 + 图卡网格
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ArrowLeft, Loader2, Play, RefreshCw, ShieldCheck } from 'lucide-vue-next'
 import {
@@ -281,7 +280,6 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex flex-col gap-1">
         <div class="flex items-center gap-4 flex-wrap">
@@ -303,7 +301,6 @@ onBeforeUnmount(() => {
     <div class="px-8 py-5 max-w-[1400px] mx-auto">
       <ErrorBanner :msg="errorMsg" />
 
-      <!-- KPI strip -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <div class="card p-4">
           <div class="text-xs text-text-muted mb-1">图片总数</div>
@@ -323,7 +320,6 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <!-- 操作条 -->
       <div class="card p-3 mb-4 flex items-center gap-2 flex-wrap">
         <button class="btn-ghost" :disabled="loading" @click="load">
           <RefreshCw :size="13" :class="loading ? 'animate-spin' : ''" /> 刷新
@@ -352,7 +348,6 @@ onBeforeUnmount(() => {
         </span>
       </div>
 
-      <!-- 进度条 —— 整片生图 / 整片图审 各一条 -->
       <div v-if="genRun || auditRun" class="card p-3 mb-4 space-y-2">
         <RunProgress v-if="genRun" :run="genRun" label="生图中" unit="张" />
         <RunProgress v-if="auditRun" :run="auditRun" label="图审中" unit="张" />
