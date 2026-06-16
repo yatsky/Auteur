@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 工具注册表:启动期由各个 *Tools 类的 @PostConstruct 把自身 register 进来。
- * AgentLoopService 用它拼 ChatRequest.tools 列表,以及在 LLM 决定调时按名查 handler。
  */
 @Slf4j
 @Component

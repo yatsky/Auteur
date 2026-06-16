@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 选题详情 —— 左主区(标题/标签/描述 + 编辑表单 + 史料/备注) + 右栏(AI 评分 + 流转记录 + 生成脚本)
 import { onMounted, ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {

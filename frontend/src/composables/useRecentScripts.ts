@@ -3,15 +3,14 @@ import { listScripts } from '../api/scripts'
 import { extractError } from '../lib/format'
 import type { PipelineRunStatus, PipelineStage } from '../types'
 
-// 直读后端 GET /api/scripts:Script 行打平 + projectName + 该 script 最近一条 run 的 stage/status/at。
-// 不再用 PipelineRun 列表客户端聚合。字段名保留 lastStage/lastRunAt/lastRunStatus 兼容老消费者。
+// 字段名保留 lastStage/lastRunAt/lastRunStatus 兼容老消费者。
 export interface ScriptHandle {
   scriptId: number
   topicId: number | null
   lastStage: PipelineStage
   lastRunAt: string
   lastRunStatus: PipelineRunStatus
-  /** 后端 list 反向 enrich 的项目名(列表显示用)。null = topic 没填。 */
+  /** 后端 list 反向 enrich 的项目名。null = topic 没填。 */
   projectName?: string | null
 }
 
@@ -27,7 +26,7 @@ export function useRecentScripts() {
       const resp = await listScripts({ page: 0, size: 200 })
       const out: ScriptHandle[] = []
       for (const s of resp.content) {
-        // 极少数:script 行刚落但 SCRIPT run 还没 markDone(竞态),lastRun* 全 null。跳过。
+        // script 行刚落但 SCRIPT run 还没 markDone(竞态),lastRun* 全 null,跳过。
         if (s.lastRunStage == null || s.lastRunStatus == null || s.lastRunAt == null) continue
         out.push({
           scriptId: s.id,

@@ -13,7 +13,6 @@ type Props = {
   shotId: number
 }
 
-// Knuth multiplicative hash → [0,1) 均匀分布;salt 让同 shotId 派生多个独立维度。
 function jitter01(shotId: number, salt: number): number {
   const h = ((shotId * 2654435761) ^ (salt * 40503)) >>> 0
   return h / 0x100000000
@@ -23,11 +22,10 @@ export const MotionImage: React.FC<Props> = ({ imageUrl, motion, shotId }) => {
   const frame = useCurrentFrame()
   const { durationInFrames } = useVideoConfig()
 
-  // 0..1 进度
   const t = durationInFrames > 0 ? frame / durationInFrames : 0
 
-  const zoomDelta = 0.06 + 0.04 * jitter01(shotId, 1) // 0.06..0.10
-  const panDist = 2.5 + 1.0 * jitter01(shotId, 2) // 2.5..3.5
+  const zoomDelta = 0.06 + 0.04 * jitter01(shotId, 1)
+  const panDist = 2.5 + 1.0 * jitter01(shotId, 2)
 
   let scale = 1
   let translateX = 0

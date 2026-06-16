@@ -37,11 +37,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class ImageAuditService {
 
-    /** 阈值:≥ PASS 直接通过;< PASS 且 ≥ REGEN 触发 1 次重生;< REGEN 标 MANUAL。
-     *  默认值通过 RuntimeConfig 读 DB 覆盖。 */
+    /** 阈值:≥ PASS 直接通过;< PASS 且 ≥ REGEN 触发 1 次重生;< REGEN 标 MANUAL。 */
     private static final int PASS_THRESHOLD_DEFAULT = 80;
     private static final int REGEN_THRESHOLD_DEFAULT = 60;
-    /** 单镜最多重生几次 */
     private static final int MAX_REGEN_PER_SHOT_DEFAULT = 1;
 
     private final LlmClient llmClient;
@@ -84,7 +82,6 @@ public class ImageAuditService {
     private int regenThreshold() { return runtimeConfig.getInt("auteur.image.audit.regen-threshold", REGEN_THRESHOLD_DEFAULT); }
     private int maxRegenPerShot() { return runtimeConfig.getInt("auteur.image.audit.max-regen-per-shot", MAX_REGEN_PER_SHOT_DEFAULT); }
 
-    /** 同步审核:兼容原 API。长任务建议改走 auditScriptAsync。 */
     @Transactional
     public List<ImageAsset> auditScript(Long scriptId) {
         PipelineRun run = runService.start(
@@ -100,9 +97,7 @@ public class ImageAuditService {
         }
     }
 
-    /**
-     * 异步审核:立即返回 runId。worker 在 pipelineExecutor 跑,每 shot 之间检查 pause/cancel。
-     */
+    /** worker 在 pipelineExecutor 跑,每 shot 之间检查 pause/cancel。 */
     public Long auditScriptAsync(Long scriptId, String triggeredBy) {
         Map<String, Object> params = Map.of("scriptId", scriptId, "mode", "async");
         PipelineRun run = runService.start(PipelineStage.IMAGEAUDIT, null, scriptId, params,
@@ -117,10 +112,7 @@ public class ImageAuditService {
         pipelineExecutor.execute(() -> runWorker(scriptId, startIndex, runId));
     }
 
-    /**
-     * 单图重审:用户在生图列表里手动点某张图重审。
-     * 跟 auditScriptAsync 不同的语义:totalItems = 1,且不走 auto-regen。
-     */
+    /** 单图重审:totalItems = 1,且不走 auto-regen。 */
     public Long auditAssetAsync(Long assetId, String triggeredBy) {
         ImageAsset asset = assetRepository.findById(assetId)
                 .orElseThrow(() -> new NotFoundException("ImageAsset not found: " + assetId));

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// 总导演"导演笔记"编辑器(用户手动填写,与 preset 配合使用)。
-// 持久化:走 PATCH /api/topics/{id} 的 directorNote 字段。
 import { computed, ref, watch } from 'vue'
 import { Loader2, Plus, Save, Sparkles, X } from 'lucide-vue-next'
 import { updateTopic } from '../api/topics'
@@ -145,7 +143,6 @@ function close() {
   emit('close')
 }
 
-/** AI 智能填充弹窗 apply 回调:全量替换 form。复用 normalizeNote 兜底,确保 5 段补齐 / 字符串字段不为 undefined。 */
 function onAiApplied(note: DirectorNote) {
   form.value = normalizeNote(note)
   saveError.value = null
@@ -178,7 +175,6 @@ function onAiApplied(note: DirectorNote) {
       </header>
 
       <div class="flex-1 overflow-y-auto p-6 space-y-6">
-        <!-- tone / pacing -->
         <section class="grid grid-cols-1 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">整体调性 (tone)</label>
@@ -200,7 +196,6 @@ function onAiApplied(note: DirectorNote) {
           </div>
         </section>
 
-        <!-- narrativeArc -->
         <section>
           <h3 class="text-sm font-semibold text-gray-700 mb-2">五段节奏指导 (narrativeArc)</h3>
           <div class="space-y-2">
@@ -216,7 +211,6 @@ function onAiApplied(note: DirectorNote) {
           </div>
         </section>
 
-        <!-- visualStyle -->
         <section>
           <h3 class="text-sm font-semibold text-gray-700 mb-2">美术指导 (visualStyle)</h3>
           <div class="grid grid-cols-1 gap-3">
@@ -260,7 +254,6 @@ function onAiApplied(note: DirectorNote) {
           </div>
         </section>
 
-        <!-- protagonistVibe -->
         <section>
           <h3 class="text-sm font-semibold text-gray-700 mb-2">演员气质 (protagonistVibe)</h3>
           <div class="grid grid-cols-1 gap-3">
@@ -279,7 +272,6 @@ function onAiApplied(note: DirectorNote) {
           </div>
         </section>
 
-        <!-- keyMoments -->
         <section>
           <h3 class="text-sm font-semibold text-gray-700 mb-2">关键瞬间 (keyMoments)</h3>
           <p class="text-xs text-gray-500 mb-2">2-4 个,剪辑师会在这些时刻强调(in 推近 / 静止 / 高亮)</p>
@@ -297,7 +289,6 @@ function onAiApplied(note: DirectorNote) {
           </div>
         </section>
 
-        <!-- highlightThemes -->
         <section>
           <h3 class="text-sm font-semibold text-gray-700 mb-2">字幕高亮主题词 (highlightThemes)</h3>
           <p class="text-xs text-gray-500 mb-2">3-8 个,副导演 LLM 提取关键词时优先匹配</p>
@@ -317,7 +308,6 @@ function onAiApplied(note: DirectorNote) {
           </div>
         </section>
 
-        <!-- directorNotes -->
         <section>
           <h3 class="text-sm font-semibold text-gray-700 mb-2">补充指令 (directorNotes)</h3>
           <textarea

@@ -11,9 +11,6 @@ import java.util.concurrent.ThreadLocalRandom;
  *   limit / timeout / network → 指数退避,最多 N 次(N 由 RuntimeConfig 读 DB)
  *   json                       → 线性,最多 N 次
  *   sensitive / 4xx            → 不重试(同 prompt/同请求重试无意义)
- *
- * 重构记录:V12(2026-06-13)从 static utility 升格为 Spring @Component,max-attempts
- * 改成从 app_config 读,延迟 base/cap ms 仍硬编码(运维很少调,改动 ROI 低)。
  */
 @Component
 public final class RetryPolicy {

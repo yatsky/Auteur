@@ -10,10 +10,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 配音 / 字幕 API。所有真正的产物都通过 voice_asset 表流转,
- * UI 通过 GET /api/runs/{runId} 轮询异步进度,DONE 后再拉 listVoices 刷新展示。
- */
+/** 配音 / 字幕 API。UI 通过 GET /api/runs/{runId} 轮询异步进度。 */
 @RestController
 @RequestMapping("/api/scripts/{scriptId}/voice")
 @RequiredArgsConstructor

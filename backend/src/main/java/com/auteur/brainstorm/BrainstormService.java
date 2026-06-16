@@ -142,16 +142,12 @@ public class BrainstormService {
             t.setPresetId(preset.getId());
             t.setPresetVersionUsed(preset.getCurrentVersion());
             if (c.getPresetInput() != null && !c.getPresetInput().isEmpty()) {
-                // 通用路径:LLM 直接按预设的 input_schema 字段名输出 preset_input 对象,整个写入。
-                // 适用任何 input_schema 用具体业务字段(非 lifecopy 4 字段)的预设。
                 try {
                     t.setPresetInputJson(objectMapper.writeValueAsString(c.getPresetInput()));
                 } catch (Exception e) {
                     log.warn("[Brainstorm] preset_input_json (generic) 序列化失败 title={}: {}",
                             c.getTitle(), e.toString());
                 }
-                // protagonist 兜底:identityTag 顶层字段如有就用,否则留空(各预设可在选题脑暴时
-                // 顺手填顶层 protagonist 字段)
                 if ((t.getProtagonist() == null || t.getProtagonist().isBlank())
                         && c.getIdentityTag() != null) {
                     t.setProtagonist(TextUtils.truncate(c.getIdentityTag(), 120));

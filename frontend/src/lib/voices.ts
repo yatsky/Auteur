@@ -1,5 +1,4 @@
 // 火山引擎豆包 TTS 音色库（与后端 VolcanoVoiceCatalog 严格对齐）
-// voice_type 格式：zh_{gender}_{name}_uranus_bigtts
 
 export interface VoiceOption {
   value: string
@@ -12,7 +11,7 @@ export interface VoiceGroup {
   voices: VoiceOption[]
 }
 
-/** Catalog 兜底默认音色（温暖阿虎），与后端 VolcanoVoiceCatalog.defaultVoice() 对齐。preset.voice_config 没指定时用。 */
+/** 与后端 VolcanoVoiceCatalog.defaultVoice() 对齐。preset.voice_config 没指定时用。 */
 export const DEFAULT_VOICE = 'zh_male_wennuanahu_uranus_bigtts'
 
 export const VOICE_GROUPS: VoiceGroup[] = [
@@ -64,7 +63,7 @@ export const VOICE_GROUPS: VoiceGroup[] = [
   },
 ]
 
-/** 给定音色 ID，反查中文显示名；不在表里就原样返回 ID */
+/** 反查中文显示名;不在表里就原样返回 ID */
 export function voiceLabelOf(id: string | null | undefined): string {
   if (!id) return ''
   for (const g of VOICE_GROUPS) {

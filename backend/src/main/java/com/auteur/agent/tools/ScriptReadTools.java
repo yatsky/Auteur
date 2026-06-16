@@ -32,12 +32,7 @@ import java.util.Map;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 /**
- * 圈二配套的只读工具(让 LLM 在触发流水线后能查进度 + 拿脚本上下文)。
- *
- *   - get_run_status      : 查 PipelineRun 状态(LLM 触发动作工具后用来轮询)
- *   - list_recent_scripts : 列出最近 N 个 script(选目标用)
- *   - get_script_summary  : 单 script 概览(不返 fullText 大字段,只返摘要 + 各类资产计数)
- *   - get_director_notes  : 读 topic 的"剧组群聊"累积笔记(每个 stage 跑完 append 的 addendum)
+ * 流水线只读工具(让 LLM 在触发流水线后能查进度 + 拿脚本上下文)。
  */
 @Slf4j
 @Component
@@ -141,7 +136,6 @@ public class ScriptReadTools {
                     .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "script id=" + id + " 不存在"));
             List<StoryboardShot> shots = shotRepo.findByScriptIdOrderByShotIndexAsc(id);
             int shotCount = shots.size();
-            // imageRepo 没有按 scriptId 查的方法,迭代 shot 累加;一个 script 通常 20-28 镜,可接受
             long imageCount = shots.stream().mapToLong(sh -> imageRepo.countByShotId(sh.getId())).sum();
             PipelineRun latest = runRepo.findLatestRunsByScriptIds(List.of(id))
                     .stream().findFirst().orElse(null);
@@ -178,12 +172,10 @@ public class ScriptReadTools {
         return s.substring(0, 300) + "…(共" + s.length() + "字)";
     }
 
-    // ============ get_director_notes ============
     /**
      * 读 topic 的"剧组群聊"累积笔记。流水线运行时各 stage(编剧/摄影/录音/副导演)跑完会 append 一条
      * ≤500 字 addendum,下游 stage 拼成"剧组群聊"塞进 prompt。
      *
-     * 用户/agent 可调本工具看"流水线刚跑完各角色都说了啥",理解决策链路。
      * Topic.directorNote(用户手动写的)是另一回事 — 那个用 update_topic / get_topic 看。
      */
     private class GetDirectorNotes implements ToolHandler {
@@ -221,12 +213,9 @@ public class ScriptReadTools {
             Map<String, Object> out = new LinkedHashMap<>();
             out.put("topicId", id);
             out.put("topicTitle", t.getTitle());
-            // Topic.directorNote — 用户手写的整体方向
             out.put("directorNote", t.getDirectorNote());
-            // addendum — 流水线各 stage 累积的"剧组群聊"
             out.put("addendaCount", addendaList.size());
             out.put("addenda", addendaList);
-            // 拼好的"剧组群聊"文本(下游 prompt 实际看到的样式),空时返空串
             out.put("groupChatBlock", directorNoteService.buildBlock(id));
             return out;
         }

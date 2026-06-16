@@ -44,9 +44,8 @@ public class BrainstormCandidate {
     private List<NodeCandidate> nodes;
 
     /**
-     * 通用路径(2026-06 加):brainstorm.yaml 直接按预设的 input_schema 输出对应字段对象,
-     * BrainstormService 整个塞进 topic.preset_input_json。
-     * 各预设的 brainstorm prompt 自己保证字段名跟 input_schema 一致(由预设作者维护)。
+     * 通用路径:brainstorm.yaml 直接按预设的 input_schema 输出对应字段对象,
+     * 整个塞进 topic.preset_input_json。
      * 优先级:preset_input 非空 → 用它;否则回落 identity_tag/era/nodes 老路径(向下兼容)。
      */
     @JsonProperty("preset_input")

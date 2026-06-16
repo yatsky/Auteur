@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// 系列详情:展示系列元信息 + 该系列下所有 topic;支持 inline 编辑系列字段。
-// /series/:id。从 /series 列表的行点击进来,或从 TopicDetail 的"系列"链接(后续接)。
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, Layers, Loader2, Pencil, Save, Trash2, X } from 'lucide-vue-next'
@@ -115,7 +113,6 @@ onMounted(load)
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex flex-col gap-1">
         <div class="flex items-center gap-4 flex-wrap">
@@ -165,7 +162,6 @@ onMounted(load)
       </div>
 
       <template v-else-if="series">
-        <!-- KPI strip -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           <div class="card p-4">
             <div class="text-xs text-text-muted mb-1">总选题数</div>
@@ -187,7 +183,6 @@ onMounted(load)
           </div>
         </div>
 
-        <!-- 描述 / 元信息 -->
         <div class="card p-5 mb-4">
           <template v-if="!editing">
             <div v-if="series.description" class="text-sm text-text-secondary whitespace-pre-wrap mb-4 leading-relaxed">
@@ -264,7 +259,6 @@ onMounted(load)
           </template>
         </div>
 
-        <!-- 系列下选题 -->
         <div class="card overflow-hidden">
           <header class="flex items-center gap-2 px-5 py-3 border-b border-border-subtle">
             <Layers :size="14" class="text-accent" />

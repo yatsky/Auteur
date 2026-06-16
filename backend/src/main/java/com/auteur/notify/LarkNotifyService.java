@@ -16,10 +16,9 @@ import java.util.concurrent.ForkJoinPool;
 /**
  * 飞书私聊通知。流水线阶段(脚本/分镜/配音/合成 等)完成或失败时,给配置的邮箱发一条消息。
  *
- * 设计:
  *  - 总开关 + 凭证 + 接收邮箱都从 RuntimeConfig 读,任一项缺失则 short-circuit 不发
  *  - Client 按 (app-id, app-secret) 缓存,凭证变化时自动重建
- *  - **直接用 receive_id_type=email 发消息**,不需要先查 open_id,只用 IM 权限
+ *  - 直接用 receive_id_type=email 发消息,不需要先查 open_id,只用 IM 权限
  *    (im:message:send_as_bot 即可,不需要 contact 通讯录权限)
  *  - 通知整链 try/catch 吞掉所有异常 — 飞书挂了不能影响 pipeline 主流程
  *  - 走 ForkJoinPool.commonPool 异步,主线程立即返回,markDone/markFailed 不等网络
@@ -30,7 +29,7 @@ public class LarkNotifyService {
 
     private final RuntimeConfig runtimeConfig;
 
-    /** 客户端缓存。key = "app-id:app-secret",变了就重建。 */
+    /** key = "app-id:app-secret",变了就重建。 */
     private volatile String cachedKey = "";
     private volatile Client cachedClient;
 
@@ -84,7 +83,7 @@ public class LarkNotifyService {
 
     /**
      * 直接按 email 发文本。飞书 IM v1 messages/create 支持 receive_id_type=email,
-     * 服务端自己根据邮箱在租户内找用户,**不需要应用有通讯录读取权限**。
+     * 服务端自己根据邮箱在租户内找用户,不需要应用有通讯录读取权限。
      */
     private void sendTextByEmail(Client client, String email, String text) throws Exception {
         // 飞书 IM text 消息 content 是 JSON 字符串 {"text":"..."}
@@ -148,7 +147,7 @@ public class LarkNotifyService {
         return (sec / 60) + "m" + (sec % 60) + "s";
     }
 
-    /** JSON 字符串转义。手写避免引一个 ObjectMapper 只为转一个字符串。 */
+    /** 手写避免引一个 ObjectMapper 只为转一个字符串。 */
     private static String jsonEscape(String s) {
         if (s == null) return "\"\"";
         StringBuilder sb = new StringBuilder(s.length() + 16).append('"');

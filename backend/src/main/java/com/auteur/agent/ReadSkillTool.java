@@ -15,9 +15,7 @@ import java.util.Map;
  * read_skill(name) — 按名读 skill 全文。READ 工具不审批。
  *
  * 配合 SkillRegistry:system prompt 末尾只列每个 skill 的 (name, summary, when),
- * LLM 决定调写工具前用本工具读对应剧本拿全文。这样:
- *   - 节省 token(不在 system prompt 里塞所有剧本全文)
- *   - 让"是否参考剧本"成为 LLM 显式决策(可观测)
+ * LLM 决定调写工具前用本工具读对应剧本拿全文。节省 token,且让"是否参考剧本"成为显式决策。
  */
 @Slf4j
 @Component

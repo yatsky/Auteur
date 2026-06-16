@@ -33,24 +33,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * 美术指导 / Art Director
  *
- * 给每个分镜调图像模型生图。buildPrompt() 负责拼最终 prompt:
- * shot 自身 promptEn + styleTag + 总导演笔记 visualStyle + 全局写实后缀。
  * 审核失败走 ShotPromptRefineService 重写;sensitive 走自动脱敏。
  */
 @Slf4j
 @Service
 public class ImageGenService {
 
-    /** 主/降级图像模型读 app_config 里的 auteur.model.image_primary / image_fallback,前端「AI 模型」页面编辑。 */
     /** 两个模型都支持的 9:16 portrait 尺寸。 */
     private static final String IMAGE_SIZE = "1024x1792";
     /** 串行限速:RPM=20,3.5s ≈ 17 RPM,留余量。 */
     private static final long THROTTLE_MS = 3500L;
 
-    /**
-     * gpt-image-2 全局风格后缀(纯英文,无 || 分隔符)。
-     * negative 词融入正向描述,因 GPT image 模型不支持独立 negative prompt。
-     */
+    /** gpt-image-2 全局风格后缀;negative 词融入正向描述(GPT image 不支持独立 negative)。 */
     private static final String STYLE_SUFFIX =
             "Photorealistic cinematic photography. "
             + "Authentic historical period-accurate costumes and architecture. "
@@ -64,9 +58,7 @@ public class ImageGenService {
     /** 不带人物的镜头不需要 reference,避免参考图把空镜也染上人脸。 */
     private static final String EMPTY_SHOT_TYPE = "空镜";
 
-    /** 上游内容审查拦截,自动脱敏未能救回,等用户改 prompt。 */
     public static final String REVIEW_DECISION_SENSITIVE_BLOCKED = "SENSITIVE_BLOCKED";
-    /** 自动脱敏改写后成功生图。 */
     public static final String AUTO_DESENSITIZED_TAG = "auto-desensitized";
 
     private static final ObjectMapper DIRECTOR_NOTE_MAPPER = new ObjectMapper();
@@ -107,7 +99,6 @@ public class ImageGenService {
         this.modelRegistry = modelRegistry;
     }
 
-    /** 同步生图,仅联调时用 — 线上长任务走 generateForScriptAsync。 */
     public List<ImageAsset> generateForScript(Long scriptId, Integer limit) {
         PipelineRun run = runService.start(
                 PipelineStage.IMAGEGEN, null, scriptId,
@@ -124,7 +115,6 @@ public class ImageGenService {
     }
 
     /**
-     * 异步生图:立即返回 runId,worker 在 pipelineExecutor 里跑。
      * @param force true=先删每个 shot 已有的 asset 再重新生图(destructive)
      * @param limit 仅前 N 镜,null 或 ≤0 不限
      */
@@ -147,8 +137,7 @@ public class ImageGenService {
     }
 
     /**
-     * 单镜重生:为某个 shot 强制重生一张图。先删旧 asset,再调一次模型。
-     * 自动结合审图反馈:若该 shot 最新一张 asset 有 reviewIssues,会用 ShotPromptRefineService
+     * 单镜重生:为某个 shot 强制重生一张图。若上一张 asset 有 reviewIssues,会用 ShotPromptRefineService
      * 调一次便宜模型把 issues 翻译成正向 prompt 增补,再用修订版 prompt 跑生图。
      */
     public Long regenerateForShotAsync(Long shotId, String triggeredBy) {
@@ -168,12 +157,6 @@ public class ImageGenService {
         return runId;
     }
 
-    /**
-     * 单镜重生 worker 主体:
-     *  1. 看上一张 asset 的 reviewIssues 决定走 refine / 原 prompt
-     *  2. 删旧 asset
-     *  3. 用 effectiveShot 生图
-     */
     private void runRegenerateWorker(Long runId, Long shotId, StoryboardShot shot) {
         try {
             runService.updateProgress(runId, 0, 1);
@@ -193,7 +176,6 @@ public class ImageGenService {
                 log.info("[美术] runId={} shotId={} deleted existing assets before regen", runId, shotId);
             }
 
-            // 3. 用 effectiveShot（修订版 / 原版）生图
             generateOne(effectiveShot);
             runService.markDone(runId, 1);
             log.info("[美术] runId={} shotId={} single-shot regen done (path={})",
@@ -206,7 +188,6 @@ public class ImageGenService {
     }
 
     /**
-     * 看上一张图的 reviewIssues 决定是否走 refine 路径。
      * SENSITIVE_BLOCKED placeholder 和 auto-desensitized 的 reviewIssues 是
      * sensitive 路径自己的 tag,不应该当审图扣分点喂给 refine。
      */
@@ -232,10 +213,7 @@ public class ImageGenService {
 
     private record RefineDecision(StoryboardShot effectiveShot, String path, String reviewIssues) {}
 
-    /**
-     * 保留 src 全部字段,只覆盖 promptZh / promptEn / negativePrompt(refined 没给的字段保留原值)。
-     * 构造一个游离副本,下游生图用修订版 prompt,但 shot 表 ground truth 不被污染。
-     */
+    /** 构造游离副本:下游生图用修订版 prompt,但 shot 表 ground truth 不被污染。 */
     private static StoryboardShot withOverriddenPrompt(StoryboardShot src,
                                                        ShotPromptRefineService.RefinedPrompt refined) {
         StoryboardShot copy = new StoryboardShot();
@@ -268,9 +246,8 @@ public class ImageGenService {
     }
 
     /**
-     * 同/异步共用循环:迭代 [startIndex..end) 的 shot,按 force 决定 skip/delete,限速调 generateOne。
-     *  - checkPause=true(异步):每镜先看 pauseRequested/cancel,命中则 markPaused 后早退。
-     *  - checkPause=false(同步):HTTP 单连接没法暂停,跑完为止。
+     * checkPause=true(异步):每镜先看 pauseRequested/cancel,命中则 markPaused 后早退。
+     * checkPause=false(同步):HTTP 单连接没法暂停,跑完为止。
      */
     private BatchResult processShots(Long scriptId, boolean force, Integer limit,
                                      int startIndex, Long runId, boolean checkPause) {
@@ -326,7 +303,6 @@ public class ImageGenService {
         return new BatchResult(created, total, true);
     }
 
-    /** pause/cancel 处理:等正在跑的镜头收尾,然后按 cancel/pause 分别 mark。 */
     private void handlePauseOrCancel(Long runId, int i, List<CompletableFuture<Void>> futures) {
         // 等正在跑的镜头收尾再 pause/cancel
         awaitAll(futures);
@@ -338,10 +314,7 @@ public class ImageGenService {
         }
     }
 
-    /**
-     * 决定本镜是否跳过(已有 asset && !force)。skip 时顺便推进进度。
-     * force=true 路径:有旧 asset 则先删,再返回 false 让外层继续生图。
-     */
+    /** force=true 路径:有旧 asset 则先删,再返回 false 让外层继续生图。 */
     private boolean shouldSkipShot(StoryboardShot shot, boolean force,
                                    AtomicInteger completedCount, int total, Long runId) {
         long shotId = shot.getId();
@@ -359,7 +332,6 @@ public class ImageGenService {
         return false;
     }
 
-    /** 提交一镜生图到 imageWorkExecutor 并接住失败,推进进度。 */
     private CompletableFuture<Void> submitGenerateOne(StoryboardShot shot, Long runId,
                                                       List<ImageAsset> created,
                                                       AtomicInteger completedCount, int total) {
@@ -386,7 +358,7 @@ public class ImageGenService {
 
     private record BatchResult(List<ImageAsset> created, int total, boolean completedNormally) {}
 
-    /** 为单个镜头生图(不审)。topic.preset_id 命中时 model 由 preset.image_config.model 决定。 */
+    /** 为单个镜头生图(不审)。 */
     public ImageAsset generateOne(StoryboardShot shot) {
         String fullPrompt = buildPrompt(shot);
         com.auteur.preset.ImageConfig cfg = effectiveImageConfig(shot);
@@ -425,9 +397,6 @@ public class ImageGenService {
 
     /**
      * 决定本次调用传给 image-to-image 的 reference。
-     * - cfg.referenceImagePath 是 http(s):// → 直接返回 URL(Doubao i2i 接受公网 URL)
-     * - cfg.referenceImagePath 是本地文件 → 读文件 → base64 dataurl
-     * - 否则 → null(纯 text-to-image)
      * fallback model(qwen 系列)是 text-to-image 模型,不传 ref。
      */
     private String pickRefDataUrl(com.auteur.preset.ImageConfig cfg, String model) {
@@ -453,12 +422,10 @@ public class ImageGenService {
         }
     }
 
-    /** 模型选择:cfg.model 优先;空时回退到 app_config 里的 auteur.model.image_primary。 */
     private String pickPrimaryModel(com.auteur.preset.ImageConfig cfg) {
         return modelRegistry.modelOrDefault(cfg == null ? null : cfg.getModel(), "image_primary");
     }
 
-    /** 尺寸选择:cfg.imageSize 优先;空时回退默认。 */
     private String pickSize(com.auteur.preset.ImageConfig cfg) {
         if (cfg != null && cfg.getImageSize() != null && !cfg.getImageSize().isBlank()) {
             return cfg.getImageSize();
@@ -534,7 +501,7 @@ public class ImageGenService {
     }
 
     /**
-     * 内容审查拦截 + 自动脱敏失败时的占位：fileUrl 留 null（前端识别后显示拦截卡片），
+     * 内容审查拦截 + 自动脱敏失败时的占位:fileUrl 留 null(前端识别后显示拦截卡片),
      * reviewDecision = SENSITIVE_BLOCKED 让 UI 区分于普通"未生图"状态。
      */
     private ImageAsset persistBlockedPlaceholder(StoryboardShot shot, String model, String reason) {
@@ -586,10 +553,7 @@ public class ImageGenService {
         return sb.toString();
     }
 
-    /**
-     * 从 shot → script → topic 反查导演笔记 visualStyle。
-     * 笔记空 → 返回 null,buildPrompt 跳过。
-     */
+    /** 从 shot → script → topic 反查导演笔记 visualStyle。 */
     private DirectorVisual resolveDirectorVisual(StoryboardShot shot) {
         if (shot.getScriptId() == null) return null;
         Script s = scriptRepository.findById(shot.getScriptId()).orElse(null);
@@ -627,9 +591,7 @@ public class ImageGenService {
         sb.append(v);
     }
 
-    /**
-     * 直接返回 preset.image_config。preset.image_config 字段可能为 null(代表该预设没配置图像层)。
-     */
+    /** preset.image_config 字段可能为 null(代表该预设没配置图像层)。 */
     private com.auteur.preset.ImageConfig effectiveImageConfig(StoryboardShot shot) {
         Topic topic = resolveTopic(shot);
         if (topic == null) return new com.auteur.preset.ImageConfig();

@@ -13,9 +13,7 @@ import java.util.regex.Pattern;
 
 /**
  * SRT (SubRip) 字幕解析器。
- *
  * 容错:BOM、CRLF/LF 混用、多行 text、末尾缺空行、时间戳逗号/句号都接受。
- * 时间戳格式异常的块静默丢弃并 log warn。HTML/ASS inline 标签保留不清洗。
  */
 @Slf4j
 public final class SrtParser {

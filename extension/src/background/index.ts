@@ -13,7 +13,7 @@ interface RetryItem {
   payload: PublishedVideoUpsert[]
 }
 
-const backoffMs = (attempt: number) => Math.min(60_000, 2_000 * 2 ** attempt) // 2s,4s,8s,16s,...,cap 60s
+const backoffMs = (attempt: number) => Math.min(60_000, 2_000 * 2 ** attempt)
 
 const getRetryQueue = async (): Promise<RetryItem[]> =>
   ((await chrome.storage.local.get(RETRY_KEY))[RETRY_KEY] as RetryItem[]) ?? []

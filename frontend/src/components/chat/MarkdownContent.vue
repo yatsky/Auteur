@@ -1,18 +1,4 @@
 <script setup lang="ts">
-/**
- * Markdown 渲染组件,用于 assistant 消息内容。
- *
- * 配置:
- *   html: false        — 不解析原始 HTML,杜绝 XSS
- *   linkify: true      — 裸 URL 自动变链接
- *   breaks: false      — 单行换行不强转 <br>(GFM 默认行为)
- *   typographer: false — 不做引号智能替换,中文场景容易把键名内的 ' 替换错
- *
- * GFM 表格、代码块、列表、加粗 默认开启,无需额外插件。
- *
- * 样式靠 .md-content 类下的 CSS 选择器(写在本文件 style 里)统一,
- * 不引入 prose 插件以减依赖。
- */
 import MarkdownIt from 'markdown-it'
 import { computed } from 'vue'
 
@@ -25,8 +11,7 @@ const md = new MarkdownIt({
   typographer: false,
 })
 
-// 把 <table> 包一层 .md-table-wrap,让列太多时横向滚动只发生在表格内,
-// 不会撑大整条 assistant 气泡。
+// 把 <table> 包一层 .md-table-wrap,让列太多时横向滚动只发生在表格内,不会撑大 assistant 气泡。
 const defaultTableOpen = md.renderer.rules.table_open
   || ((tokens, idx, opts, _env, self) => self.renderToken(tokens, idx, opts))
 const defaultTableClose = md.renderer.rules.table_close

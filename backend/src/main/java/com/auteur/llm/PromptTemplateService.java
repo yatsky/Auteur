@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 
 /**
- * 渲染好的 system/user prompt。配置可来自 classpath:prompts/*.yaml(老路径,category 参数)
- * 或来自 DB 的 yaml 字符串(V51 新路径,renderInline)。Rendered.sourceId 永远 null。
+ * 渲染好的 system/user prompt。配置可来自 classpath:prompts/*.yaml(category 参数)
+ * 或来自 DB 的 yaml 字符串(renderInline)。Rendered.sourceId 永远 null。
  */
 @Slf4j
 @Service

@@ -19,10 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Series 管理:CRUD + 反查该系列下的 topics。
- * Topic.seriesId 走 PATCH /api/topics/{id}(已存在),不在此控制器里维护;这里只管 series 行本体。
- */
+/** Series 管理:CRUD + 反查该系列下的 topics。 */
 @Slf4j
 @RestController
 @RequestMapping("/api/series")
@@ -55,7 +52,7 @@ public class SeriesController {
         return SeriesDto.from(s, count);
     }
 
-    /** 反查该系列下所有 topic(详情页"集列表"用)。按 id desc。 */
+    /** 反查该系列下所有 topic。 */
     @GetMapping("/{id}/topics")
     public List<Topic> topics(@PathVariable Long id) {
         if (!seriesRepository.existsById(id)) {
@@ -108,10 +105,7 @@ public class SeriesController {
         return SeriesDto.from(saved, count);
     }
 
-    /**
-     * 删 series 行。挂在该 series 下的 topic.series_id 不会自动清(没建 FK,topic 表里残留指向已删 series 的字段)。
-     * 简化:在删之前要求该 series 下没有 topic;有则 409 并提示先迁移 topic.seriesId。
-     */
+    /** 挂在该 series 下的 topic 不为零 → 409,要求先迁移。 */
     @DeleteMapping("/{id}")
     @Transactional
     public void delete(@PathVariable Long id) {
@@ -140,7 +134,6 @@ public class SeriesController {
             @Size(max = 20) String status
     ) {}
 
-    /** 列表/详情共用。topicCount 只在列表/get 时填,创建时给 0。 */
     public record SeriesDto(
             Long id,
             String name,

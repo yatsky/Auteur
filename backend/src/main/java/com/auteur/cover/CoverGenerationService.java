@@ -34,9 +34,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 
-/**
- * 一键生成 3 张封面:3:4(1080×1440)、4:3(1440×1080)、16:9(1920×1080)。走 PipelineRun 异步框架。
- */
+/** 一键生成 3 张封面(3:4 / 4:3 / 16:9)。走 PipelineRun 异步框架。 */
 @Slf4j
 @Service
 public class CoverGenerationService {
@@ -170,10 +168,7 @@ public class CoverGenerationService {
         return coverRepo.save(c);
     }
 
-    /**
-     * /api/files/{voice|video|cover|image}/* → 本地路径;http(s) → 下到 work-dir 临时文件;
-     * 解析失败返 null,worker 用占位渲染。
-     */
+    /** 解析失败返 null,worker 用占位渲染。 */
     private Path resolveLocalPath(String url) {
         if (url == null || url.isBlank()) return null;
         if (url.startsWith("data:")) return null;

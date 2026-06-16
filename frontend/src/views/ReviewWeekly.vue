@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 周复盘输入页 —— 本周完成 + 4 大块复盘输入
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { ArrowLeft, ArrowRight, Save, Sparkles } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
@@ -44,7 +43,6 @@ const aiLoading = ref(false)
 const insights = ref<TopBottomReport | null>(null)
 const router = useRouter()
 
-// 跟 Insights / Dashboard 同款的平台 chip 配色
 const PLATFORM_CHIP: Record<string, string> = {
   '抖音':   'bg-status-failed/15 text-status-failed',
   '快手':   'bg-status-paused/15 text-status-paused',
@@ -56,7 +54,6 @@ const PLATFORM_CHIP: Record<string, string> = {
 function platformChip(p: string): string {
   return PLATFORM_CHIP[p] ?? 'bg-surface-tertiary text-text-secondary'
 }
-// 把标题里的 #标签拆出来,主标题 + 标签副行 —— 跟 Insights 同一逻辑
 function splitTitle(raw: string): { main: string; tags: string[] } {
   if (!raw) return { main: '', tags: [] }
   const idx = raw.indexOf('#')
@@ -201,7 +198,6 @@ const PROMPTS: Record<keyof Omit<WeeklyReview, 'weekKey'>, { title: string; plac
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex flex-col gap-1">
         <div class="flex items-center gap-4 flex-wrap">
@@ -262,7 +258,6 @@ const PROMPTS: Record<keyof Omit<WeeklyReview, 'weekKey'>, { title: string; plac
         </div>
       </div>
 
-      <!-- 本周维度洞察:从 InsightService 拉的近 7 天 Top/Bottom 共性 -->
       <div class="card p-4 mb-4 text-sm">
         <div class="flex items-center gap-2 mb-2">
           <Sparkles :size="14" class="text-accent" />

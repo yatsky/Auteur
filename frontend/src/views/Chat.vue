@@ -1,23 +1,5 @@
 <script setup lang="ts">
-/**
- * Agent 对话主界面。
- *
- * 状态:
- *   - sessions      左栏列表
- *   - activeId      当前选中会话
- *   - messages      当前会话消息流(初次进入 GET 历史,之后由 SSE 增量 push)
- *   - busy          一轮 chat 流期间为 true,期间禁输入
- *
- * SSE 事件处理:
- *   - user_saved      把刚发的用户消息正式塞进 messages(乐观插入的 placeholder 已经在了,这里更新 id)
- *   - assistant_done  追加一条 assistant 消息(可能 hasToolCalls=true)
- *   - tool_call       占位 placeholder tool 行,seq 暂用临时值
- *   - tool_result     用 messageId 替换/更新 placeholder
- *   - done            busy = false
- *   - error           弹错 + busy = false
- *
- * 刷新策略:done 事件后做一次 GET messages 兜底,把所有 SSE 期间错过的字段补齐(token/cost 等)。
- */
+// 刷新策略:done 事件后做一次 GET messages 兜底,把所有 SSE 期间错过的字段补齐(token/cost 等)。
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import {
   type AgentSession,
@@ -64,12 +46,6 @@ const runWatcher = useRunWatcher()
 // busy 期间收到的完成通知排队,等 busy=false 再依次发出 — 避免 race(server 拒绝并发 chat)
 const pendingNotifications = ref<string[]>([])
 
-/**
- * 取消正在进行的 SSE 流。在切会话/删会话/卸载组件/出错时调用,避免后端 LLM 调用孤立运行。
- * 注意:fetch AbortController.abort() 只能切断前端的读流;后端的 LlmClient.chatWithTools 仍会跑完当前那一次 HTTP,
- * 但下一次 emitter.send() 会 IOException 而被 onError catch,turn() 整体退出。完美干净要等 AgentLoopService 接收 cancel 信号
- * (见 AgentController review 里 onTimeout/onError 的同类问题)。
- */
 function cancelInFlight() {
   // 后端取消:让正在跑的 turn 立即抽身,不再花 LLM token。
   // fetch abort 只切断前端读流,后端默认会跑完当前 LLM 调用才退出 — 调 cancel 端点把信号塞进 registry。

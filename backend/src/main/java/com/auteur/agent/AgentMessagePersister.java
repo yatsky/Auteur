@@ -12,14 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * 把 Agent 消息持久化抽成独立 Component,绕开 Spring 自调用不触发 @Transactional 的坑。
- *
+ * 独立 @Component 绕开 Spring 自调用不触发 @Transactional 的坑。
  * 每个 public 方法都是一个独立短事务,不持有 LLM 长调用的连接。
  *
- * 设计:DB 存原文,不做存储期截断 — 之前的 32K 截断会(a)悄悄丢用户输入(b)让 SSE 直播版本和刷新后看到的版本不一致。
- *   token 控制下放到 AgentLoopService.replayMessages → truncateForReplay,只在喂给 LLM 那一刻按字符上限截。
- *   tool_calls_json / tool_args_json 仍只 warn 不动 — 截断会破坏 OpenAI 协议(LLM 重放时反序列化 ToolCall 失败)。
- *   超大值看到 warn 后由调用方自己决定是否拒绝该工具调用。
+ * DB 存原文,不做存储期截断 — 之前的 32K 截断会(a)悄悄丢用户输入(b)让 SSE 直播和刷新后看到的版本不一致。
+ *   token 控制下放到 AgentLoopService.replayMessages → truncateForReplay。
+ *   tool_calls_json / tool_args_json 仅 warn 不动 — 截断会破坏 OpenAI 协议(LLM 重放反序列化 ToolCall 失败)。
  */
 @Slf4j
 @Component

@@ -1,9 +1,4 @@
 <script setup lang="ts">
-// Preset 编辑器。10 个 tab —
-// 基本信息 / 输入字段 / 选题策划(选题) / 编剧(脚本) / 编剧自审(脚本自审) /
-// 摄影指导(分镜) / 美术指导(画面) / 配音演员(配音字幕) / 作曲(BGM) / 制片(合成)。
-// 沿用项目 Tailwind 风格,prompt 编辑用原生 textarea
-// (font-mono + 大行距,基础够用;Monaco 后期再说,先不引依赖)。
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
@@ -210,7 +205,6 @@ async function toggleVersions() {
   if (showVersions.value) await loadVersions()
 }
 
-// ========== AI 沟通优化 ==========
 // 与后端 PresetOptimizeService.SECTION_FIELDS 对齐;改这里时记得同步后端。
 const SECTION_FIELDS: Record<TabKey, string[]> = {
   basic:       ['displayName', 'description', 'visibility', 'ownerName'],
@@ -310,7 +304,6 @@ const optimizeSectionLabel = computed(() =>
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-20 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex items-center gap-3 flex-wrap">
         <button
@@ -368,7 +361,6 @@ const optimizeSectionLabel = computed(() =>
         <Loader2 :size="14" class="animate-spin" /> 加载中…
       </div>
 
-      <!-- 当前 tab 的标题栏 + AI 优化按钮(显眼位置) -->
       <div v-if="!loading" class="flex items-center gap-3 mb-3">
         <h2 class="text-base font-semibold text-text-primary">
           {{ tabLabel(activeTab) }}
@@ -395,7 +387,6 @@ const optimizeSectionLabel = computed(() =>
         </span>
       </div>
 
-      <!-- ========== 基本信息 ========== -->
       <div v-show="activeTab === 'basic'" class="card p-5 space-y-5">
         <div class="space-y-1.5">
           <label class="text-sm text-text-primary block">内部标识 (name)</label>
@@ -427,7 +418,6 @@ const optimizeSectionLabel = computed(() =>
         </div>
       </div>
 
-      <!-- ========== 输入字段 ========== -->
       <div v-show="activeTab === 'input'" class="card p-5 space-y-3">
         <div class="text-sm text-text-secondary">
           JSON Schema 描述创建 topic 时的表单字段。前端 DynamicForm 据此渲染。空 = 不填字段(适合极简 freeform)。
@@ -441,7 +431,6 @@ const optimizeSectionLabel = computed(() =>
         />
       </div>
 
-      <!-- ========== 选题 ========== -->
       <div v-show="activeTab === 'brainstorm'" class="card p-5 space-y-3">
         <div class="text-sm text-text-secondary">
           选题 prompt yaml(空 = 该预设不支持头脑风暴)。yaml 必含 system / user 字段。
@@ -449,7 +438,6 @@ const optimizeSectionLabel = computed(() =>
         <textarea v-model="draft.brainstormPromptYaml" :disabled="!adminMode" class="form-textarea font-mono text-xs" rows="22" />
       </div>
 
-      <!-- ========== 编剧 ========== -->
       <div v-show="activeTab === 'script'" class="card p-5 space-y-3">
         <div class="text-sm text-text-secondary">
           编剧 prompt yaml(必填)。可用 <code v-pre>{{key}}</code> 引用 input_schema 字段。
@@ -457,7 +445,6 @@ const optimizeSectionLabel = computed(() =>
         <textarea v-model="draft.scriptPromptYaml" :disabled="!adminMode" class="form-textarea font-mono text-xs" rows="26" />
       </div>
 
-      <!-- ========== 自审 ========== -->
       <div v-show="activeTab === 'critic'" class="card p-5 space-y-3">
         <div class="text-sm text-text-secondary">
           脚本自审 prompt(空 = 不跑 critic)。LLM 给的分数低于 threshold 时触发"带反馈重投"。
@@ -470,7 +457,6 @@ const optimizeSectionLabel = computed(() =>
         <textarea v-model="draft.scriptCriticPromptYaml" :disabled="!adminMode" class="form-textarea font-mono text-xs" rows="22" />
       </div>
 
-      <!-- ========== 摄影 ========== -->
       <div v-show="activeTab === 'storyboard'" class="card p-5 space-y-3">
         <div class="space-y-1.5">
           <label class="text-sm text-text-primary block">分镜模式 (storyboard_mode)</label>
@@ -484,7 +470,6 @@ const optimizeSectionLabel = computed(() =>
         <textarea v-model="draft.storyboardPromptYaml" :disabled="!adminMode" class="form-textarea font-mono text-xs" rows="22" />
       </div>
 
-      <!-- ========== 美术 ========== -->
       <div v-show="activeTab === 'image'" class="card p-5 space-y-3">
         <div class="text-sm text-text-secondary">
           美术配置 JSON。字段:
@@ -500,7 +485,6 @@ const optimizeSectionLabel = computed(() =>
         />
       </div>
 
-      <!-- ========== 录音 ========== -->
       <div v-show="activeTab === 'voice'" class="card p-5 space-y-3">
         <div class="text-sm text-text-secondary">
           录音配置 JSON。字段:<code class="text-xs">voice_id / speed_ratio / volume_ratio</code>。
@@ -515,7 +499,6 @@ const optimizeSectionLabel = computed(() =>
         />
       </div>
 
-      <!-- ========== BGM ========== -->
       <div v-show="activeTab === 'bgm'" class="card p-5 space-y-3">
         <div class="space-y-1.5">
           <label class="text-sm text-text-primary block">启用 BGM (bgm_enabled)</label>
@@ -531,7 +514,6 @@ const optimizeSectionLabel = computed(() =>
         <textarea v-model="draft.bgmMoodPromptYaml" :disabled="!adminMode" class="form-textarea font-mono text-xs" rows="14" />
       </div>
 
-      <!-- ========== 合成 ========== -->
       <div v-show="activeTab === 'composition'" class="card p-5 space-y-5">
         <div class="space-y-1.5">
           <label class="text-sm text-text-primary block">合成组件 (composition_id)</label>
@@ -560,7 +542,6 @@ const optimizeSectionLabel = computed(() =>
       </div>
     </div>
 
-    <!-- 版本侧栏 -->
     <div
       v-if="showVersions"
       class="fixed inset-y-0 right-0 w-96 bg-surface-secondary border-l border-border-subtle shadow-xl z-30 overflow-y-auto"
@@ -581,7 +562,6 @@ const optimizeSectionLabel = computed(() =>
       </div>
     </div>
 
-    <!-- AI 沟通优化对话框 -->
     <PresetOptimizeDialog
       :preset-id="props.id"
       :section="optimizeSection"

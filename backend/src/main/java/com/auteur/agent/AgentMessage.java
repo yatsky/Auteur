@@ -13,10 +13,6 @@ import java.time.LocalDateTime;
  *   - role=assistant : content = LLM 文本(可空); tool_calls_json = LLM 决定调的工具数组(可空)
  *   - role=tool      : tool_call_id + tool_name + content(=工具结果) + tool_args_json + tool_status
  *   - role=system    : content = 注入的额外指令(目前未用,留口子)
- *
- * 重放协议:按 seq 排序读出来,按 role 转回 ChatRequest.Message:
- *   - assistant 行 → Message.assistant(content, parsed tool_calls)
- *   - tool      行 → Message.tool(tool_call_id, tool_name, content)
  */
 @Entity
 @Table(name = "agent_message")

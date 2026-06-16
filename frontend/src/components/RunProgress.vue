@@ -1,15 +1,11 @@
 <script setup lang="ts">
-// 进度条 —— 异步 run 通用展示。lastCompletedIndex / totalItems 是后端 PipelineRun 的进度字段。
-// totalItems 为空(0/null)时退化成"提交中"灰条;DONE/FAILED 后显示终态色 + 完成数量。
 import { computed } from 'vue'
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-vue-next'
 import type { PipelineRun } from '../types'
 
 const props = defineProps<{
   run: PipelineRun | null
-  /** 顶部 chip 的标签:"生成分镜中" / "生图中" / "图审中"。失败/完成时仍显示。 */
   label?: string
-  /** 计数单位:"张" / "镜" / "条"。无值时只显示 done/total 数字。 */
   unit?: string
 }>()
 

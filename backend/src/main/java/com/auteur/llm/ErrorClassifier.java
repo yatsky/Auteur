@@ -20,7 +20,6 @@ public final class ErrorClassifier {
 
         Throwable cur = t;
         while (cur != null) {
-            // 1) Spring RestClient 4xx
             if (cur instanceof HttpClientErrorException ce) {
                 int code = ce.getStatusCode().value();
                 if (code == 429) return "limit";

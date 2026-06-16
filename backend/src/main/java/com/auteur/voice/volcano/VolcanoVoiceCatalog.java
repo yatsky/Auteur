@@ -7,8 +7,7 @@ import java.util.List;
 
 /**
  * 火山预训练音色目录(精选)。来源:火山文档「在线音色列表」豆包语音合成 2.0。
- *
- * group: biography(生平叙述) / mystery(悬疑旁白) / both(通用)。
+ * group: biography / mystery / both。
  */
 @Component
 @RequiredArgsConstructor

@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 圈二:流水线触发工具集(全部 ACTION,必走 HITL approval)。
+ * 流水线触发工具集(全部 ACTION,必走 HITL approval)。
  *
  * 所有工具立即返回 runId,让 LLM 提示用户用 get_run_status 轮询,
  * 不在 Agent 控制台同步等待 — 长任务跑 5-15 分钟,SSE 撑不住。
@@ -67,7 +67,6 @@ public class PipelineTriggerTools {
         );
     }
 
-    // -------- regenerate_script --------
     private class RegenerateScript implements ActionToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -96,7 +95,6 @@ public class PipelineTriggerTools {
         }
     }
 
-    // -------- generate_storyboard --------
     private class GenerateStoryboard implements ActionToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -123,7 +121,6 @@ public class PipelineTriggerTools {
         }
     }
 
-    // -------- generate_images --------
     private class GenerateImages implements ActionToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -153,7 +150,6 @@ public class PipelineTriggerTools {
         }
     }
 
-    // -------- audit_images --------
     private class AuditImages implements ActionToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -176,7 +172,6 @@ public class PipelineTriggerTools {
         }
     }
 
-    // -------- regenerate_image_for_shot --------
     private class RegenerateImageForShot implements ActionToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -199,7 +194,6 @@ public class PipelineTriggerTools {
         }
     }
 
-    // -------- generate_voice --------
     private class GenerateVoice implements ActionToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -238,7 +232,6 @@ public class PipelineTriggerTools {
         }
     }
 
-    // -------- render_video --------
     private class RenderVideo implements ActionToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -276,7 +269,6 @@ public class PipelineTriggerTools {
         }
     }
 
-    // -------- generate_covers --------
     private class GenerateCovers implements ActionToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -309,7 +301,6 @@ public class PipelineTriggerTools {
         }
     }
 
-    // -------- run_factcheck --------
     private class RunFactCheck implements ActionToolHandler {
         @Override
         public ChatRequest.Tool definition() {

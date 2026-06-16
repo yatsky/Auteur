@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// 数据看板 —— KPI(带 sparkline + 环比) + 趋势 + 平台分布 + Top 视频 + 平台×完播率对比表
-// 数据源:/api/analytics/compare(单条视频明细) + /api/analytics/daily-trend(日序列,只有 views/engagementPct)
 import { computed, onMounted, ref } from 'vue'
 import { ArrowDown, ArrowLeft, ArrowUp, BarChart3, Minus, RefreshCw } from 'lucide-vue-next'
 import MiniLineChart from '../components/MiniLineChart.vue'
@@ -9,7 +7,6 @@ import { getAnalyticsCompare, getDailyTrend, type VideoCompare, type DailyTrendP
 const range = ref<'7d' | '30d' | '90d'>('30d')
 const platform = ref<string>('all')
 
-// 跟 Insights.vue 同款的平台 chip 配色 —— status palette /15 半透明,色相微差识别平台,克制不扎眼
 const PLATFORM_CHIP: Record<string, string> = {
   '抖音':   'bg-status-failed/15 text-status-failed',
   '快手':   'bg-status-paused/15 text-status-paused',
@@ -50,7 +47,6 @@ const filtered = computed(() => {
 // 当前 range 的 daily trend 切片(后端默认返回 30 天,这里再按 rangeDays 截尾)
 const trendInRange = computed(() => trend.value.slice(-rangeDays.value))
 
-// KPI 当前值
 const kpi = computed(() => {
   const totalViews = filtered.value.reduce((s, v) => s + v.views, 0)
   const totalLikes = filtered.value.reduce((s, v) => s + v.likes, 0)
@@ -97,7 +93,6 @@ const sparkEngagement = computed(() =>
   trendInRange.value.map((d) => ({ x: d.date.slice(5), y: Number(d.engagementPct) })),
 )
 
-// 平台分布(按 views 占比)
 const platformDistribution = computed(() => {
   const map = new Map<string, number>()
   for (const v of filtered.value) map.set(v.platform, (map.get(v.platform) || 0) + v.views)
@@ -183,7 +178,6 @@ function fmtNum(n: number): string {
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex flex-col gap-1">
         <div class="flex items-center gap-4 flex-wrap">
@@ -231,7 +225,6 @@ function fmtNum(n: number): string {
       </div>
 
       <template v-else>
-        <!-- 平台过滤(独立行) -->
         <div class="card p-2.5 mb-4 flex items-center gap-2 flex-wrap">
         <span class="text-xs text-text-muted ml-1">平台</span>
         <button
@@ -243,7 +236,6 @@ function fmtNum(n: number): string {
         </button>
       </div>
 
-      <!-- KPI 4 卡:数值 + 环比 trend + sparkline -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <div class="card p-4">
           <div class="text-xs text-text-muted">总播放</div>
@@ -300,7 +292,6 @@ function fmtNum(n: number): string {
         </div>
       </div>
 
-      <!-- 趋势图 + 平台分布 -->
       <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 mb-4">
         <div class="card p-5">
           <div class="flex items-center gap-2 mb-3 flex-wrap">
@@ -344,7 +335,6 @@ function fmtNum(n: number): string {
         </div>
       </div>
 
-      <!-- Top 5 视频 + 平台对比表 -->
       <div class="grid grid-cols-1 lg:grid-cols-[1fr_440px] gap-4">
         <div class="card p-5">
           <h2 class="text-base font-semibold mb-3">Top 5 视频</h2>

@@ -16,11 +16,6 @@ import java.util.Map;
 
 /**
  * 系统配置只读工具(app_config)。
- *
- * - list_app_configs:    全部配置项(secret 已 mask 成 abcd****wxyz)
- * - get_app_config:      单 key 取一项
- *
- * 写入工具放第 3 步 AppConfigWriteTools。
  */
 @Slf4j
 @Component

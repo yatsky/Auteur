@@ -17,10 +17,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 预设写入工具。三件套:
- *
+ * 预设写入工具:
  *   - update_preset_field:        改一个字段,走 PresetService.update(覆盖当前版,不写 snapshot)
- *   - save_preset_as_new_version: 改 + 新写一份 snapshot,currentVersion+1(LLM 在做"重大改动"时用)
+ *   - save_preset_as_new_version: 改 + 新写一份 snapshot,currentVersion+1
  *   - rollback_preset_version:    回到指定历史版本
  *
  * 字段白名单是受限子集:不让 LLM 改 visibility/owner_name 之类访问控制属性,
@@ -186,7 +185,6 @@ public class PresetWriteTools {
         };
     }
 
-    // ---- 共享 schema 片段 ----
     private static Map<String, Object> fieldsSchema() {
         return Map.of(
                 "type", "string",
@@ -202,7 +200,6 @@ public class PresetWriteTools {
         );
     }
 
-    // -------- update_preset_field --------
     private class UpdatePresetField implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {

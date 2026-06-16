@@ -1,6 +1,5 @@
 import { http } from './client'
 
-/** 体裁/垂类聚合统计快照(投稿作品.xlsx 按周期导入)。 */
 export interface GenreStat {
   id: number
   periodStart: string  // YYYY-MM-DD

@@ -33,18 +33,8 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 /**
- * P1 缺口工具集合(网页可点击但 agent 没暴露的高频写操作)。
+ * 工具集合(网页可点击但 agent 没暴露的高频写操作)。
  *
- *   - update_topic            (WRITE) PATCH topic 字段(白名单内,部分更新)
- *   - delete_topic            (WRITE) 选题硬删,有脚本时拒绝
- *   - delete_script           (WRITE) 脚本硬删(级联清 sections/shots/images/voice/video/cover)
- *   - align_script_timing     (WRITE) 重算 section/shot 时间戳对齐 voice 节奏(纯算,毫秒级)
- *   - dismiss_factcheck_issue (WRITE) 忽略 factcheck issue(标 resolved=true,不改文)
- *   - select_image_as_final   (WRITE) 选某 image_asset 作 shot 的 final
- *   - finalize_cover          (WRITE) 选某 cover 作 script 同 ratio 的 final(独占)
- *   - save_weekly_review      (WRITE) 保存周复盘(LLM 生成的 highlights/lessons/... 落库)
- *
- * 都是 WRITE risk → 走 HITL 审批,不直接生效。
  * Topic 白名单字段:title/projectName/dynasty/genre/protagonist/hookType/emotion/durationMinutes/
  *   potentialScore/historicalReference/status/notes/directorNote/presetId/seriesId。
  *   不开放:source / aiSuggestedSeries / 时间戳(系统管)。
@@ -83,7 +73,6 @@ public class MoreOpsTools {
         registry.register(new SaveWeeklyReview());
     }
 
-    // ============ update_topic ============
     private class UpdateTopic implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -169,7 +158,6 @@ public class MoreOpsTools {
         }
     }
 
-    // ============ delete_topic ============
     private class DeleteTopic implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -200,7 +188,6 @@ public class MoreOpsTools {
         }
     }
 
-    // ============ delete_script ============
     private class DeleteScript implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -228,7 +215,6 @@ public class MoreOpsTools {
         }
     }
 
-    // ============ align_script_timing ============
     private class AlignScriptTiming implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -254,7 +240,6 @@ public class MoreOpsTools {
         }
     }
 
-    // ============ dismiss_factcheck_issue ============
     private class DismissFactcheckIssue implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -283,7 +268,6 @@ public class MoreOpsTools {
         }
     }
 
-    // ============ select_image_as_final ============
     private class SelectImageAsFinal implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -328,7 +312,6 @@ public class MoreOpsTools {
         }
     }
 
-    // ============ finalize_cover ============
     private class FinalizeCover implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {
@@ -368,7 +351,6 @@ public class MoreOpsTools {
         }
     }
 
-    // ============ save_weekly_review ============
     private class SaveWeeklyReview implements WriteToolHandler {
         @Override
         public ChatRequest.Tool definition() {

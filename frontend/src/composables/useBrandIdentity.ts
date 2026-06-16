@@ -1,5 +1,4 @@
-// useBrandIdentity —— 账号级品牌包,后端 brand_identity 单行表(id=1)。
-// 模块级 ref:onMounted GET 一次,所有引用页面共享;watch debounce 写回 PUT。
+// useBrandIdentity —— 账号级品牌包,后端 brand_identity 单行表(id=1)。模块级 ref 所有引用页面共享。
 // 一次性迁移:首屏 GET 回来若仍是初始空值且 localStorage 有旧 mock 数据,PUT 上去当迁移。
 import { ref, watch } from 'vue'
 import type { BrandIdentity } from '../types'
@@ -7,7 +6,7 @@ import { getBrandIdentity, saveBrandIdentity } from '../api/scripts'
 
 const LEGACY_STORAGE_KEY = 'auteur.brand'
 
-// 默认品牌包 —— "历史密档" 频道的墨蓝 + 古铜金 + 印章红配色。仅在首次后端 GET 完成前作占位。
+// 仅在首次后端 GET 完成前作占位。
 const DEFAULT_BRAND: BrandIdentity = {
   brandName: '历史密档',
   authorName: '',
@@ -23,7 +22,7 @@ const DEFAULT_BRAND: BrandIdentity = {
 
 const brand = ref<BrandIdentity>({ ...DEFAULT_BRAND })
 
-// 加载状态:loaded=true 之前 watch 不触发 PUT,避免初始默认值覆盖后端真值
+// loaded=true 之前 watch 不触发 PUT,避免初始默认值覆盖后端真值
 const loaded = ref(false)
 const loading = ref(false)
 let loadPromise: Promise<void> | null = null
@@ -39,8 +38,8 @@ function readLegacyLocalStorage(): Partial<BrandIdentity> | null {
 }
 
 function isBackendEmpty(b: BrandIdentity): boolean {
-  // 后端首次启动 INSERT 的行 brand_name='' author_name='',颜色字段在 entity 给了默认值
-  // 但 logoDataUrl 为 null,brandName/authorName 空 → 算"空"
+  // 后端首次启动 INSERT 的行 brand_name='' author_name='',颜色字段在 entity 给了默认值;
+  // logoDataUrl 为 null,brandName/authorName 空 → 算"空"
   return (!b.brandName || b.brandName.trim() === '')
       && (!b.authorName || b.authorName.trim() === '')
       && !b.logoDataUrl
@@ -68,7 +67,7 @@ async function ensureLoaded() {
             console.warn('[useBrandIdentity] migrate failed, falling back to remote', e)
           }
         }
-        // 没旧数据可迁:把 DEFAULT_BRAND 的展示值合进 remote(后端字段为 hex 默认色,brandName/authorName 留空)
+        // 没旧数据可迁:把 DEFAULT_BRAND 的展示值合进 remote
         brand.value = { ...DEFAULT_BRAND, ...remote }
       } else {
         brand.value = { ...DEFAULT_BRAND, ...remote }
@@ -89,7 +88,7 @@ let saveTimer: ReturnType<typeof setTimeout> | null = null
 let lastSaveSerialized: string = ''
 
 watch(brand, (next) => {
-  if (!loaded.value) return  // 还没拉过 → 不要写
+  if (!loaded.value) return
   const serialized = JSON.stringify({
     brandName: next.brandName,
     authorName: next.authorName,
@@ -107,7 +106,7 @@ watch(brand, (next) => {
     try {
       const saved = await saveBrandIdentity(next)
       lastSaveSerialized = serialized
-      // 把 updatedAt 同步回来,但不要用整个 saved 覆盖(避免触发再次 watch)
+      // 同步 updatedAt,但不要用整个 saved 覆盖(避免触发再次 watch)
       brand.value.updatedAt = saved.updatedAt
     } catch (e) {
       console.warn('[useBrandIdentity] save failed', e)
@@ -116,7 +115,7 @@ watch(brand, (next) => {
 }, { deep: true })
 
 export function useBrandIdentity() {
-  // 首次调用立即拉一次。重复调不会重复请求(loadPromise 复用)
+  // 重复调不会重复请求(loadPromise 复用)
   void ensureLoaded()
   return {
     brand,

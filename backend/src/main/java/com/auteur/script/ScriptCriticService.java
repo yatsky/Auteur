@@ -21,7 +21,6 @@ import java.util.Map;
 /**
  * 自审编辑 / Critic
  *
- * 编剧出稿后的自审循环。LLM 给的分数低于 preset.script_critic_threshold 时触发 REWRITE。
  * preset.script_critic_prompt_yaml 为空 → 该预设不需要 critic,直接 PASS。
  * 失败放行降级:LLM 异常或解析失败时返回 PASS,只 WARN 日志。
  */
@@ -30,7 +29,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ScriptCriticService {
 
-    /** 默认通过分数线;preset.script_critic_threshold 缺失时回落此值。 */
     private static final int DEFAULT_PASS_THRESHOLD = 80;
 
     private final LlmClient llmClient;
@@ -40,10 +38,7 @@ public class ScriptCriticService {
     private final com.auteur.preset.TopicPresetResolver presetResolver;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    /**
-     * 自审入口。返回的 decision = PASS / REWRITE。
-     * scriptId 仅用于 critic_log 落库追溯,可空。
-     */
+    /** scriptId 仅用于 critic_log 落库追溯,可空。 */
     public ScriptCriticResult audit(ScriptDraft draft, Topic topic, Long scriptId) {
         ScriptCriticResult result = doAudit(draft, topic);
         writeLog(result, topic, scriptId);

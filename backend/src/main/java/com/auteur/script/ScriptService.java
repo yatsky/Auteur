@@ -43,11 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
-/**
- * 编剧 / Screenwriter
- * 把选题(topic)展开成完整脚本(五段 A 钩子 / B 累积 / C 中段 / D 揭秘 / E 留白)。
- * 从 preset.script_prompt_yaml 渲染,preset_input_json 注入变量。
- */
 @Slf4j
 @Service
 public class ScriptService {
@@ -118,7 +113,7 @@ public class ScriptService {
         return generate(topicId, null);
     }
 
-    /** 带锚点(用户自由指令)的版本 —— 重新生成按钮走这条。anchor=null/空白 等价于无指令。 */
+    /** 带锚点(用户自由指令)的版本。anchor=null/空白 等价于无指令。 */
     @Transactional
     public Script generate(Long topicId, String anchor) {
         PipelineRun run = runService.start(
@@ -135,11 +130,7 @@ public class ScriptService {
         }
     }
 
-    /**
-     * 异步脚本生成:立即返回 runId,worker 在 pipelineExecutor 跑 LLM。
-     * UI 通过 GET /api/runs/{runId} 轮询进度,DONE 后用 run.scriptId 跳到脚本详情。
-     * 生成成功会 setScriptId 回写到 PipelineRun,这样列表/工作台能正确反查到脚本(顺手把孤儿 run 的根因解掉)。
-     */
+    /** 生成成功会 setScriptId 回写到 PipelineRun。 */
     public Long generateAsync(Long topicId, String triggeredBy) {
         return generateAsync(topicId, null, triggeredBy);
     }
@@ -159,7 +150,7 @@ public class ScriptService {
 
     /**
      * 异步路径不在 @Transactional 边界里,但脚本/章节落库要有事务,所以独立成一段 REQUIRES_NEW。
-     * 同步路径外层已经有 @Transactional,REQUIRES_NEW 会嵌套也没坏处(Hibernate 会拿到一个独立事务)。
+     * 同步路径外层已经有 @Transactional,REQUIRES_NEW 嵌套也没坏处(Hibernate 会拿到独立事务)。
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Script doGenerateInNewTx(Long topicId, String anchor) {
@@ -171,8 +162,7 @@ public class ScriptService {
         Topic topic = topicRepository.findById(topicId)
                 .orElseThrow(() -> new NotFoundException("Topic not found: " + topicId));
 
-        // 每 topic 一脚本:生成新脚本前先 cascade 删除该 topic 下的所有旧脚本
-        // (连带 sections / shots / images / voice / video / cover / bgm-choice)。
+        // 每 topic 一脚本:生成新脚本前先 cascade 删除该 topic 下的所有旧脚本。
         // published_video / pipeline_run 是软引用 script_id,不会被删,保留作历史/审计。
         int removed = scriptRepository.deleteByTopicId(topicId);
         if (removed > 0) {
@@ -204,9 +194,7 @@ public class ScriptService {
     }
 
     /**
-     * 原地重新生成 —— 反查 topicId,清空下游产物(分镜/图/语音/视频/封面/系列钩子/事实核查),
-     * 用 LLM 重写 fullText 与 sections,但保留 Script.id 与 version 不变。
-     * 上游(选题)和下游引用关系都不会被改写,仅"内容"被新版替换。
+     * 原地重新生成 —— 清空下游产物,用 LLM 重写 fullText 与 sections,但保留 Script.id 与 version 不变。
      */
     public Long regenerateInPlaceAsync(Long scriptId, String anchor, String triggeredBy) {
         Script existing = scriptRepository.findById(scriptId)
@@ -263,10 +251,6 @@ public class ScriptService {
         return script;
     }
 
-    /**
-     * 渲染 prompt → 调 LLM → 解析校验 → 把 fullText/wordCount/durationSeconds/modelUsed 写回入参 script,
-     * 并把 5 段 ScriptSection 落库。
-     */
     private Script populateScriptFromLlm(Script script, Topic topic, String anchor) {
         com.auteur.preset.PresetContext ctx = presetResolver.forTopic(topic);
 
@@ -418,8 +402,8 @@ public class ScriptService {
     }
 
     /**
-     * 模型选择：优先按预设里的 routing.by=potential_score 路由，旗舰/批量模型与阈值都从 yaml 读。
-     * 任何字段缺失都回退到 yaml 顶层 model；yaml 也未指定则回落到全局默认(app_config 里的 auteur.model.script)。
+     * 优先按预设里的 routing.by=potential_score 路由,旗舰/批量模型与阈值从 yaml 读;
+     * 缺失则回退到 yaml 顶层 model;yaml 未指定则回落到全局默认。
      */
     private String pickModel(Topic topic, PromptTemplateService.Rendered tpl) {
         com.auteur.llm.PromptTemplateLoader.Routing r = tpl.routing();
@@ -436,8 +420,7 @@ public class ScriptService {
     }
 
     /**
-     * 兼容渲染:若 preset_input_json 里(顶层或 identity_card 下)有 nodes 数组,
-     * 渲染成 yaml 期望的 {{identity_card_nodes}} 多行字符串。
+     * 兼容渲染:若 preset_input_json 里有 nodes 数组,渲染成 yaml 期望的 {{identity_card_nodes}} 多行字符串。
      */
     private void injectIdentityCardNodesIfPresent(Map<String, Object> params, String presetInputJson, Long topicId) {
         if (presetInputJson == null || presetInputJson.isBlank()) return;
@@ -519,8 +502,8 @@ public class ScriptService {
     }
 
     /**
-     * 人工编辑 section 后的入口:更新 textContent / title,并基于该 script 的所有 section 重建 fullText.
-     * 不刷 wordCount / durationSeconds —— 那两个由生成时 LLM 给的目标值,不是统计值.
+     * 人工编辑 section 后的入口:更新 textContent / title,并基于该 script 的所有 section 重建 fullText。
+     * 不刷 wordCount / durationSeconds —— 那两个由生成时 LLM 给的目标值,不是统计值。
      */
     @Transactional
     public ScriptSection updateSection(Long scriptId, Long sectionId, String textContent, String title) {
@@ -545,7 +528,6 @@ public class ScriptService {
         return section;
     }
 
-    /** 同 {@link #joinFullText} 的拼接格式,但输入是已持久化的 ScriptSection 列表. */
     private static String joinSectionFullText(List<ScriptSection> sections) {
         StringBuilder sb = new StringBuilder();
         for (ScriptSection s : sections) {
@@ -557,8 +539,8 @@ public class ScriptService {
     }
 
     /**
-     * 重新生成时用户给的"自由指令"块。空指令 → 空串。
-     * 非空时包成显眼标注的"最高优先级"段,放在选题信息之后,让模型最近读到的是约束。
+     * 重新生成时用户给的"自由指令"块。非空时包成显眼标注的"最高优先级"段,
+     * 让模型最近读到的是约束。
      */
     private static String buildAnchorBlock(String anchor) {
         if (anchor == null) return "";

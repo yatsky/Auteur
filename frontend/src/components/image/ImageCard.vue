@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// 单张图片卡:封面 + 状态浮层 + 元数据 + 操作 + inline 提示词编辑器
-// 父持有所有 state(运行态、编辑草稿),通过 props 注入,子件 emit 行为。
 import { Link2, Loader2, Pencil, RotateCcw, Save, ShieldCheck, X } from 'lucide-vue-next'
 import TimeText from '../TimeText.vue'
 import type { ImageAsset, PipelineRun } from '../../types'
@@ -14,7 +12,6 @@ const props = defineProps<{
   shotHasFinal: boolean
   shotRun?: RunState
   assetRun?: RunState
-  // inline 提示词编辑器:仅当 editingShotId === img.shotId 时显示
   isEditingPrompt: boolean
   draftPrompt: string
   promptSaving: boolean
@@ -129,7 +126,6 @@ function onCoverClick() {
         </button>
       </div>
 
-      <!-- inline 提示词编辑器 -->
       <div v-if="isEditingPrompt"
            class="mt-2 p-2 rounded-md bg-surface-tertiary/60 border border-accent/30">
         <div class="text-[10px] text-text-muted mb-1 flex items-center justify-between">

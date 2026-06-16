@@ -10,7 +10,6 @@ import {
   type StoryProps,
 } from './types'
 
-// Story 横屏 demo —— picsum 占位 + 简短示例字幕。生产环境由 backend 拼真实数据。
 const storyHorizontalDefaultProps: StoryProps = {
   audioUrl: '',
   audioDurationSec: 18,
@@ -33,7 +32,6 @@ const storyHorizontalDefaultProps: StoryProps = {
   hookPageFlipSoundUrl: '',
 }
 
-// Story 竖屏 demo —— 同上,picsum 切到 1080×1920 比例。
 const storyVerticalDefaultProps: StoryProps = {
   ...storyHorizontalDefaultProps,
   shots: storyHorizontalDefaultProps.shots.map(s => ({
@@ -45,7 +43,7 @@ const storyVerticalDefaultProps: StoryProps = {
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      {/* LifeCopy:横屏 1920×1080。保留作 alias,兼容历史 preset.composition_id="LifeCopy"。 */}
+      {/* LifeCopy:保留作 alias,兼容历史 preset.composition_id="LifeCopy"。 */}
       <Composition
         id="LifeCopy"
         component={StoryComposition}
@@ -63,7 +61,6 @@ export const RemotionRoot: React.FC = () => {
         })}
       />
 
-      {/* Story 横屏 1920×1080 */}
       <Composition
         id="StoryHorizontal"
         component={StoryComposition}
@@ -80,7 +77,6 @@ export const RemotionRoot: React.FC = () => {
         })}
       />
 
-      {/* Story 竖屏 1080×1920(短视频主流) */}
       <Composition
         id="StoryVertical"
         component={StoryComposition}

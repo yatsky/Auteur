@@ -22,15 +22,10 @@ import java.util.Map;
 
 /**
  * 总导演笔记 "AI 智能填充" 服务。把"用户当前填的内容(可能含未保存草稿)+ 自然语言诉求"喂给 LLM,
- * 重写整份 DirectorNote(tone/pacing/五段 narrativeArc/visualStyle/protagonistVibe/keyMoments/
- * highlightThemes/directorNotes),返回完整对象 + explanation。
+ * 重写整份 DirectorNote,返回完整对象 + explanation。
  *
  * 不落库 — 仅返回建议,前端写回 form,用户决定是否点保存。
- *
- * 与 {@link DirectorNoteService}(剧组群聊增量,append-only)无任何关系,仅同名容易混淆,这里明确分离。
- *
- * 镜像 {@link com.auteur.preset.PresetOptimizeService}:system prompt 写死 schema 约束 + 严格 JSON 输出,
- * 解析阶段 stripCodeFence → 截最外层 {} → readValue → 硬/软校验。
+ * 与 {@link DirectorNoteService}(剧组群聊增量,append-only)无任何关系。
  */
 @Slf4j
 @Service
@@ -131,14 +126,11 @@ public class DirectorNoteOptimizeService {
                 .relatedType("TOPIC")
                 .relatedId(topicId)
                 .temperature(0.5)
-                // 整份 DirectorNote JSON 含 5 段 narrativeArc + visualStyle + protagonistVibe +
-                // keyMoments + highlightThemes + directorNotes,实测中文输出 1500-3000 字符 /
-                // 1000-1500 tokens。不设 maxTokens 时 DeepSeek 默认 1024 会截断 → JSON 解析失败。
+                // 不设 maxTokens 时 DeepSeek 默认 1024 会截断 → JSON 解析失败。
                 .maxTokens(4000)
                 .build();
 
-        // LLM 偶发结构性错误(数组对象嵌套漏 } 之类),不是 healer 能修的字符级问题 —
-        // 整次重新生成成功率 > 修复尝试。最多重试 2 次,加起来约 60-80s。
+        // LLM 偶发结构性错误(数组对象嵌套漏 } 之类),整次重新生成成功率 > 修复尝试。最多重试 2 次。
         ResponseStatusException lastErr = null;
         for (int attempt = 1; attempt <= 2; attempt++) {
             LlmResult result = llmClient.chat(spec, system, user);
@@ -194,11 +186,10 @@ public class DirectorNoteOptimizeService {
         String json = stripped.substring(start, end + 1);
         Map<String, Object> parsed;
         try {
-            // LLM 经常在中文 prompt 内嵌套双引号(如「" "」),JsonHealer 修常见 unescaped 双引号
+            // JsonHealer 修常见 unescaped 双引号
             String healed = com.auteur.llm.JsonHealer.fixUnescapedAsciiQuotes(json);
             parsed = objectMapper.readValue(healed, new TypeReference<Map<String, Object>>() {});
         } catch (Exception e) {
-            // 完整 raw 落 log 便于复盘 — preview 只截 200 字看不见根因
             log.warn("[DirectorNoteOptimize] parse failed: {}\nFULL raw=\n{}", e.toString(), raw);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "LLM 输出 JSON 解析失败: " + TextUtils.preview(raw));
@@ -220,9 +211,7 @@ public class DirectorNoteOptimizeService {
         return new OptimizeResponse(noteOn, explanation);
     }
 
-    /**
-     * 硬校验失败抛 400;软校验只 log warn 后就地修复 ObjectNode。
-     */
+    /** 硬校验失败抛 400;软校验只 log warn 后就地修复 ObjectNode。 */
     private void validateAndPatch(ObjectNode note) {
         // 硬:tone/pacing 非空字符串
         requireNonBlankString(note, "tone");

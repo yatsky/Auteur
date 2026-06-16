@@ -28,8 +28,6 @@ import java.util.Optional;
  *   - 不传 audioformat=mp32:会过滤掉只有 mp31 (96kbps stream) 的曲目,导致大部分 mood tag 返 0 条
  *   - 不传 fuzzytags:Jamendo 这个参数有 bug,传任何值都返 0 条;默认行为已是模糊匹配
  *   - tags 多个值是严格 AND 匹配,3 个 tag 几乎找不到曲;映射用 2 个 tag
- *
- * 失败策略:client_id 缺失或 4xx/5xx 直接抛 RuntimeException,上层转 503/502。
  */
 @Slf4j
 @Component
@@ -55,7 +53,6 @@ public class JamendoClient {
         return runtimeConfig.get("auteur.bgm.jamendo.client-id");
     }
 
-    /** 按 mood 标签拉曲库,popularity_total_desc 排序。 */
     public List<JamendoTrack> search(String tagsCsv, int limit, int offset) {
         String clientId = clientId();
         if (clientId == null || clientId.isBlank()) {

@@ -1,12 +1,5 @@
-// coverTemplates —— 4 个封面模板的 canvas 渲染函数。
 // 每个模板都接收 (ctx, w, h, brand, design, heroImg),内部用 w/h 比例自适应 3:4 / 4:3 / 16:9。
-// 预览即 canvas,导出 = canvas.toBlob('image/png') —— 像素一致,无第三方依赖。
-//
-// 设计原则:
-// 1. 文字必须自动换行(中文不能撑出画面);
-// 2. hero 图按 cover 模式裁切(填满目标区域,不变形);
-// 3. 颜色全部从 brand 取,改主色三比例同步变;
-// 4. logo 在底部对齐,统一 60px 高(自适应小尺寸缩放)。
+// 颜色全部从 brand 取,改主色三比例同步变。
 import type { BrandIdentity, CoverDesign } from '../types'
 
 export type CoverRenderFn = (
@@ -26,7 +19,7 @@ export interface CoverTemplateMeta {
   render: CoverRenderFn
 }
 
-// 中文文字断行 —— canvas measureText 在中文上每个字宽差不多,直接按字宽贪心断行。
+// canvas measureText 在中文上每个字宽差不多,按字宽贪心断行。
 function wrapText(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -53,7 +46,7 @@ function wrapText(
   return lines
 }
 
-// hero 图 cover 模式裁切 —— 像 CSS background-size: cover,填满目标区域,中心裁切,不变形。
+// 像 CSS background-size: cover,填满目标区域,中心裁切,不变形。
 function drawCover(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
@@ -73,13 +66,11 @@ function drawCover(
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h)
 }
 
-// 占位 placeholder 矩形(没传 hero 图时)
 function drawHeroPlaceholder(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, w: number, h: number,
   brand: BrandIdentity,
 ) {
-  // 渐变填充,左上 primary → 右下 secondary
   const grad = ctx.createLinearGradient(x, y, x + w, y + h)
   grad.addColorStop(0, brand.primaryColor)
   grad.addColorStop(1, brand.secondaryColor)
@@ -92,8 +83,6 @@ function drawHeroPlaceholder(
   ctx.fillText('封面主图占位', x + w / 2, y + h / 2)
 }
 
-// 画 logo + 频道名 角标。logo 圆形 clip + 古铜金描边;
-// 文字第一行 brandName,有 authorName 时跟在后面小字 @xxx。
 function drawLogoAndAuthor(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, h: number,
@@ -116,14 +105,13 @@ function drawLogoAndAuthor(
     ctx.clip()
     ctx.fillStyle = brand.bgColor
     ctx.fillRect(cursorX, y, size, size)
-    // 用 max(scaleX, scaleY) 中心裁切,保证非方图也填满圆
+    // max(scaleX, scaleY) 中心裁切,保证非方图也填满圆
     const scale = Math.max(size / logoImg.naturalWidth, size / logoImg.naturalHeight)
     const dw = logoImg.naturalWidth * scale
     const dh = logoImg.naturalHeight * scale
     ctx.drawImage(logoImg, cursorX + (size - dw) / 2, y + (size - dh) / 2, dw, dh)
     ctx.restore()
 
-    // 描边(古铜金,跟着 brand.secondaryColor 走)
     ctx.strokeStyle = brand.secondaryColor
     ctx.lineWidth = Math.max(1.5, h * 0.04)
     ctx.beginPath()
@@ -155,14 +143,12 @@ function drawLogoAndAuthor(
 
 // 模板 1:bottom-caption —— hero 填满 + 底部渐变蒙层 + 大字标题压图
 const renderBottomCaption: CoverRenderFn = (ctx, w, h, brand, design, heroImg, logoImg) => {
-  // 底色兜底
   ctx.fillStyle = brand.bgColor
   ctx.fillRect(0, 0, w, h)
-  // 主图填满
   if (heroImg) drawCover(ctx, heroImg, 0, 0, w, h)
   else drawHeroPlaceholder(ctx, 0, 0, w, h, brand)
 
-  // 底部渐变蒙层 —— 透明 → 主色,占 55% 高度,保证标题压在画面深色区
+  // 底部渐变蒙层占 55% 高度,保证标题压在画面深色区
   const overlayH = h * 0.55
   const grad = ctx.createLinearGradient(0, h - overlayH, 0, h)
   grad.addColorStop(0, 'rgba(0,0,0,0)')
@@ -171,10 +157,9 @@ const renderBottomCaption: CoverRenderFn = (ctx, w, h, brand, design, heroImg, l
   ctx.fillStyle = grad
   ctx.fillRect(0, h - overlayH, w, overlayH)
 
-  // 标题:占宽度 86%,自动换行
   const padX = w * 0.07
   const maxTextW = w - padX * 2
-  // 标题字号 —— 3:4 用 w*0.095,4:3 / 16:9 用 h*0.13,保证视觉一致
+  // 3:4 用 w*0.095,4:3 / 16:9 用 h*0.13,保证视觉一致
   const ratio = w / h
   const titleSize = ratio < 1 ? Math.round(w * 0.095) : Math.round(h * 0.13)
   ctx.font = `bold ${titleSize}px ${brand.titleFont}`
@@ -182,11 +167,11 @@ const renderBottomCaption: CoverRenderFn = (ctx, w, h, brand, design, heroImg, l
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
   const titleLines = wrapText(ctx, design.titleText || '在这里写一个有钩子的标题', maxTextW)
-  // 限最多 3 行,超出截断加省略号
+  // 最多 3 行,超出截断加省略号
   const cap = titleLines.slice(0, 3)
   if (titleLines.length > 3) cap[2] = cap[2].slice(0, -1) + '…'
 
-  // logo 角标占位约 h*0.18 —— 标题贴底部上方
+  // logo 角标占位约 h*0.18
   const cornerH = Math.round(h * 0.06)
   const lineGap = titleSize * 0.18
   const titleBlockH = cap.length * (titleSize + lineGap) - lineGap
@@ -198,7 +183,6 @@ const renderBottomCaption: CoverRenderFn = (ctx, w, h, brand, design, heroImg, l
     ctx.fillText(line, padX, y)
   })
 
-  // 角标:logo + author
   drawLogoAndAuthor(ctx, padX, h - cornerH - h * 0.03, cornerH, brand, logoImg, '#FFFFFF')
 }
 
@@ -207,11 +191,9 @@ const renderSplitVertical: CoverRenderFn = (ctx, w, h, brand, design, heroImg, l
   const heroH = Math.round(h * 0.6)
   const captionH = h - heroH
 
-  // 上:hero
   if (heroImg) drawCover(ctx, heroImg, 0, 0, w, heroH)
   else drawHeroPlaceholder(ctx, 0, 0, w, heroH, brand)
 
-  // 下:色块标题区(底色 = brand.bgColor)
   ctx.fillStyle = brand.bgColor
   ctx.fillRect(0, heroH, w, captionH)
 
@@ -248,7 +230,6 @@ const renderSplitVertical: CoverRenderFn = (ctx, w, h, brand, design, heroImg, l
 
 // 模板 3:diagonal —— hero 图右倾 5°,左侧粗体竖排标题
 const renderDiagonal: CoverRenderFn = (ctx, w, h, brand, design, heroImg, logoImg) => {
-  // 底色
   ctx.fillStyle = brand.bgColor
   ctx.fillRect(0, 0, w, h)
 
@@ -262,7 +243,6 @@ const renderDiagonal: CoverRenderFn = (ctx, w, h, brand, design, heroImg, logoIm
   ctx.translate(heroX + heroW / 2, heroY + heroH / 2)
   ctx.rotate((-3 * Math.PI) / 180)
   ctx.translate(-(heroX + heroW / 2), -(heroY + heroH / 2))
-  // 阴影
   ctx.shadowColor = 'rgba(0,0,0,0.25)'
   ctx.shadowBlur = w * 0.02
   ctx.shadowOffsetX = w * 0.005
@@ -282,7 +262,6 @@ const renderDiagonal: CoverRenderFn = (ctx, w, h, brand, design, heroImg, logoIm
   ctx.closePath()
   ctx.fill()
 
-  // 标题
   const padX = w * 0.04
   const maxTextW = w * 0.36
   const ratio = w / h
@@ -301,18 +280,16 @@ const renderDiagonal: CoverRenderFn = (ctx, w, h, brand, design, heroImg, logoIm
     ctx.fillText(line, padX, startY + i * (titleSize + lineGap))
   })
 
-  // 角标:logo + author 在左下
   const cornerH = Math.round(h * 0.05)
   drawLogoAndAuthor(ctx, padX, h - cornerH - h * 0.03, cornerH, brand, logoImg, '#FFFFFF')
 }
 
 // 模板 4:minimal —— 大字标题居中,hero 缩小成右下角圆角小图
 const renderMinimal: CoverRenderFn = (ctx, w, h, brand, design, heroImg, logoImg) => {
-  // 底色
   ctx.fillStyle = brand.bgColor
   ctx.fillRect(0, 0, w, h)
 
-  // 顶部装饰条(品牌色)
+  // 顶部装饰条
   ctx.fillStyle = brand.primaryColor
   ctx.fillRect(0, 0, w, Math.max(6, h * 0.008))
 
@@ -347,22 +324,18 @@ const renderMinimal: CoverRenderFn = (ctx, w, h, brand, design, heroImg, logoImg
   if (heroImg) drawCover(ctx, heroImg, heroX, heroY, heroSide, heroSide)
   else drawHeroPlaceholder(ctx, heroX, heroY, heroSide, heroSide, brand)
   ctx.restore()
-  // 边框
   ctx.strokeStyle = brand.primaryColor
   ctx.lineWidth = Math.max(2, w * 0.003)
   roundedRectPath(ctx, heroX, heroY, heroSide, heroSide, r)
   ctx.stroke()
 
-  // 左下角:logo + author
   const cornerH = Math.round(h * 0.05)
   drawLogoAndAuthor(ctx, w * 0.06, h - cornerH - h * 0.06, cornerH, brand, logoImg, brand.primaryColor)
 }
 
 // 模板 5:lifecopy-classic —— 录取通知书风格,红底圆角 hero(保留 hero 原色) + 底部主副标题
 // 标题用 "\n" 分隔主副:第一行小字提示语,第二行大字主标题。无换行时整段当大字主标题。
-// 参考"今天体验的人生"系列爆款封面
 const renderLifecopyClassic: CoverRenderFn = (ctx, w, h, brand, design, heroImg, _logoImg) => {
-  // 整体黑色外背景(写实质感)
   ctx.fillStyle = '#1a1a1a'
   ctx.fillRect(0, 0, w, h)
 
@@ -382,11 +355,11 @@ const renderLifecopyClassic: CoverRenderFn = (ctx, w, h, brand, design, heroImg,
   if (heroImg) drawCover(ctx, heroImg, padX, heroY, heroW, heroH)
   ctx.restore()
 
-  // 标题区:占下 24%,主副两行黄底黑描边
+  // 标题区:占下 24%,主副两行
   const titleAreaY = heroY + heroH + h * 0.04
   const titleAreaH = h - titleAreaY - h * 0.04
 
-  // 拆主副:design.titleText 含 \n 时,第一行小字主标题,第二行大字副标题
+  // design.titleText 含 \n 时,第一行小字主标题,第二行大字副标题
   const rawTitle = design.titleText || '今天体验的人生:示例'
   const lines = rawTitle.split('\n').map((s) => s.trim()).filter(Boolean)
   const main = lines.length >= 2 ? lines[0] : null
@@ -394,22 +367,21 @@ const renderLifecopyClassic: CoverRenderFn = (ctx, w, h, brand, design, heroImg,
 
   const titleMaxW = w * 0.92
   const ratio = w / h
-  // 大字(副标题/主标题):占 13% 高
+  // 大字占 13% 高
   const subSize = ratio < 1 ? Math.round(w * 0.105) : Math.round(h * 0.13)
-  // 小字(主标题/提示语):占大字的 60%
+  // 小字占大字的 60%
   const mainSize = Math.round(subSize * 0.6)
 
   ctx.textAlign = 'center'
   ctx.textBaseline = 'alphabetic'
 
-  // 测量布局
   const lineGap = subSize * 0.18
   let totalH = subSize
   if (main) totalH += mainSize + lineGap
 
   let yCursor = titleAreaY + (titleAreaH - totalH) / 2
 
-  // 第一行:小字主标题(可选) — 白字直接 fill,深色背景下不需要描边
+  // 第一行:小字主标题 — 白字直接 fill,深色背景下不需要描边
   if (main) {
     yCursor += mainSize
     ctx.font = `bold ${mainSize}px ${brand.titleFont}`
@@ -417,13 +389,13 @@ const renderLifecopyClassic: CoverRenderFn = (ctx, w, h, brand, design, heroImg,
     yCursor += lineGap
   }
 
-  // 第二行(或唯一一行):大字 — 黄色 + 黑描边(保留视觉重心)
+  // 第二行:大字 — 黄色 + 黑描边(保留视觉重心)
   yCursor += subSize - (main ? 0 : 0)
   ctx.font = `900 ${subSize}px ${brand.titleFont}`
   drawStrokedYellow(ctx, sub, w / 2, yCursor, subSize, titleMaxW)
 }
 
-// 大字主标题:黄色填充 + 黑色粗描边(WordArt 风,平台压缩仍醒目)
+// 黄色填充 + 黑色粗描边(WordArt 风,平台压缩仍醒目)
 function drawStrokedYellow(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -448,7 +420,7 @@ function drawStrokedYellow(
   ctx.fillText(line, cx, y)
 }
 
-// 小字主标题:纯白填充,标题区是 #1a1a1a 深底,白字本身已经够醒目
+// 纯白填充,深底白字已足够醒目
 function drawWhitePlain(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -484,7 +456,7 @@ function roundedRectPath(
   ctx.closePath()
 }
 
-// hex(#RRGGBB)+ alpha → rgba 字符串
+// hex(#RRGGBB) + alpha → rgba
 function hexWithAlpha(hex: string, alpha: number): string {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex)
   if (!m) return `rgba(0,0,0,${alpha})`

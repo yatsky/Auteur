@@ -1,7 +1,4 @@
 <script setup lang="ts">
-// DismissedHooksDialog —— "已忽略"抽屉。在 TopicList 顶部链接 [查看已忽略 N 条] 触发。
-// 列出 dismissed_at IS NOT NULL 的钩子,每行 [恢复] 按钮调 undismiss API。
-// 恢复成功后 emit('restored', id),父组件刷新主 banner 列表。
 import { onMounted, ref } from 'vue'
 import { Loader2, RotateCcw, X } from 'lucide-vue-next'
 import { listDismissedHooks, undismissHook } from '../api/seriesHooks'

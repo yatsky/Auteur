@@ -25,12 +25,7 @@ import java.util.UUID;
 
 /**
  * 火山 V3 单向流式 TTS - HTTP Chunked 协议。
- *
- * resourceId 按 voice 后缀路由:火山 voice 与 resource 强绑定,uranus → seed-tts-2.0,
- * mars/moon → seed-tts-1.0,选错报 code=55000000 "resource ID is mismatched"。
- *
- * 响应是 chunked 流,每行一个 JSON:音频帧(data=base64 mp3 片段)/ 字幕帧(sentence.words[]) /
- * code=20000000 成功结束 / 其它非 0 立刻抛。
+ * resourceId 按 voice 后缀路由:uranus → seed-tts-2.0,mars/moon → seed-tts-1.0,选错报 code=55000000。
  */
 @Slf4j
 public class VolcanoTtsHttpClient {
@@ -58,7 +53,6 @@ public class VolcanoTtsHttpClient {
         audioParams.put("sample_rate", 24000);
         audioParams.put("speech_rate", speechRate);
         // 字幕开关跟资源版本走:2.0 (uranus) 用 enable_subtitle;1.0 (mars/moon) 用 enable_timestamp。
-        // 配错那一边直接被服务端忽略 → 响应里没 sentence 帧,下游 StoryboardService 缺 subtitle_url。
         if (isLegacyVoice(voiceType)) {
             audioParams.put("enable_timestamp", true);
         } else {
@@ -69,7 +63,6 @@ public class VolcanoTtsHttpClient {
         reqParams.put("text", text);
         reqParams.put("speaker", voiceType);
         reqParams.put("audio_params", audioParams);
-        // pitch 走 additions.post_process.pitch,additions 整体是 jsonstring 类型(文档要求)
         if (pitchRate != 0) {
             try {
                 String additions = mapper.writeValueAsString(Map.of(
@@ -86,8 +79,7 @@ public class VolcanoTtsHttpClient {
         body.put("user", Map.of("uid", uid));
         body.put("req_params", reqParams);
 
-        // resourceId 按 voice 后缀挑(catalog 同时含 uranus 2.0 与 mars emo v2 1.0,
-        // 不动态路由会撞 code=55000000 资源错配)
+        // resourceId 按 voice 后缀挑(catalog 同时含 uranus 2.0 与 mars emo v2 1.0)
         String resourceId = resolveResourceId(voiceType);
         URI uri = URI.create(cfg.getBaseUrl() + "/api/v3/tts/unidirectional");
         String apiKeyTail = cfg.getApiKey() == null || cfg.getApiKey().length() < 4
@@ -219,10 +211,10 @@ public class VolcanoTtsHttpClient {
     }
 
     /**
-     * 按 voice_type 后缀挑 X-Api-Resource-Id。火山 voice 与资源强绑定,选错报 code=55000000。
+     * 按 voice_type 后缀挑 X-Api-Resource-Id。选错报 code=55000000。
      *   *_uranus_bigtts → seed-tts-2.0
-     *   *_mars_bigtts / *_moon_bigtts(含 *_emo_v2_*) → seed-tts-1.0
-     *   其它/自定义复刻 → cfg.getResourceId() 兜底
+     *   *_mars_bigtts / *_moon_bigtts → seed-tts-1.0
+     *   其它 → cfg.getResourceId() 兜底
      */
     private String resolveResourceId(String voiceType) {
         if (voiceType != null) {
@@ -232,7 +224,7 @@ public class VolcanoTtsHttpClient {
         return cfg.getResourceId();
     }
 
-    /** 1.0 系列(mars/moon),包括情绪 V2。这条线字幕开关用 enable_timestamp。 */
+    /** 1.0 系列(mars/moon)。字幕开关用 enable_timestamp。 */
     private static boolean isLegacyVoice(String voiceType) {
         return voiceType != null
                 && (voiceType.endsWith("_mars_bigtts") || voiceType.endsWith("_moon_bigtts"));
@@ -246,7 +238,6 @@ public class VolcanoTtsHttpClient {
                         "auteur.voice.volcano.api-key 未配置(或旧版 app-key/access-key 都为空)");
             }
         }
-        // resource-id 不强校验:已知后缀由 resolveResourceId 自动定;只有兜底分支才会回落到 cfg.getResourceId()
     }
 
     private static String truncate(String s, int max) {

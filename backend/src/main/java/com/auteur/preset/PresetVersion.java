@@ -8,10 +8,10 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 /**
- * Preset 修改快照(V51 引入)。每次 PresetService.saveAsNewVersion 写一行,
+ * Preset 修改快照。每次 PresetService.saveAsNewVersion 写一行,
  * snapshot_json 是当时整个 preset 行的 JSON 序列化,可一键回滚。
  *
- * 不挂 ON DELETE CASCADE 的 Java 端联动 — 删 preset 时数据库 FK 会级联清快照(见 V51 migration)。
+ * 不挂 ON DELETE CASCADE 的 Java 端联动 — 删 preset 时数据库 FK 会级联清快照。
  */
 @Entity
 @Table(name = "preset_version")

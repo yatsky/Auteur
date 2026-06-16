@@ -1,12 +1,6 @@
 import { http } from './client'
 
-/**
- * Agent 控制台 API。
- *
- * 普通 REST 走 axios(http);唯一例外是 chat 走 fetch + ReadableStream(SSE),
- * axios 不支持流式响应,直接用 fetch 更直观。
- */
-
+// chat 走 fetch + ReadableStream(SSE),axios 不支持流式响应
 export interface AgentSession {
   id: number
   title: string | null
@@ -18,9 +12,6 @@ export interface AgentSession {
 
 /**
  * 工具消息状态:
- *   - OK         执行成功
- *   - ERROR      工具内部异常 / preview 失败 / TOCTOU 冲突
- *   - REJECTED   用户在审批卡明确拒绝(或 60s 超时按拒绝处理)
  *   - CANCELLED  会话取消时给孤立 tool_call 补的 placeholder(不是用户拒绝,是整轮被中断)
  */
 export type ToolStatus = 'OK' | 'ERROR' | 'REJECTED' | 'CANCELLED'
@@ -68,7 +59,6 @@ export async function listTools(): Promise<{ tools: string[]; definitions: any[]
 
 /**
  * HITL:用户对一个待审批 tool_call 给出决定。
- * 收到 SSE tool_approval_request 后,前端弹卡 → 用户点 → 调本接口。
  */
 export async function approveTool(
   sessionId: number,
@@ -85,15 +75,12 @@ export async function approveTool(
 }
 
 /**
- * 显式取消正在跑的 turn。前端切会话/卸载/用户主动停止时调。
- * 幂等:找不到活跃 turn 不报错。
+ * 显式取消正在跑的 turn。幂等:找不到活跃 turn 不报错。
  */
 export async function cancelSession(sessionId: number): Promise<{ ok: boolean; sessionId: number; note: string }> {
   const { data } = await http.post(`/agent/sessions/${sessionId}/cancel`)
   return data
 }
-
-// ---- SSE 流式聊天 ----
 
 export type AgentEventType =
   | 'user_saved'
@@ -111,9 +98,7 @@ export interface AgentEventPayload {
 }
 
 /**
- * 发起一轮 chat,流式回调每条 SSE 事件。
  * 前端不能用 EventSource(后端是 POST 触发),改用 fetch + ReadableStream 解析 text/event-stream。
- *
  * 返回 abort 函数,用于中途取消。
  */
 export function sendChatStream(
@@ -139,7 +124,6 @@ export function sendChatStream(
       const reader = resp.body.getReader()
       const decoder = new TextDecoder('utf-8')
       let buffer = ''
-      // 简易 SSE parser:按 \n\n 分块,每块行解析 event: / data:
       while (true) {
         const { value, done } = await reader.read()
         if (done) break

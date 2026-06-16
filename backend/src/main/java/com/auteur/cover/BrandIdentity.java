@@ -10,9 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
-/**
- * 账号品牌包,单行表(强制 id=1)。封面渲染右下角账号标志读这里。
- */
+/** 账号品牌包,单行表(强制 id=1)。 */
 @Entity
 @Table(name = "brand_identity")
 @Getter

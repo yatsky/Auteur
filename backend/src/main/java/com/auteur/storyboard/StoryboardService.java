@@ -33,17 +33,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 摄影指导 / Cinematographer
- *
- * 拿到编剧给的脚本五段,拆成 20-28 个分镜 prompt(中文 + 英文 + shot_type + duration)。
- * 消费总导演笔记的 visualStyle / narrativeArc / keyMoments,把 vision 落到每镜 prompt_zh。
- */
+/** 摄影指导 / Cinematographer */
 @Slf4j
 @Service
 public class StoryboardService {
 
-    /** 全局风格常量。每个 shot 都一样,在 service 层注入,避免让 LLM 重复输出。 */
+    /** 全局风格常量,在 service 层注入,避免让 LLM 重复输出。 */
     private static final String STYLE_TAG_DEFAULT = "古风工笔白描+暗调影视感+冷色+电影级构图";
     private static final String NEGATIVE_PROMPT_DEFAULT =
             "modern clothing, modern makeup, modern face, instagram face, sharp jawline, plastic skin, contemporary beauty, repetitive pattern, symmetric scars, watermark, text, logo, signature, subtitle, blurry, deformed hands, extra fingers, ugly face, low quality";
@@ -114,10 +109,6 @@ public class StoryboardService {
         }
     }
 
-    /**
-     * 异步分镜生成:立即返回 runId,worker 在 pipelineExecutor 跑 LLM。
-     * UI 通过 GET /api/runs/{runId} 轮询,DONE 后再拉 GET /api/scripts/{id}/shots。
-     */
     public Long generateAsync(Long scriptId, boolean force, String triggeredBy) {
         Map<String, Object> p = Map.of("scriptId", scriptId, "force", force, "mode", "async");
         return runService.runAsync(PipelineStage.STORYBOARD, null, scriptId, p, triggeredBy, "Storyboard",
@@ -157,8 +148,7 @@ public class StoryboardService {
             if (!force) {
                 return shotRepository.findByScriptIdOrderByShotIndexAsc(scriptId);
             }
-            // force=true:清空旧 shot。FK image_asset.shot_id ON DELETE CASCADE,
-            // 旧图也会一起没 —— 这是有意的,分镜变了下游图必然要重生。
+            // force=true:清空旧 shot。FK image_asset.shot_id ON DELETE CASCADE,旧图也一起删。
             shotRepository.deleteByScriptId(scriptId);
             shotRepository.flush();
             log.info("[摄影] force=true, deleted existing shots for scriptId={}", scriptId);
@@ -167,7 +157,7 @@ public class StoryboardService {
         // useCueAnchoring 同时受 preset.storyboardMode 与 SRT 可用性控制:
         //   PRECISE_BY_CUE + 有 SRT → 加载 cues + 强制 anchor 校验
         //   PRECISE_BY_CUE + 无 SRT → 运行时降级 FREE,LLM 自由分镜
-        //   FREE                    → LLM 自由分镜(不论是否有 SRT)
+        //   FREE                    → LLM 自由分镜
         com.auteur.preset.PresetContext ctx = presetResolver.forTopic(topic);
         boolean preciseByCue = "PRECISE_BY_CUE".equals(ctx.preset().getStoryboardMode());
         boolean useCueAnchoring = preciseByCue && hasSubtitle;
@@ -175,7 +165,7 @@ public class StoryboardService {
             log.info("[摄影] scriptId={} preset=PRECISE_BY_CUE 但未生成配音字幕,降级 FREE 让 LLM 自行判断分镜", scriptId);
         }
 
-        // cue 锚定模式需要把 voice 的 SRT cues 喂给 LLM,让 LLM 拆 shot 时显式标 anchor_cue_indices。
+        // cue 锚定模式把 voice 的 SRT cues 喂给 LLM,让 LLM 拆 shot 时显式标 anchor_cue_indices。
         java.util.List<com.auteur.video.SrtParser.Cue> srtCues = useCueAnchoring
                 ? loadSrtCuesAny(voice.getSubtitleUrl())
                 : java.util.Collections.emptyList();
@@ -223,11 +213,7 @@ public class StoryboardService {
         return postProcessAndAlign(scriptId, topic, persisted, useCueAnchoring);
     }
 
-    /**
-     * persist 后的两件事:
-     *  1. STORYBOARD addendum 写入(只在 cue anchoring 模式 + 非空 persisted)。失败不阻塞。
-     *  2. SRT 对齐:把 LLM 估算的 timeRange/duration 校准到真实音频。失败时返回 persisted 原值。
-     */
+    /** 失败不阻塞;SRT 对齐失败时返回 persisted 原值。 */
     private java.util.List<StoryboardShot> postProcessAndAlign(Long scriptId,
                                                                Topic topic,
                                                                java.util.List<StoryboardShot> persisted,
@@ -257,7 +243,7 @@ public class StoryboardService {
     }
 
     /**
-     * 把 LLM drafts 落到 storyboard_shot 表。包含三件事:
+     * 把 LLM drafts 落到 storyboard_shot 表:
      *  1. sectionCode 位置纠正(LLM 用 A/B/C 时映射回实际 ①②③)
      *  2. anchor_text 字面校验(仅 PRECISE_BY_CUE 模式)
      *  3. styleTag / negativePrompt 三级兜底(draft → preset → 默认)
@@ -349,9 +335,8 @@ public class StoryboardService {
     }
 
     /**
-     * cue 锚定校验 + 1 次重试。PRECISE_BY_CUE 模式下,LLM 必须输出每镜的 anchor_cue_indices = [start, end],
-     * 所有 shot 区间合并必须严格升序连续覆盖 [1, srtCues.size()]。校验失败则反馈给 LLM 重试 1 次,
-     * 仍失败 → log warn 放行(下游 ShotTimingResolver 会回落到 PRECISE_BY_SECTION 或 UNIFORM_SCALE)。
+     * cue 锚定校验 + 1 次重试。PRECISE_BY_CUE 模式下,所有 shot 区间合并必须严格升序连续覆盖 [1, srtCues.size()]。
+     * 重试仍失败 → log warn 放行(下游 ShotTimingResolver 会回落到 PRECISE_BY_SECTION 或 UNIFORM_SCALE)。
      */
     private List<StoryboardShotDraft> runLlmWithRetry(Long scriptId,
                                                       Topic topic,
@@ -512,8 +497,7 @@ public class StoryboardService {
      * 字面锚定校验:对每个 draft 的 anchor_text 跑两个检查:
      *  1. 子串校验:normalize(anchor_text) 必须出现在 normalize(fullText) 中
      *  2. 顺序校验:相邻 shot 的 anchor 在 fullText 里的位置必须非降序
-     * 任一失败 → 该 shot 加入 missed 集合,持久化时 anchor_match=false。
-     * 不阻塞流水线;anchor_text 太短(< 4 字)直接判 false。
+     * anchor_text 太短(< 4 字)直接判 false。
      */
     private static java.util.Set<Integer> validateAnchors(List<StoryboardShotDraft> drafts, String fullText) {
         java.util.Set<Integer> missed = new java.util.LinkedHashSet<>();
@@ -563,10 +547,7 @@ public class StoryboardService {
 
     private record CueCoverageCheck(boolean ok, String reason) {}
 
-    /**
-     * 校验所有 draft 的 anchor_cue_indices 合并起来严格升序连续覆盖 [1, cuesTotal]。
-     * 失败示例:某 shot 缺 anchor_cue_indices / 区间倒序 / 重叠 / 第 1 个不从 1 起 / 末尾不到 cuesTotal / 中间跳跃。
-     */
+    /** 校验所有 draft 的 anchor_cue_indices 合并起来严格升序连续覆盖 [1, cuesTotal]。 */
     private static CueCoverageCheck checkCueCoverage(List<StoryboardShotDraft> drafts, int cuesTotal) {
         if (drafts == null || drafts.isEmpty()) return new CueCoverageCheck(false, "drafts 空");
         if (cuesTotal <= 0) return new CueCoverageCheck(true, "no cues to cover");

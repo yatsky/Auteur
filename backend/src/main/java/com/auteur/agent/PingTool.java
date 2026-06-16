@@ -9,10 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 /**
- * 健康检查工具:第 1 步骨架阶段就注册一个,验证 LLM ↔ tool_call ↔ 派发 ↔ 结果回灌 全链路打通。
- *
- * LLM 看到用户说"ping" / "测试一下"时,应该调本工具,本工具回 { ok:true, message:"pong",echo:<args.message?> },
- * LLM 据此输出最终回复。
+ * 健康检查工具:验证 LLM ↔ tool_call ↔ 派发 ↔ 结果回灌 全链路打通。
  */
 @Component
 @RequiredArgsConstructor

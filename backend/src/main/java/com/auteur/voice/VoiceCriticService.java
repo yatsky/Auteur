@@ -16,8 +16,6 @@ import java.util.List;
 
 /**
  * 配音生成后体检并落 critic_log。不重投(语音重生成本高且不一定改善),仅告警。
- *
- * 检查项:duration 偏差 > 30%、subtitle_url 缺失、成本异常高(> 0.5 元/条)。
  */
 @Slf4j
 @Service

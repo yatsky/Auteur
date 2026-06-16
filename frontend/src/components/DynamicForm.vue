@@ -1,23 +1,10 @@
 <script setup lang="ts">
-/**
- * 通用 JSON-Schema 驱动表单。
- *
- * 支持的 schema 形态(够用主义,不追求 ajv 全规格):
- *   - { type: 'object', required: [...], properties: { key: <field> } }
- *   - field 类型:string / integer / number / boolean / array<string> / object(嵌套递归)
- *   - 字段可选属性:title / description / enum / default / minimum / maximum
- *
- * 对象嵌套:递归用同组件渲染 sub-schema。
- * 数组:目前只支持 items.type=string(每行一个 input + 增删按钮);更复杂的 array<object>(嵌套 nodes 等)
- *      用 textarea 让用户填 JSON 字符串,提交时 parse 回数组。
- */
 import { computed, watch } from 'vue'
 import { Plus, Trash2 } from 'lucide-vue-next'
 
 interface Props {
   schema: any
   modelValue: Record<string, any>
-  /** 嵌套递归时用 — 不显示 description block */
   nested?: boolean
   disabled?: boolean
 }
@@ -118,7 +105,6 @@ function objectArrayText(value: any): string {
       </label>
       <div v-if="field.description" class="text-xs text-text-muted">{{ field.description }}</div>
 
-      <!-- enum 下拉 -->
       <select
         v-if="field.enum && Array.isArray(field.enum)"
         :value="props.modelValue[key] ?? ''"
@@ -130,7 +116,6 @@ function objectArrayText(value: any): string {
         <option v-for="opt in field.enum" :key="opt" :value="opt">{{ opt }}</option>
       </select>
 
-      <!-- string 输入框 / 多行 -->
       <textarea
         v-else-if="field.type === 'string'"
         :value="props.modelValue[key] ?? ''"
@@ -141,7 +126,6 @@ function objectArrayText(value: any): string {
         @input="setField(key, ($event.target as HTMLTextAreaElement).value)"
       />
 
-      <!-- integer / number -->
       <input
         v-else-if="field.type === 'integer' || field.type === 'number'"
         type="number"
@@ -157,7 +141,6 @@ function objectArrayText(value: any): string {
               : parseFloat(($event.target as HTMLInputElement).value)))"
       />
 
-      <!-- boolean -->
       <input
         v-else-if="field.type === 'boolean'"
         type="checkbox"
@@ -166,7 +149,6 @@ function objectArrayText(value: any): string {
         @change="setField(key, ($event.target as HTMLInputElement).checked)"
       />
 
-      <!-- array<string> -->
       <div v-else-if="field.type === 'array' && (!field.items || field.items.type === 'string')" class="space-y-1.5">
         <div v-for="(item, idx) in ((props.modelValue[key] || []) as string[])" :key="idx" class="flex gap-2">
           <input
@@ -195,7 +177,7 @@ function objectArrayText(value: any): string {
         </button>
       </div>
 
-      <!-- array<object>(嵌套结构):用 JSON textarea 让用户直接编辑 -->
+      <!-- array<object> 嵌套结构:用 JSON textarea 让用户直接编辑 -->
       <textarea
         v-else-if="field.type === 'array'"
         :value="objectArrayText(props.modelValue[key])"
@@ -206,7 +188,6 @@ function objectArrayText(value: any): string {
         @input="tryParseObjectArray(key, ($event.target as HTMLTextAreaElement).value)"
       />
 
-      <!-- 嵌套对象:递归 -->
       <div v-else-if="field.type === 'object'" class="pl-3 border-l-2 border-border-subtle">
         <DynamicForm
           :schema="field"
@@ -217,7 +198,7 @@ function objectArrayText(value: any): string {
         />
       </div>
 
-      <!-- 兜底:不识别的类型 → JSON 字符串 -->
+      <!-- 兜底:不识别的类型 -->
       <textarea
         v-else
         :value="JSON.stringify(props.modelValue[key] ?? null)"

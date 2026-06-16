@@ -1,5 +1,4 @@
-// coverExport —— 把 canvas 导出 PNG 触发浏览器下载。
-// 同源 hero 图(/api/files/voice 同源)不会让 canvas taint,toBlob 能正常输出 1080×1440 PNG。
+// 同源 hero 图不会让 canvas taint,toBlob 能正常输出 PNG。
 export function downloadCoverPng(canvas: HTMLCanvasElement, filename: string): Promise<void> {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {

@@ -25,17 +25,16 @@ import java.util.Map;
 /**
  * 数据复盘 → 反向选题优化的核心服务。
  *
- * 现算不预聚合：published_video 量级在几千条以内,每次 group by 几十毫秒就够。
+ * 现算不预聚合:published_video 量级在几千条以内,每次 group by 几十毫秒就够。
  * 维度归一用 TRIM(LOWER(...)) 在 SQL 里做桶。
  *
- * 主指标：retention_pct(完播率,已经是百分比 0-100)。
+ * 主指标:retention_pct(完播率,已经是百分比 0-100)。
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class InsightService {
 
-    /** 维度权重(系数),前端展示时也复用。 */
     public static final List<DimensionDef> DIMENSIONS = List.of(
             new DimensionDef("dynasty",         "朝代",   0.20, "t.dynasty"),
             new DimensionDef("genre",           "题材",   0.30, "t.genre"),
@@ -180,12 +179,10 @@ public class InsightService {
     public TopBottomReport topBottom(String platform, int days, int n, String contentType) {
         int topN = Math.max(1, Math.min(20, n));
         LocalDateTime since = LocalDateTime.now().minusDays(Math.max(1, days));
-        // 完播率:主视角(向后兼容,前端旧 UI 直接用 top/bottom 字段)
         List<VideoFeature> top    = fetchVideosOrdered(platform, since, topN, SortMetric.RETENTION, true,  contentType);
         List<VideoFeature> bottom = fetchVideosOrdered(platform, since, topN, SortMetric.RETENTION, false, contentType);
         Map<String, String> topCommon    = commonalityOf(top);
         Map<String, String> bottomCommon = commonalityOf(bottom);
-        // 多视角 Top —— 让前端用户可以切换"互动力 / 传播力 / 带粉力 / 封面力"
         List<VideoFeature> topByLike      = fetchVideosOrdered(platform, since, topN, SortMetric.LIKE_RATE, true,  contentType);
         List<VideoFeature> topByShare     = fetchVideosOrdered(platform, since, topN, SortMetric.SHARE_RATE, true, contentType);
         List<VideoFeature> topBySubscribe = fetchVideosOrdered(platform, since, topN, SortMetric.SUBSCRIBE, true,  contentType);
@@ -299,7 +296,7 @@ public class InsightService {
 
     /**
      * 按真实 published_video 数据重算 DRAFT 状态选题的 potential_score。
-     * 公式：score = Σ weight(dim_i, value_i) × coef_i
+     * 公式:score = Σ weight(dim_i, value_i) × coef_i
      * 单维度无可信样本时回退到全局平均;topic 的某维度为空时该项贡献全局平均×coef。
      */
     @Transactional

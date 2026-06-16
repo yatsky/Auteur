@@ -8,7 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 /**
- * Preset 关联的二进制资源(V51 引入)。典型用例:锁脸预设的 P0.png 主角参考图。
+ * Preset 关联的二进制资源。典型用例:锁脸预设的 P0.png 主角参考图。
  *
  * local_path 存相对启动 cwd 的路径,典型:
  *   ./storage/preset_assets/private/{preset.name}/P0.png

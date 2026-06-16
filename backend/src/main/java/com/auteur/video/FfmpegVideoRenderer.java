@@ -29,11 +29,7 @@ import java.util.stream.Stream;
 
 /**
  * ffmpeg 渲染器:concat demuxer + libass 烧字幕 + AAC 音轨。
- *
- * 字幕样式:standard 走 SRT + libass force_style 全白字幕;highlight 走 AssSubtitleWriter 转 ASS,
- * 关键词金色加粗(纯规则抽取无 LLM)。
- *
- * URL 翻译:VoiceClient 落库存的是 /api/files/voice/{name},此处还原成 {voice.storage.local-dir}/{name}。
+ * standard 走 SRT + libass force_style;highlight 走 AssSubtitleWriter 关键词金色加粗。
  */
 @Slf4j
 @Component
@@ -59,15 +55,7 @@ public class FfmpegVideoRenderer implements VideoRenderer {
         this.runtimeConfig = runtimeConfig;
     }
 
-    /**
-     * 合并 RuntimeConfig DB 值 + props yml 兜底,生成 ffmpeg 用的有效配置。
-     * 每次合成现读,改 DB 立即对下次合成生效。binary-path 留 yml(profile 敏感)。
-     *
-     * 数值字段一律走 getIntPositive:DB 里被改成 0/负数(运维误操作)时回落 yml 默认,
-     *   不会让 ffmpeg 拼出 `-r 0` 之类无效命令。
-     * 字幕字体走 osAwareSubtitleFont:DB 没值时按 OS 选合适的中文字体
-     *   (避免 Linux/Docker 上拿 macOS-only 的 PingFang SC)。
-     */
+    /** 合并 RuntimeConfig DB 值 + props yml 兜底。每次合成现读,改 DB 立即对下次合成生效。 */
     private VideoProperties.Ffmpeg effectiveFfmpeg() {
         VideoProperties.Ffmpeg base = props.getFfmpeg();
         VideoProperties.Ffmpeg c = new VideoProperties.Ffmpeg();
@@ -86,13 +74,7 @@ public class FfmpegVideoRenderer implements VideoRenderer {
         return c;
     }
 
-    /**
-     * 字幕字体 OS-aware 选择:
-     *   DB 有值 → 用 DB(用户显式配置优先)
-     *   DB 空 + macOS → "PingFang SC"(系统自带)
-     *   DB 空 + Linux/其它 → "Noto Sans CJK SC"(Docker 镜像 / Debian / Ubuntu 通常有)
-     * V14 已把 V11 写入的 'PingFang SC' 默认值清空,让 fresh deploy 走这个分支。
-     */
+    /** macOS 默认 PingFang SC;Linux/其它默认 Noto Sans CJK SC。 */
     private String osAwareSubtitleFont(String ymlFallback) {
         String fromDb = runtimeConfig.get("auteur.video.ffmpeg.subtitle-font");
         if (!fromDb.isBlank()) return fromDb;
@@ -223,9 +205,7 @@ public class FfmpegVideoRenderer implements VideoRenderer {
         return out;
     }
 
-    /**
-     * ffconcat v1.0 demuxer 格式。最后一张文件名必须重复一次,否则 demuxer 会丢掉它(已知 quirk)。
-     */
+    /** ffconcat v1.0 demuxer 格式。最后一张文件名必须重复一次,否则 demuxer 会丢掉它。 */
     private void writeConcatList(Path concatFile, List<Path> images, List<ImageClip> clips) throws IOException {
         StringBuilder sb = new StringBuilder("ffconcat version 1.0\n");
         for (int i = 0; i < images.size(); i++) {
@@ -238,10 +218,7 @@ public class FfmpegVideoRenderer implements VideoRenderer {
         Files.writeString(concatFile, sb.toString());
     }
 
-    /**
-     * ffmpeg 主命令。无音轨时去掉 audio 参数;无字幕时滤镜里去掉 subtitles= 链。
-     * 有 BGM 时必有人声(BGM 走 sidechaincompress ducking 在人声之上),无人声直接忽略 BGM。
-     */
+    /** 无音轨时去掉 audio 参数;无字幕时滤镜里去掉 subtitles= 链。有 BGM 必有人声。 */
     private int runFfmpeg(Path concatFile, Path audio, Path subtitle, Path outPath,
                           int width, int height, VideoRenderer.BgmConfig bgm,
                           boolean isHighlightAss, VideoProperties.Ffmpeg cfg)
@@ -280,7 +257,7 @@ public class FfmpegVideoRenderer implements VideoRenderer {
                 vf.append(",subtitles=filename='").append(subPath).append("'");
             } else {
                 // libass force_style:逗号要转义成 \, 否则会被 ffmpeg filter 解析器吃掉。
-                // BorderStyle=1 = outline + shadow(无背景色块);=3 才是 opaque box。
+                // BorderStyle=1 = outline + shadow;=3 才是 opaque box。
                 String style = "FontName=" + cfg.getSubtitleFont()
                         + "\\,FontSize=" + cfg.getSubtitleFontSize()
                         + "\\,PrimaryColour=&Hffffff&"
@@ -296,11 +273,7 @@ public class FfmpegVideoRenderer implements VideoRenderer {
         }
 
         if (hasBgm) {
-            // sidechaincompress:BGM 是被压缩的主输入,voice 是 sidechain key。
-            //   threshold=0.05 - 人声超过 -26dB 触发压缩
-            //   ratio=8        - 8:1 强压缩,BGM 在人声段砍半
-            //   attack=5ms     - 快速反应,人声起声立刻让位
-            //   release=200ms  - 较长释放,人声停顿后 BGM 缓慢抬起
+            // sidechaincompress:BGM 是被压缩的主输入,voice 是 sidechain key。人声段砍半 BGM。
             String fc = "[0:v]" + vf + "[vid];"
                     + "[2:a]volume=" + bgm.volume() + "[bgvol];"
                     + "[bgvol][1:a]sidechaincompress=threshold=0.05:ratio=8:attack=5:release=200[bgduck];"
@@ -395,7 +368,6 @@ public class FfmpegVideoRenderer implements VideoRenderer {
 
     // ---------------- 字幕软断行 ----------------
 
-    /** 读 src SRT,按 maxChars 软断行(中文标点优先在标点后切)写到 dst,返回插入了 \n 的 cue 条数。 */
     private static int softWrapAndWriteSrt(Path src, Path dst, int maxChars) throws IOException {
         List<SrtParser.Cue> cues = SrtParser.parseFile(src);
         StringBuilder sb = new StringBuilder();

@@ -56,7 +56,6 @@ public class DirectorNoteService {
         }
     }
 
-    /** 拼群聊汇总,塞进下游 prompt 的 {{creator_addenda_block}}。无数据返回空串。 */
     @Transactional(readOnly = true)
     public String buildBlock(Long topicId) {
         if (topicId == null) return "";

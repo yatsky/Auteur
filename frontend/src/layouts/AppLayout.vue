@@ -22,8 +22,6 @@ import { adminMode, ownerName } from '../lib/admin'
 const { theme, toggle } = useTheme()
 const route = useRoute()
 
-// 主导航侧栏:可拖拽改宽,拖到 130px 以下松手自动折叠为 56px 图标态。
-// 折叠态下也有手柄,可以从边缘拖出来重新展开。
 const { width, collapsed, dragging, startDrag } = useResizableSidebar({
   storageKey: 'auteur.app-sidebar',
   defaultWidth: 240,
@@ -39,8 +37,8 @@ interface NavItem {
   icon: any
   label: string
   hint?: string
-  matchPaths?: string[]  // 哪些 path 前缀算 active
-  adminOnly?: boolean    // 仅 admin 模式可见
+  matchPaths?: string[]
+  adminOnly?: boolean
 }
 
 interface NavGroup {
@@ -48,7 +46,6 @@ interface NavGroup {
   items: NavItem[]
 }
 
-// 做减法之后只剩两组:创作 + 复盘。工具/配置/其它整组移除。
 const navGroups: NavGroup[] = [
   {
     title: '创作',
@@ -77,7 +74,7 @@ const navGroups: NavGroup[] = [
       { to: '/series', icon: LayersIcon, label: '系列视图' },
     ],
   },
-  // 配置组(预设管理),公开预设始终可见 — 私有预设需 admin 模式才能编辑/新建
+  // 公开预设始终可见 — 私有预设需 admin 模式才能编辑/新建
   {
     title: '配置',
     items: [
@@ -121,7 +118,6 @@ function isActive(item: NavItem): boolean {
             <div class="text-base font-semibold text-text-primary leading-tight">Auteur</div>
             <div class="text-xs text-text-muted">控制台</div>
           </div>
-          <!-- 全局 admin 标记。任何页面都能看到当前是否启用 admin 模式 -->
           <a
             v-if="adminMode"
             href="/admin"
@@ -221,7 +217,6 @@ function isActive(item: NavItem): boolean {
         </button>
       </div>
 
-      <!-- 拖拽手柄:右边缘竖条。展开/折叠态都可拖,折叠态拖出会自动展开 -->
       <div
         class="absolute top-0 right-0 h-full w-1 cursor-col-resize group z-10"
         :title="collapsed ? '拖出展开侧边栏' : '拖动调整宽度;拖到很窄会自动收起'"

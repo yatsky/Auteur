@@ -4,9 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * 品牌包(单行)读写。CoverGen 渲染前调 getOrCreate;表一定有一行,误删则兜底插。
- */
+/** 品牌包(单行)读写。表一定有一行,误删则兜底插。 */
 @Service
 @RequiredArgsConstructor
 public class BrandIdentityService {
@@ -19,7 +17,7 @@ public class BrandIdentityService {
                 .orElseGet(() -> repo.save(new BrandIdentity()));
     }
 
-    /** 前端 PUT /api/brand 入口。强锁 id 防误传新 id 多行。 */
+    /** 强锁 id 防误传新 id 多行。 */
     @Transactional
     public BrandIdentity save(BrandIdentity incoming) {
         BrandIdentity row = getOrCreate();

@@ -21,7 +21,6 @@ const COMMON_TEXT_STYLE: React.CSSProperties = {
 export const HookTitle: React.FC<Props> = ({ text }) => {
   if (!text) return null
 
-  // 按冒号(中英)分割。无冒号时整段当主体黄字处理。
   const idx = text.search(/[::]/)
   const firstLine = idx >= 0 ? text.substring(0, idx).trim() : ''
   const secondLine = idx >= 0 ? text.substring(idx + 1).trim() : text.trim()

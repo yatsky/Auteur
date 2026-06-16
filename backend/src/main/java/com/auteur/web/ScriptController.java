@@ -54,10 +54,7 @@ public class ScriptController {
     private final PipelineRunRepository runRepository;
     private final com.auteur.preset.PresetRepository presetRepository;
 
-    /**
-     * 列表分页:支持 ?topicId 过滤;批量 enrich projectName + 每个 script 最近一条 run 的 stage/status/at。
-     * 前端 useRecentScripts / ScriptList / VoiceStudio 等工作台从 PipelineRun 聚合凑合的写法切到这里。
-     */
+    /** 列表分页:支持 ?topicId 过滤;批量 enrich projectName + 每个 script 最近一条 run 的 stage/status/at。 */
     @GetMapping
     public Page<ScriptListDto> list(
             @RequestParam(value = "topicId", required = false) Long topicId,
@@ -121,10 +118,7 @@ public class ScriptController {
         return resp;
     }
 
-    /**
-     * 删除脚本(连带 cascade 清理 sections / shots / images / voice / video / cover)。
-     * published_video / pipeline_run 是软引用,保留作历史。
-     */
+    /** published_video / pipeline_run 是软引用,保留作历史。 */
     @DeleteMapping("/{id}")
     public Map<String, Object> delete(@PathVariable Long id) {
         if (!scriptRepository.existsById(id)) {
@@ -134,7 +128,6 @@ public class ScriptController {
         return Map.of("ok", true, "id", id);
     }
 
-    /** 人工编辑某段脚本 —— 配合事实核查的 fix 闭环。同步更新 script.full_text. */
     @PutMapping("/{scriptId}/sections/{sectionId}")
     public ScriptSection updateSection(@PathVariable Long scriptId,
                                        @PathVariable Long sectionId,
@@ -150,7 +143,6 @@ public class ScriptController {
         return factCheckService.factCheck(id);
     }
 
-    /** 异步事实核查,立即返回 runId,前端轮询 GET /api/runs/{runId} 看进度。 */
     @PostMapping("/{id}/factcheck-async")
     public Map<String, Object> factCheckAsync(@PathVariable Long id) {
         Long runId = factCheckService.factCheckAsync(id, "API");
@@ -168,7 +160,6 @@ public class ScriptController {
         return storyboardService.generate(id, force);
     }
 
-    /** 异步分镜生成,立即返回 runId,前端轮询 GET /api/runs/{runId},DONE 后再拉 GET /api/scripts/{id}/shots。 */
     @PostMapping("/{id}/storyboard/generate-async")
     public Map<String, Object> generateStoryboardAsync(@PathVariable Long id,
                                                        @RequestParam(value = "force", required = false, defaultValue = "false") boolean force) {
@@ -187,7 +178,6 @@ public class ScriptController {
         return imageGenService.generateForScript(id, limit);
     }
 
-    /** 异步生图，立即返回 runId，前端轮询 GET /api/runs/{runId} 看进度。 */
     @PostMapping("/{id}/images/generate-async")
     public Map<String, Object> generateImagesAsync(@PathVariable Long id,
                                                    @RequestParam(value = "limit", required = false) Integer limit,
@@ -201,7 +191,6 @@ public class ScriptController {
         return imageAuditService.auditScript(id);
     }
 
-    /** 异步图审，立即返回 runId。 */
     @PostMapping("/{id}/images/audit-async")
     public Map<String, Object> auditImagesAsync(@PathVariable Long id) {
         Long runId = imageAuditService.auditScriptAsync(id, "API");
@@ -218,20 +207,13 @@ public class ScriptController {
         return out;
     }
 
-    /**
-     * 测试触发用 —— 同步抽下集钩子并返回新落库的 SeriesHook。
-     * 异步路径已经挂在 ScriptService.doGenerate 末尾;这个端点用来对历史 script 回填 / 调 prompt。
-     */
+    /** 同步抽下集钩子并返回新落库的 SeriesHook。用来对历史 script 回填 / 调 prompt。 */
     @PostMapping("/{id}/extract-hook")
     public SeriesHook extractHook(@PathVariable Long id) {
         return hookExtractor.extract(id);
     }
 
-    /**
-     * 重新生成脚本(原地) —— 反查当前 script 的 topicId,清空下游(分镜/图/语音/视频/封面/钩子/事实核查)
-     * 后用 LLM 重写 fullText 与 sections,保留 Script.id 与 version 不变。立即返回 runId,
-     * 前端轮询 /api/runs/{runId},DONE 后调用方刷新当前页即可看到新内容。
-     */
+    /** 清空下游(分镜/图/语音/视频/封面/钩子/事实核查)后用 LLM 重写,保留 Script.id 与 version 不变。 */
     @PostMapping("/{id}/regenerate-async")
     public Map<String, Object> regenerateAsync(@PathVariable Long id, @RequestBody(required = false) RegenerateBody body) {
         String anchor = body == null ? null : body.anchor();
@@ -241,10 +223,7 @@ public class ScriptController {
 
     public record RegenerateBody(String anchor) {}
 
-    /**
-     * 对齐画面 —— 用户改完文案后,根据真实/估算时长刷一遍 section / shot 时间戳让画面切换跟朗读节奏对齐。
-     * 同步执行(纯算 + 几条 update,毫秒级):有 voice+SRT 走真实对齐,否则按 4.5 字/秒估算。
-     */
+    /** 同步执行:有 voice+SRT 走真实对齐,否则按 4.5 字/秒估算。 */
     @PostMapping("/{id}/align-timing")
     public ScriptAlignmentService.AlignmentResult alignTiming(@PathVariable Long id) {
         return alignmentService.align(id);

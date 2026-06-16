@@ -1,4 +1,3 @@
-// 左上角角标水印 —— 灰白细字 + 黑色描边阴影。
 type Props = {
   text: string
 }

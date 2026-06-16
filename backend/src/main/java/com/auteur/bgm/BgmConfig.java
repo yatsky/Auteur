@@ -10,10 +10,7 @@ import org.springframework.web.client.RestClient;
 import java.time.Duration;
 
 /**
- * Jamendo search RestClient。client_id 走 query 参数,不挂 Authorization。
- *
- * 注意:RestClient 是启动时构造的单例 bean,base-url / timeout 改 DB 后**需重启 backend**。
- * 这与 LLM RestClient / TOS Client 同语义,前端「系统设置」UI 会标"重启生效"。
+ * RestClient 是启动时构造的单例 bean,base-url / timeout 改 DB 后需重启 backend。
  */
 @Configuration
 @EnableConfigurationProperties(JamendoProperties.class)

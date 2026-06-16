@@ -8,8 +8,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode;
 
-// VIA_DTO:Page<T> 序列化为 { content, page:{ size, number, totalElements, totalPages } },
-// 避免 Spring Data 3.3 的 PageImpl 不稳定结构 WARN;前端读分页元信息走 resp.page.*。
+// VIA_DTO:Page<T> 序列化为 { content, page:{...} },避免 Spring Data 3.3 PageImpl 不稳定结构 WARN
 @SpringBootApplication
 @EnableSpringDataWebSupport(pageSerializationMode = PageSerializationMode.VIA_DTO)
 @EnableConfigurationProperties({VideoProperties.class, VoiceProperties.class})

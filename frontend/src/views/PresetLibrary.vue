@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 预设库列表。无 admin 模式时只显示公开预设;admin 模式时叠加私有预设 + 编辑/新建按钮。
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
@@ -95,7 +94,6 @@ async function onImportFile(e: Event) {
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex flex-col gap-1">
         <div class="flex items-center gap-4 flex-wrap">

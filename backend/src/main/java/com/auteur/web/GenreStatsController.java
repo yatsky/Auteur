@@ -19,11 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * 体裁/垂类聚合统计快照 CRUD + 批量导入。
- * 抖音「投稿作品.xlsx」按周期导入(period_start/period_end 由前端 dialog 提供),
- * KpiDrift 用最新快照算"体裁基准"。
- */
+/** 体裁/垂类聚合统计快照 CRUD + 批量导入。KpiDrift 用最新快照算"体裁基准"。 */
 @Slf4j
 @RestController
 @RequestMapping("/api/genre-stats")
@@ -55,11 +51,7 @@ public class GenreStatsController {
         return GenreStatDto.from(saved);
     }
 
-    /**
-     * 批量导入。
-     * 同(period_start, period_end, platform, genre, vertical)命中就字段级 merge,
-     * 允许同一周期分多次导入(只补部分字段),也允许重导整周期覆盖空字段。
-     */
+    /** 同(period_start, period_end, platform, genre, vertical)命中就字段级 merge。 */
     @PostMapping("/bulk")
     @Transactional
     public BulkResult bulk(@RequestBody List<UpsertRequest> rows) {

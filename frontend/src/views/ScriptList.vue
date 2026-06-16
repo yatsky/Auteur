@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 脚本工作台 —— Tab 按状态分组 + 搜索 + 排序;表格行点开进 ScriptDetail
 import { computed, ref } from 'vue'
 import { ArrowLeft, ArrowUpDown, FileText, Loader2, Search, Trash2 } from 'lucide-vue-next'
 import { useRecentScripts, type ScriptHandle } from '../composables/useRecentScripts'
@@ -21,7 +20,6 @@ async function onDelete(scriptId: number, projectName: string | null | undefined
   deleteError.value = null
   try {
     await deleteScript(scriptId)
-    // 从前端列表里移掉这条
     const idx = items.value.findIndex((x) => x.scriptId === scriptId)
     if (idx >= 0) items.value.splice(idx, 1)
   } catch (e: any) {
@@ -86,7 +84,6 @@ const TABS: { key: Tab; label: string }[] = [
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex flex-col gap-1">
         <div class="flex items-center gap-4 flex-wrap">
@@ -109,7 +106,6 @@ const TABS: { key: Tab; label: string }[] = [
     <div class="px-8 py-5 max-w-[1400px] mx-auto">
       <ErrorBanner :msg="errorMsg" />
 
-      <!-- Tab + 搜索 + 排序 -->
       <div class="card p-3 mb-4">
         <div class="flex items-center gap-1 border-b border-border-subtle -mx-3 px-3 -mt-3 pt-1 mb-3 flex-wrap">
           <button
@@ -139,7 +135,6 @@ const TABS: { key: Tab; label: string }[] = [
         </div>
       </div>
 
-      <!-- 表格 -->
       <div class="card overflow-hidden">
         <div v-if="deleteError" class="px-4 py-2 bg-status-failed/10 text-status-failed text-xs border-b border-status-failed/30">
           {{ deleteError }}

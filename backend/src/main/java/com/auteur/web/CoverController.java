@@ -12,13 +12,6 @@ import org.springframework.http.HttpStatus;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 封面 API。
- * - POST /api/scripts/{id}/covers/generate-async → 异步触发 3 张图渲染,返回 {runId}
- * - GET  /api/scripts/{id}/covers                 → 该 script 所有已生成封面(按 id desc)
- * - GET  /api/scripts/{id}/covers/defaults        → 表单默认值(topic.title + 钩子段)
- * - POST /api/covers/{id}/finalize                → 标记某张为最终封面(独占,该 ratio 的其它行 isFinal=0)
- */
 @RestController
 @RequiredArgsConstructor
 public class CoverController {

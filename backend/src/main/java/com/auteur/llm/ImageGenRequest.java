@@ -20,9 +20,9 @@ public class ImageGenRequest {
     /** Doubao Seedream 关水印；gpt-image-2 不支持此字段，保持 null。 */
     private Boolean watermark;
     /**
-     * Doubao Seedream image-to-image 参考图 URL（V15 引入）。
-     * 非 null 时上游按 reference 生图，保持人物 / 风格连贯。OpenAI 标准 generations 端点
-     * 不支持这个字段，但 ARK / 火山的兼容层会透传给 Seedream。null 时按纯 prompt 生图。
+     * Doubao Seedream image-to-image 参考图 URL。
+     * 非 null 时上游按 reference 生图,保持人物/风格连贯。OpenAI 标准 generations 端点
+     * 不支持这个字段,但 ARK / 火山的兼容层会透传给 Seedream。null 时按纯 prompt 生图。
      */
     private String image;
 

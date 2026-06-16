@@ -13,14 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 数据复盘 → 反向选题优化的 4 个端点。
- *
- * 设计要点：
- * - 全部支持 platform 过滤（不传 = 全部混合）。
- * - dimension-weights 和 top-bottom 是只读分析；recompute-scores 和 check-exhaustion 是写操作（POST）。
- * - 维度权重 / 公式 / 阈值都在 InsightService 里集中维护，控制器只做参数透传。
- */
+/** 数据复盘 → 反向选题优化的端点。全部支持 platform 过滤(不传 = 全部混合)。 */
 @Slf4j
 @RestController
 @RequestMapping("/api/insights")

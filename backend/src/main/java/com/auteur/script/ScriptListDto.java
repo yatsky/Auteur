@@ -9,11 +9,7 @@ import com.auteur.domain.ScriptStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * GET /api/scripts 列表元素。打平 Script + topic.projectName + 该 script 最近一条 PipelineRun
- * 的 stage/status/at —— 让前端 ScriptList / VoiceStudio / CoverList 等工作台不用再
- * 从 PipelineRun 列表凑合反查。
- */
+/** 打平 Script + topic.projectName + 该 script 最近一条 PipelineRun 的 stage/status/at。 */
 public record ScriptListDto(
         Long id,
         Long topicId,

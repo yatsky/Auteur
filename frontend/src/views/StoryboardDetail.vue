@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// 分镜工作台 —— master-detail:左网格选镜,右编辑 prompt + 重生
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
   ArrowLeft, Film, Loader2, Play, RefreshCw,
@@ -24,18 +23,15 @@ const loading = ref(false)
 const errorMsg = ref<string | null>(null)
 const runMsg = ref<string | null>(null)
 
-// 单镜重生轮询
 const shotRuns = ref<Record<number, PipelineRun>>({})
 const shotRunMsg = ref<Record<number, string>>({})
 const shotPollStops: Record<number, () => void> = {}
 
-// 当前选中的 shot id（master-detail 选中态）+ 编辑草稿 + 保存中标记
 const selectedShotId = ref<number | null>(null)
 const draft = ref({ promptZh: '', promptEn: '', negativePrompt: '' })
 const draftDirty = ref(false)
 const savingPrompt = ref(false)
 
-// 左侧筛选 chip:全部 / 已生图 / 未生图 / 敏感拦截
 type Filter = 'all' | 'withImg' | 'noImg' | 'blocked'
 const filter = ref<Filter>('all')
 
@@ -263,7 +259,6 @@ onBeforeUnmount(stopAllShotPolls)
 
 <template>
   <div class="min-h-full">
-    <!-- sticky 顶栏 -->
     <div class="sticky top-0 z-10 bg-surface-primary border-b border-border-subtle">
       <div class="px-8 py-3 max-w-[1400px] mx-auto flex flex-col gap-1">
         <div class="flex items-center gap-4 flex-wrap">
@@ -316,7 +311,6 @@ onBeforeUnmount(stopAllShotPolls)
       </div>
 
       <div v-else class="grid grid-cols-1 lg:grid-cols-[1fr_440px] gap-4 items-start">
-      <!-- 左:筛选 + 卡片网格 -->
       <div>
         <div class="flex items-center gap-2 mb-3 flex-wrap text-xs">
           <button
@@ -344,7 +338,6 @@ onBeforeUnmount(stopAllShotPolls)
         </div>
       </div>
 
-      <!-- 右:编辑面板(sticky) -->
       <ShotEditPanel
         :selected-shot="selectedShot"
         :selected-latest-asset="selectedLatestAsset"

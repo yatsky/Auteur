@@ -1,11 +1,5 @@
 import { http } from './client'
 
-/**
- * Preset 管理 REST 客户端。后端见 PresetController。
- *
- * 字段命名沿用后端 camelCase(JPA → Jackson 默认),前端不做二次转换 —— 保持简单。
- */
-
 export interface Preset {
   id: number
   name: string
@@ -112,7 +106,6 @@ export async function listPresetAssets(id: number): Promise<PresetAsset[]> {
 }
 
 /**
- * 沟通优化:用户在某 tab 描述对当前配置的不满,LLM 重新生成该 section 涉及的字段。
  * 不落库,前端拿到结果再决定是否写回 draft。LLM 调用慢,timeout 拉到 120s。
  */
 export interface PresetOptimizeRequest {

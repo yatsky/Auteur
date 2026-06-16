@@ -21,7 +21,6 @@ export const subtitleCueSchema = z.object({
 
 export type SubtitleCue = z.infer<typeof subtitleCueSchema>
 
-// motion 方向枚举,对应 MotionImage 5 种动作
 export const motionDirSchema = z.enum(['in', 'out', 'panLeft', 'panRight', 'static'])
 export type MotionDir = z.infer<typeof motionDirSchema>
 

@@ -37,7 +37,6 @@ public class StaticFilesConfig implements WebMvcConfigurer {
         String sfxDir = Paths.get(voiceProperties.getStorage().getLocalDir())
                 .toAbsolutePath().normalize().getParent().resolve("sfx").toString();
         mount(registry, "/api/files/sfx/**", sfxDir, "sfx");
-        // video/cover/image/bgm 已迁移至 TOS 对象存储，无需本地伺服
     }
 
     private void mount(ResourceHandlerRegistry registry, String pattern, String localDir, String label) {

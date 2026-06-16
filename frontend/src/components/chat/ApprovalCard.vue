@@ -2,17 +2,6 @@
 /**
  * 工具审批卡片(HITL gate)。
  *
- * 收到 SSE tool_approval_request 时由 Chat.vue 在消息流中插入一张本卡。
- * 用户必须显式点"批准"或"拒绝";60 秒不响应后端会超时算拒绝。
- *
- * Props:
- *   - request:      后端发的 tool_approval_request 数据(id, name, argsJson, risk, timeoutSeconds, diff?)
- *   - submitting:   父组件正在调 approveTool API 中,按钮置灰
- *   - submitError:  上次提交失败的错误信息;非空时把本地 decision 清掉,让用户能重试
- *
- * Events:
- *   - decided: 用户做出决定(approved: bool, reason?: string),由父组件调 approveTool API
- *
  * 时序保护(避免与服务端 60s race):
  *   - 客户端剩余 ≤ 2s 时主动禁用按钮 — 留出 ≥1 RTT 余量,避免用户在边界点击却撞上服务端 orTimeout
  *   - 剩余 = 0 时只切换显示状态,不主动 emit decided(让服务端自己 orTimeout 发 REJECTED tool_result,
@@ -30,8 +19,8 @@ interface ApprovalDiff {
 }
 
 interface ApprovalRequest {
-  id: string         // toolCallId
-  name: string       // tool 名
+  id: string
+  name: string
   argsJson: string
   risk: 'WRITE' | 'ACTION' | 'READ'
   timeoutSeconds: number
@@ -133,7 +122,7 @@ const chipClass = computed(() => {
 })
 const riskLabel = computed(() => (props.request.risk === 'ACTION' ? '动作(可能产生成本)' : '写入(改配置/预设/内容)'))
 
-/** 5 分钟超时下"剩余 287s"看着突兀,转成 mm:ss 更直观;<60s 仍按秒数展示突出紧迫感。 */
+/** 5 分钟超时下"剩余 287s"突兀,转成 mm:ss 更直观;<60s 仍按秒数展示突出紧迫感。 */
 const remainingDisplay = computed(() => {
   const s = remaining.value
   if (s < 60) return `${s}s`
@@ -156,7 +145,6 @@ const remainingDisplay = computed(() => {
           <Wrench :size="11" /> <span class="font-mono">{{ request.name }}</span>
         </div>
 
-        <!-- 有 diff 时优先展示 DiffView -->
         <div v-if="hasDiff && request.diff" class="mt-2">
           <DiffView
             :field-name="request.diff.fieldName"
@@ -179,14 +167,12 @@ const remainingDisplay = computed(() => {
           >
         </div>
 
-        <!-- 无 diff:展示完整 args -->
         <pre
           v-else-if="prettyArgs"
           class="mt-2 bg-surface-primary/50 rounded p-2 overflow-x-auto text-[11px] text-text-secondary max-h-48"
           >{{ prettyArgs }}</pre
         >
 
-        <!-- 上一次提交错误,允许重试 -->
         <div
           v-if="submitError && decision === null"
           class="mt-2 text-xs text-status-failed bg-status-failed/10 rounded px-2 py-1"
@@ -194,7 +180,6 @@ const remainingDisplay = computed(() => {
           ✗ {{ submitError }}(可再次点击决定按钮重试)
         </div>
 
-        <!-- 决定区 -->
         <div v-if="decision === null" class="mt-3 flex items-center gap-2 flex-wrap">
           <button class="btn-primary" :disabled="buttonsLocked" @click="approve">
             <Check :size="14" /> 批准并执行
@@ -221,7 +206,6 @@ const remainingDisplay = computed(() => {
           <button class="btn-danger" :disabled="buttonsLocked" @click="reject">确认拒绝</button>
         </div>
 
-        <!-- 已决定 / 提交中状态 -->
         <div v-else class="mt-2 text-xs flex items-center gap-1.5">
           <Loader2 v-if="submitting" :size="12" class="animate-spin text-text-muted" />
           <span v-if="decision === 'approved'" class="text-status-done">

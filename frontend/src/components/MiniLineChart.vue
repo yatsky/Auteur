@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// 极简 SVG 折线图 —— 只用于复盘页 mock 数据可视化
-// 不引入 chart 库，控制 bundle 大小
 import { computed } from 'vue'
 
 const props = withDefaults(defineProps<{

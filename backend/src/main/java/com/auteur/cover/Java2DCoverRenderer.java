@@ -33,14 +33,12 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * 服务端封面渲染器。把前端 lib/coverTemplates.ts 的 4 个 canvas 渲染函数 1:1 翻成 Java2D。
- * 4 模板:bottom-caption / split-vertical / diagonal / minimal。
+ * 服务端封面渲染器。把前端 lib/coverTemplates.ts 的 canvas 渲染函数 1:1 翻成 Java2D。
  *
  * canvas → Java2D 关键差异:
  *   - textBaseline=middle 没原生支持,手算 y + ascent - (ascent+descent)/2
  *   - 渐变用 LinearGradientPaint(stops) / GradientPaint(两段)
  *   - 圆角裁切走 setClip(RoundRectangle2D)
- *   - shadow 直接省略
  */
 @Slf4j
 @Component
@@ -117,7 +115,6 @@ public class Java2DCoverRenderer {
         }
     }
 
-    // ===================== 模板 1: bottom-caption =====================
     private void renderBottomCaption(Graphics2D g, RenderRequest req, BufferedImage hero) {
         int w = req.width(), h = req.height();
         BrandIdentity brand = req.brand();
@@ -166,7 +163,6 @@ public class Java2DCoverRenderer {
         drawLogoAndAuthor(g, padX, h - cornerH - (int) (h * 0.03), cornerH, brand, Color.WHITE);
     }
 
-    // ===================== 模板 2: split-vertical =====================
     private void renderSplitVertical(Graphics2D g, RenderRequest req, BufferedImage hero) {
         int w = req.width(), h = req.height();
         BrandIdentity brand = req.brand();
@@ -203,7 +199,6 @@ public class Java2DCoverRenderer {
                 parseColor(brand.getPrimaryColor(), Color.BLACK));
     }
 
-    // ===================== 模板 3: diagonal =====================
     private void renderDiagonal(Graphics2D g, RenderRequest req, BufferedImage hero) {
         int w = req.width(), h = req.height();
         BrandIdentity brand = req.brand();
@@ -250,7 +245,6 @@ public class Java2DCoverRenderer {
         drawLogoAndAuthor(g, padX, h - cornerH - (int) (h * 0.03), cornerH, brand, Color.WHITE);
     }
 
-    // ===================== 模板 4: minimal =====================
     private void renderMinimal(Graphics2D g, RenderRequest req, BufferedImage hero) {
         int w = req.width(), h = req.height();
         BrandIdentity brand = req.brand();
@@ -300,9 +294,7 @@ public class Java2DCoverRenderer {
         drawLogoAndAuthor(g, (int) (w * 0.06), h - cornerH - (int) (h * 0.06), cornerH, brand, primary);
     }
 
-    // ===================== 模板 5: lifecopy-classic =====================
-    // 录取通知书风格:黑底外框 + 红底圆角 hero(保留 hero 原色)+ 底部主副标题
-    // 标题 titleText 含 \n 时拆主副:小字主标题 + 大字副标题;无换行时整段当大字主标题
+    // 录取通知书风格:黑底外框 + 红底圆角 hero + 底部主副标题。titleText 含 \n 时拆主副。
     private void renderLifecopyClassic(Graphics2D g, RenderRequest req, BufferedImage hero) {
         int w = req.width(), h = req.height();
 
@@ -420,8 +412,6 @@ public class Java2DCoverRenderer {
     }
 
     // ===================== 工具 =====================
-
-    /** background-size: cover —— 填满目标区域,中心裁切。 */
     private void drawCover(Graphics2D g, BufferedImage img, int x, int y, int w, int h) {
         double imgRatio = (double) img.getWidth() / img.getHeight();
         double boxRatio = (double) w / h;
@@ -579,9 +569,7 @@ public class Java2DCoverRenderer {
     }
 
     /** Java 找不到 family 自动回退到 SansSerif,不会抛错。
-     *  字体 OS-aware:DB 有值用 DB;DB 空 + macOS 用 yml(默认 PingFang SC);
-     *  DB 空 + Linux/其它 用 Noto Sans CJK SC。V14 已把 V11 写入的 'PingFang SC' 清空,
-     *  让 fresh Linux/Docker 部署自动走 Noto。 */
+     *  字体 OS-aware:DB 有值用 DB;macOS 默认 yml (PingFang SC);Linux 用 Noto Sans CJK SC。 */
     private Font pickFont(int style, int size) {
         String family = runtimeConfig.get("auteur.cover.java2d.font-family");
         if (family.isBlank()) {

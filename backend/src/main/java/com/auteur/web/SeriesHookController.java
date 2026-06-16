@@ -22,11 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 钩子兑现链路:
- * <p>GET /api/series-hooks?status=unresolved 返回 STRONG 且未兑现且未忽略的钩子;
- *    Java 层按 fromScriptId dedupe 留最新一条。
- * <p>POST /{id}/dismiss 软删,设 dismissed_at = NOW()。
- * <p>POST /{id}/fulfill-with-new-topic 事务里建 Topic + 回填 toTopicId。
+ * 钩子兑现链路:GET 列表(Java 层按 fromScriptId dedupe);
+ * POST /{id}/dismiss 软删,POST /{id}/fulfill-with-new-topic 事务里建 Topic + 回填 toTopicId。
  */
 @Slf4j
 @RestController

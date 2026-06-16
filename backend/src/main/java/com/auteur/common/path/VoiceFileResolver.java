@@ -8,7 +8,6 @@ import java.nio.file.Paths;
 
 /**
  * voice url(/api/files/voice/X) ↔ 本地文件系统路径(voice.localDir/X)的统一解析。
- * 替代散落在 VideoAssemblyService / FfmpegVideoRenderer / ScriptAlignmentService 的同名私有方法。
  */
 @Component
 public class VoiceFileResolver {

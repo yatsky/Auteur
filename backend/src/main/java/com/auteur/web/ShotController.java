@@ -15,11 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
-/**
- * Shot 级别(单镜头)的精细化操作。批量操作仍走 ScriptController。
- *  - 重生这一镜:POST /api/shots/{shotId}/images/regen-async
- *  - 改 prompt :PUT  /api/shots/{shotId}/prompt
- */
+/** Shot 级别(单镜头)的精细化操作。批量操作仍走 ScriptController。 */
 @RestController
 @RequestMapping("/api/shots")
 @RequiredArgsConstructor
@@ -28,7 +24,6 @@ public class ShotController {
     private final ImageGenService imageGenService;
     private final StoryboardShotRepository shotRepository;
 
-    /** 单镜重生,立即返回 runId,前端轮询 GET /api/runs/{runId},DONE 后刷新该镜下图片列表。 */
     @PostMapping("/{shotId}/images/regen-async")
     public Map<String, Object> regenImageAsync(@PathVariable Long shotId) {
         Long runId = imageGenService.regenerateForShotAsync(shotId, "API");
@@ -36,9 +31,8 @@ public class ShotController {
     }
 
     /**
-     * 用户手动编辑 prompt（D 兜底路径：自动脱敏失败时人工救场）。
-     * 只接受 promptZh / promptEn / negativePrompt 三个字段，其它字段保留原值。
-     * 任意字段缺省 = 不动；显式传空字符串 = 清空。
+     * 用户手动编辑 prompt(自动脱敏失败时的人工救场)。
+     * 只接受 promptZh / promptEn / negativePrompt 三个字段。null = 不动,空串 = 清空。
      */
     @PutMapping("/{shotId}/prompt")
     @Transactional

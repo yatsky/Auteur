@@ -88,8 +88,7 @@ export const RUN_STATUS_LABELS: Record<PipelineRunStatus, string> = {
 
 export const ASYNC_STAGES: Set<PipelineStage> = new Set(['IMAGEGEN', 'IMAGEAUDIT', 'VOICE', 'VIDEO', 'COVER'])
 
-// ===================== Series Hook =====================
-// 钩子 —— 上一集 E 段埋的下集种子。LLM 抽取(STRONG/WEAK 分级),前端 banner 只关心 STRONG 未兑现。
+// 钩子 —— 上一集 E 段埋的下集种子。LLM 抽取(STRONG/WEAK 分级)。
 export interface SeriesHook {
   id: number
   fromTopicId: number
@@ -104,13 +103,7 @@ export interface SeriesHook {
   createdAt: string
 }
 
-// ===================== Topic =====================
-// 历史:Topic 曾按 ContentType 枚举('LIFE_COPY' 等)分形态;P3 后改为 preset 路由,
-// preset.name / preset.displayName 取代了枚举。前端不再消费 ContentType。
-// 旧 IdentityCardJson / IdentityCardNode 已下线 —— 改用 presetInputJson。
-
 // 总导演 LLM 产出的"导演笔记"。schema 与后端 prompts/director.yaml 对齐。
-// 由 PATCH /api/topics/{id} 的 directorNote 字段保存。
 export interface DirectorNote {
   /** 整体调性,如"沉重克制" */
   tone: string
@@ -188,7 +181,7 @@ export interface Topic {
   latestScriptId?: number | null
 }
 
-// 后端 Spring Page<T> 的 JSON 结构(@EnableSpringDataWebSupport VIA_DTO 模式)
+// 后端 Spring Page<T> JSON 结构(@EnableSpringDataWebSupport VIA_DTO 模式)
 export interface SpringPage<T> {
   content: T[]
   page: {
@@ -199,7 +192,6 @@ export interface SpringPage<T> {
   }
 }
 
-// ===================== Script =====================
 export type ScriptStatus = 'DRAFT' | 'REVIEWING' | 'APPROVED' | 'REJECTED'
 
 export const SCRIPT_STATUS_LABELS: Record<ScriptStatus, string> = {
@@ -209,7 +201,7 @@ export const SCRIPT_STATUS_LABELS: Record<ScriptStatus, string> = {
   REJECTED: '已驳回',
 }
 
-// 图审决策标签 —— PASS/FAIL/REJECT/REGENERATE/REVIEW/MANUAL 都可能从后端来
+// PASS/FAIL/REJECT/REGENERATE/REVIEW/MANUAL 都可能从后端来
 export const REVIEW_DECISION_LABELS: Record<string, string> = {
   PASS: '通过',
   FAIL: '不通过',
@@ -219,7 +211,7 @@ export const REVIEW_DECISION_LABELS: Record<string, string> = {
   MANUAL: '人工处理',
 }
 
-// FactCheck 严重度标签 —— 后端 prompt 用 CRITICAL/MAJOR/MINOR,旧 demo 数据可能残留 HIGH/MEDIUM/LOW
+// 后端 prompt 用 CRITICAL/MAJOR/MINOR,旧 demo 数据可能残留 HIGH/MEDIUM/LOW
 export const SEVERITY_LABELS: Record<string, string> = {
   CRITICAL: '严重',
   MAJOR: '高',
@@ -245,7 +237,6 @@ export interface Script {
 }
 
 // GET /api/scripts/{id} 返回 { script, sections } —— sections 是脚本切段
-// 字段名以后端 ScriptSection entity 为准:sectionCode (A/B/C...)、textContent、directorNote、isGoldenLine
 export interface ScriptSection {
   id: number
   scriptId: number
@@ -262,14 +253,13 @@ export interface ScriptSection {
 export interface ScriptDetailResponse {
   script: Script
   sections: ScriptSection[]
-  // V3 起后端联查 topic.preset 直接打平 presetName + bgmLocked,前端不再需要二次查 preset
+  // V3 起后端联查 topic.preset 直接打平 presetName + bgmLocked
   presetName?: string | null
   bgmLocked?: boolean | null
 }
 
 /**
  * GET /api/scripts 列表元素 —— Script 实体打平 + projectName + 该 script 最近一条 PipelineRun 的 stage/status/at。
- * useRecentScripts / ScriptList / VoiceStudio / CoverList 等工作台直读这个,不走 PipelineRun 聚合。
  */
 export interface ScriptListItem {
   id: number
@@ -288,7 +278,6 @@ export interface ScriptListItem {
   lastRunAt: string | null
 }
 
-// ===================== FactCheck =====================
 export interface FactCheckIssue {
   id: number
   scriptId: number
@@ -303,7 +292,6 @@ export interface FactCheckIssue {
   createdAt: string
 }
 
-// ===================== Storyboard =====================
 export interface StoryboardShot {
   id: number
   scriptId: number
@@ -319,7 +307,6 @@ export interface StoryboardShot {
   createdAt: string
 }
 
-// ===================== Image =====================
 export interface ImageAsset {
   id: number
   shotId: number
@@ -337,7 +324,6 @@ export interface ImageAsset {
   createdAt: string
 }
 
-// ===================== Voice =====================
 export interface VoiceAsset {
   id: number
   scriptId: number
@@ -354,7 +340,6 @@ export interface VoiceAsset {
   createdAt: string
 }
 
-// ===================== Video =====================
 export interface VideoAsset {
   id: number
   scriptId: number
@@ -374,9 +359,7 @@ export interface VideoAsset {
   createdAt: string
 }
 
-// ===================== Cover / Brand Identity =====================
-// 账号级品牌包 —— 同账号下所有视频封面强制套这套色板/字体/logo,保证主页风格统一。
-// 单例,localStorage key = 'auteur.brand'。后端不接,纯前端 mock。
+// 账号级品牌包 —— 同账号下所有视频封面强制套这套色板/字体/logo。
 export interface BrandIdentity {
   brandName: string             // "历史密档" 之类的频道名
   authorName: string            // 显示在封面副标题或角标
@@ -390,11 +373,11 @@ export interface BrandIdentity {
   updatedAt: string
 }
 
-// per-script 封面设计 —— localStorage key = 'auteur.cover.${scriptId}'
+// per-script 封面设计
 export interface CoverDesign {
   scriptId: number
   templateId: string
-  titleText: string             // 主标题
+  titleText: string
   heroImageUrl: string | null   // storyboard 里挑的 ImageAsset.fileUrl,或自上传 base64
   heroSource: 'storyboard' | 'upload'
   isFinal: boolean
@@ -403,7 +386,7 @@ export interface CoverDesign {
 
 export interface CoverTemplate {
   id: string
-  name: string                  // "底部标题压图" / "上下分割" / "对角强对比" / "极简标题"
+  name: string
   description: string
 }
 
@@ -416,7 +399,7 @@ export const COVER_RATIO_DIMENSIONS: Record<CoverRatio, { w: number; h: number; 
   '16:9': { w: 1920, h: 1080, label: '16:9 · B站 / YouTube' },
 }
 
-// 后端 cover_asset 表行 —— 一次 generate 落 3 行(3 比例)
+// 一次 generate 落 3 行(3 比例)
 export interface CoverAsset {
   id: number
   scriptId: number

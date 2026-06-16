@@ -1,6 +1,4 @@
-// useCoverDesign —— per-script 封面设计表单状态(in-memory only)。
-// 后端接管渲染后,真值落 cover_asset 表;前端 ref 只是表单临时态,
-// 进页面时从后端 covers[0] 反构,改完点"生成"再 POST。
+// per-script 封面设计表单状态(in-memory only)。真值落后端 cover_asset 表;前端 ref 只是表单临时态。
 import { ref, watch, type Ref } from 'vue'
 import type { CoverDesign } from '../types'
 import { useBrandIdentity } from './useBrandIdentity'

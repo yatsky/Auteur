@@ -1,16 +1,9 @@
 <script setup lang="ts">
-/**
- * 预设下拉选择器。
- * 列出后端可见的 preset(根据 X-Auteur-Admin / X-Auteur-Owner 头);用户选定后通过 v-model 回传 id。
- *
- * 默认行为:首次挂载时如果父组件没指定值且预设非空,则自动选第一条 public 预设(优先 freeform 示例)。
- */
 import { computed, onMounted, ref, watch } from 'vue'
 import { listPresets, type Preset } from '../api/presets'
 
 const props = defineProps<{
   modelValue: number | null
-  /** 是否只列出有 brainstorm_prompt 的预设(用于头脑风暴场景);默认 false */
   brainstormCapable?: boolean
 }>()
 
@@ -50,7 +43,6 @@ onMounted(async () => {
 watch(
   () => props.brainstormCapable,
   () => {
-    // 切换 brainstormCapable 后,如果当前选中已不在过滤后列表里,reset 到第一条
     if (props.modelValue != null && !filtered.value.find((p) => p.id === props.modelValue)) {
       emit('update:modelValue', filtered.value[0]?.id ?? null)
     }

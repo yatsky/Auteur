@@ -20,17 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 
-/**
- * 给 script 打 BGM mood 标签。固定 6 词表,LLM JSON 输出。结果落 script.bgm_mood_tag 缓存。
- */
 @Slf4j
 @Service
 public class BgmMoodTagger {
 
-    /**
-     * 6 词表 → Jamendo 标签组合(逗号分隔)。每 mood 用 2 个 tag:
-     * Jamendo 多 tag 是严格 AND 匹配,3 个 tag 几乎找不到曲;fuzzytags 参数有 bug 不能传。
-     */
+    // Jamendo 多 tag 是严格 AND 匹配,3 个 tag 几乎找不到曲;fuzzytags 参数有 bug 不能传。
     public static final Map<String, String> MOOD_TO_JAMENDO_TAGS = Map.of(
             "dark_suspense",      "cinematic,dark",
             "ancient_solemn",     "ambient,orchestral",
@@ -60,7 +54,7 @@ public class BgmMoodTagger {
         this.topicRepository = topicRepository;
     }
 
-    /** 已缓存直返,否则调 LLM 并落库。失败回落 DEFAULT_MOOD 不阻塞推荐流程。 */
+    /** 失败回落 DEFAULT_MOOD 不阻塞推荐流程。 */
     @Transactional
     public String resolveMood(Long scriptId) {
         Script script = scriptRepository.findById(scriptId)

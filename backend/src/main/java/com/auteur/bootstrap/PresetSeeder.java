@@ -15,12 +15,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
- * 启动时检查 preset 表,空则 seed 内置示例预设(目前仅 freeform)。幂等:已有同名 preset 则跳过。
- *
- * Seed 文件来源 = backend/src/main/resources/preset_seeds/{name}/。
- *
- * 想要进阶示例(锁脸 + PRECISE_BY_CUE + 漫画风横屏 + hook 段)?参考代码里 StoryComposition / StoryboardCriticService
- * 的实现,在 UI「预设库」自建一个预设并自行配 reference image,本类不再默认 seed。
+ * 启动时检查 preset 表,空则 seed 内置示例预设。幂等:已有同名 preset 则跳过。
  */
 @Component
 @RequiredArgsConstructor

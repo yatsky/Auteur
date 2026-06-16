@@ -1,10 +1,5 @@
 <script setup lang="ts">
-// BGM 选曲组件 —— 嵌在 VideoAssemblyPreview 的渲染参数卡里。
-// 流程:首次进入 → POST /recommend(LLM 打 mood + Jamendo top-3)→ 用户试听 → POST /select
-// 后端会自动下载 mp3 到 ./storage/bgm/ 缓存,前端只显示进度。
-//
-// 注:preset.bgmLocked = true 时整组件 v-if 隐藏,前端不显示选曲 UI、
-//     不调 /recommend 等任何 BGM 接口,后端按 preset 兜底逻辑出曲。
+// preset.bgmLocked = true 时整组件 v-if 隐藏,不调任何 BGM 接口,后端按 preset 兜底逻辑出曲。
 import { computed, onMounted, ref, watch } from 'vue'
 import { Loader2, Music, Plus, RefreshCcw, Volume2 } from 'lucide-vue-next'
 import ErrorBanner from './ErrorBanner.vue'
@@ -22,11 +17,10 @@ const choice = ref<BgmChoice | null>(null)
 const offset = ref(0)
 const volume = ref(0.25)
 
-const loadingInit = ref(false)         // 首次 recommend
-const loadingMore = ref(false)         // 翻页
-const selecting = ref<number | null>(null)  // 正在选哪个 trackId(下载中)
+const loadingInit = ref(false)
+const loadingMore = ref(false)
+const selecting = ref<number | null>(null)
 const errorMsg = ref<string | null>(null)
-// preset.bgmLocked 时整组件 v-if 隐藏 + 跳过所有 BGM 接口
 const bgmLocked = ref(false)
 
 // LLM 给出的 mood key,从返回的曲目里读(全 3 条 moodTag 一致)
@@ -66,9 +60,7 @@ async function loadInitial() {
     choice.value = existing
     if (existing) {
       volume.value = existing.volume
-      // 不立刻拉推荐,等用户点"看看其他"
     } else {
-      // 没选过 → 自动拉一批
       const top = await recommendBgm(props.scriptId)
       tracks.value = top
       offset.value = top.length
@@ -80,7 +72,6 @@ async function loadInitial() {
   }
 }
 
-/** 已选状态下用户点"看看其他推荐" → 按需拉曲目列表。 */
 async function showOtherRecommendations() {
   loadingInit.value = true
   errorMsg.value = null
@@ -126,7 +117,7 @@ async function pick(track: BgmTrack) {
 }
 
 async function onVolumeChange() {
-  // 改音量但已经选过 → 同 trackId 重新提交一次,后端只 update volume
+  // 同 trackId 重新提交一次,后端只 update volume
   if (!choice.value) return
   try {
     choice.value = await selectBgm(props.scriptId, choice.value.bgmTrackId, volume.value)
@@ -148,15 +139,12 @@ watch(() => props.scriptId, () => {
   bootstrap()
 })
 
-/**
- * preset.bgmLocked 时直接 return 不调任何 BGM 接口,显示静态锁定提示。
- */
 async function bootstrap() {
   try {
     const detail = await getScript(props.scriptId)
     bgmLocked.value = !!detail.bgmLocked
   } catch (e: any) {
-    // getScript 失败不算 BGM 故障,降级当作未锁定处理(走原流程)
+    // getScript 失败不算 BGM 故障,降级当作未锁定处理
     bgmLocked.value = false
   }
   if (bgmLocked.value) return
@@ -167,7 +155,6 @@ onMounted(bootstrap)
 </script>
 
 <template>
-  <!-- preset.bgmLocked 时统一锁定 BGM,显示静态说明,不渲染选曲 UI、不调 BGM 接口 -->
   <div v-if="bgmLocked"
        class="rounded border border-border-subtle bg-surface-tertiary/40 p-2.5 text-xs text-text-muted flex items-start gap-2">
     <Music :size="14" class="text-accent flex-shrink-0 mt-0.5" />
@@ -189,7 +176,6 @@ onMounted(bootstrap)
 
     <ErrorBanner :msg="errorMsg" />
 
-    <!-- 当前已选 -->
     <div v-if="choice"
          class="rounded border border-status-done/40 bg-status-done/5 p-2.5 text-xs space-y-2">
       <div class="flex items-start justify-between gap-2">
@@ -215,7 +201,6 @@ onMounted(bootstrap)
       </div>
     </div>
 
-    <!-- 推荐曲目列表 -->
     <div v-if="loadingInit && tracks.length === 0"
          class="flex items-center justify-center py-6 text-text-muted text-xs gap-2">
       <Loader2 :size="14" class="animate-spin" /> LLM 打 mood + 拉 Jamendo…

@@ -24,8 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Remotion 视频合成器(画幅与 composition 由 preset 决定)。
- *
- * 流程:把 Request → props.json → ProcessBuilder 调 render.sh → 落本地 mp4 → ffmpeg loudnorm → 上 TOS。
+ * 流程:Request → props.json → render.sh → 本地 mp4 → ffmpeg loudnorm → TOS。
  */
 @Slf4j
 @Component
@@ -91,8 +90,7 @@ public class RemotionVideoRenderer implements VideoRenderer {
             List<SrtParser.Cue> srtCues = loadSrtCues(req.subtitleUrl());
             ArrayNode cuesNode = cuesToJson(srtCues);
 
-            // clips sum 可能 < 音频真实长度(VideoAssemblyService 跳过无图 shot 会丢这些 shot 的时长)。
-            // 取 SRT 末尾时间作为音频真实长度的代理。
+            // clips sum 可能 < 音频真实长度。取 SRT 末尾时间作为音频真实长度的代理。
             double clipsTotalSec = ordered.stream().mapToDouble(ImageClip::durationSec).sum();
             double srtEndSec = srtCues.isEmpty() ? 0
                     : srtCues.get(srtCues.size() - 1).endMs() / 1000.0;
@@ -100,7 +98,7 @@ public class RemotionVideoRenderer implements VideoRenderer {
             if (audioDurationSec <= 0) audioDurationSec = ordered.size() * 5.0;
 
             // clips 总和 < 真实音频长度时,只延长最后一个 clip 填补尾部。
-            // 不做全局拉伸——会把 PRECISE_BY_SECTION 精确对齐的切镜点同等比例撑开,导致声画错位。
+            // 不做全局拉伸——会把精确对齐的切镜点同等比例撑开导致声画错位。
             if (audioDurationSec > clipsTotalSec + 0.5 && clipsTotalSec > 0 && !ordered.isEmpty()) {
                 double tail = audioDurationSec - clipsTotalSec;
                 ImageClip last = ordered.get(ordered.size() - 1);
@@ -207,13 +205,8 @@ public class RemotionVideoRenderer implements VideoRenderer {
 
     /**
      * 用 scriptId 做种子的伪随机选 motion,且强制相邻镜不同种。
-     * 同一个 scriptId 重渲染得到相同序列(可复现);不同 scriptId 序列各异(对 AI 检测器
-     * 不再呈现固定周期模式)。"相邻不同"是这套约束里最关键的一条:循环原版每 5 镜重复,
-     * 一旦改成相邻去重,即使 5 种全用上,序列也不会出现规律周期。
-     *
-     * 内容感:有 anchorText 时走 MotionIntentHeuristic,把高潮/凝视/转场等情绪映射到运镜池;
-     * 无 anchorText 时回退到全 5 种池随机(P0 行为)。两条路径都在同一个 Random 实例上抽,
-     * 所以"种子可复现 + 相邻去重"在两种 case 下都成立。
+     * 同一个 scriptId 重渲染得到相同序列;不同 scriptId 序列各异。
+     * 有 anchorText 时走 MotionIntentHeuristic 把情绪映射到运镜池;无 anchorText 回退全池随机。
      */
     private ObjectNode buildDemoPlan(List<ImageClip> ordered, JsonNode persona, long seed) {
         java.util.Random rnd = new java.util.Random(seed);
@@ -289,10 +282,7 @@ public class RemotionVideoRenderer implements VideoRenderer {
         return arr;
     }
 
-    /**
-     * 把 audio/image url 翻译成 Remotion 浏览器能下载的 http(s) URL。
-     * Remotion 不支持 file://;/api/files/... 拼 publicBaseUrl。
-     */
+    /** Remotion 不支持 file://;/api/files/... 拼 publicBaseUrl。 */
     private String toHttpUrl(String url) {
         if (url == null || url.isBlank()) return null;
         if (url.startsWith("http://") || url.startsWith("https://")) return url;
@@ -399,11 +389,7 @@ public class RemotionVideoRenderer implements VideoRenderer {
     }
 
     /**
-     * ffmpeg 把 mp4 整体响度推到 -16 LUFS(短视频平台标准),收紧动态范围。
-     * Remotion 直出 mp4 通常在 -24~-22 LUFS,差 6-8 LU(听感 ~2x)。
-     *
-     * filter chain:acompressor 先把瞬态压住(ratio=3 温和),再 loudnorm 推到 -16,LRA 收紧到 7。
-     * 视频流 -c:v copy 不重编。失败 → log warn 保留原文件,不阻塞成片。
+     * ffmpeg 把 mp4 整体响度推到 -16 LUFS,收紧动态范围。失败 → log warn 保留原文件。
      */
     private void postProcessLoudnorm(Path outPath, Path workDir, Long scriptId) {
         Path normalized = workDir.resolve("normalized.mp4");

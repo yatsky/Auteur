@@ -1,11 +1,4 @@
 <script setup lang="ts">
-// DirectorNoteOptimizeDialog —— DirectorNoteDrawer 上的 "AI 智能填充" 子弹窗。
-// 两阶段:用户输入诉求 → LLM 返回完整 DirectorNote → 预览 → 应用回 form。
-// 不直接落库;applied 后父组件仍需点保存。
-//
-// 镜像 PresetOptimizeDialog 的骨架,主要区别:
-//   - 没有 section 概念(导演笔记是整体重写)
-//   - 预览阶段按 DirectorNote 的语义分组渲染,而不是泛型 fields map
 import { computed, ref, watch } from 'vue'
 import { Loader2, Sparkles, X, Check, RotateCcw } from 'lucide-vue-next'
 import { optimizeDirectorNote } from '../api/topics'
@@ -108,7 +101,6 @@ function close() {
         {{ error }}
       </div>
 
-      <!-- 阶段一:输入诉求 -->
       <template v-if="!result">
         <label class="flex flex-col gap-1">
           <span class="text-xs text-gray-500">你希望怎么改?(可选,留空 = 让模型按 Topic 上下文自行判断)</span>
@@ -141,7 +133,6 @@ function close() {
         </div>
       </template>
 
-      <!-- 阶段二:预览方案 -->
       <template v-else>
         <div class="rounded-md p-3 mb-3 bg-amber-50 border border-amber-200 text-sm">
           <div class="text-xs text-amber-700 mb-1 flex items-center gap-1.5">
@@ -155,7 +146,6 @@ function close() {
         <div class="text-xs text-gray-500 mb-3">应用后会覆盖编辑器里所有字段,你仍可手动微调再保存。</div>
 
         <div class="space-y-3 mb-4">
-          <!-- tone / pacing -->
           <div class="grid grid-cols-2 gap-3">
             <div class="rounded p-2 bg-gray-50">
               <div class="text-[10px] font-mono text-gray-500 mb-1">tone</div>
@@ -167,7 +157,6 @@ function close() {
             </div>
           </div>
 
-          <!-- narrativeArc -->
           <div class="rounded p-3 bg-gray-50">
             <div class="text-[10px] font-mono text-gray-500 mb-2">narrativeArc(五段节奏)</div>
             <div class="space-y-1.5">
@@ -178,7 +167,6 @@ function close() {
             </div>
           </div>
 
-          <!-- visualStyle -->
           <div class="rounded p-3 bg-gray-50">
             <div class="text-[10px] font-mono text-gray-500 mb-2">visualStyle</div>
             <div class="text-xs space-y-1">
@@ -196,7 +184,6 @@ function close() {
             </div>
           </div>
 
-          <!-- protagonistVibe -->
           <div class="rounded p-3 bg-gray-50">
             <div class="text-[10px] font-mono text-gray-500 mb-2">protagonistVibe</div>
             <div class="text-xs space-y-1">
@@ -206,7 +193,6 @@ function close() {
             </div>
           </div>
 
-          <!-- keyMoments -->
           <div class="rounded p-3 bg-gray-50" v-if="result.note.keyMoments?.length">
             <div class="text-[10px] font-mono text-gray-500 mb-2">keyMoments({{ result.note.keyMoments.length }})</div>
             <div class="space-y-1">
@@ -217,7 +203,6 @@ function close() {
             </div>
           </div>
 
-          <!-- highlightThemes -->
           <div class="rounded p-3 bg-gray-50" v-if="result.note.highlightThemes?.length">
             <div class="text-[10px] font-mono text-gray-500 mb-2">highlightThemes</div>
             <div class="flex flex-wrap gap-1.5">
@@ -229,7 +214,6 @@ function close() {
             </div>
           </div>
 
-          <!-- directorNotes -->
           <div class="rounded p-3 bg-gray-50" v-if="result.note.directorNotes">
             <div class="text-[10px] font-mono text-gray-500 mb-2">directorNotes</div>
             <pre class="text-xs text-gray-800 whitespace-pre-wrap font-sans leading-relaxed">{{ result.note.directorNotes }}</pre>

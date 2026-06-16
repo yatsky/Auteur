@@ -145,7 +145,7 @@ public class ImageClient {
     /**
      * 把 provider 临时 URL 下载 + 上传到项目 TOS,返回稳定公网 URL。
      * 失败回落原 URL(下游 Remotion 可能仍可用,只是不稳)。
-     * 慢:Doubao jpeg ~700KB 平均 1-2s,加在生图主链路上;但避免后续 Remotion 渲染时反复拉外部桶超时,净收益正。
+     * 慢:Doubao jpeg ~700KB 平均 1-2s;但避免后续 Remotion 渲染反复拉外部桶超时,净收益正。
      */
     private String repipeUrlToTos(String sourceUrl, LlmCallSpec spec) {
         long t0 = System.currentTimeMillis();

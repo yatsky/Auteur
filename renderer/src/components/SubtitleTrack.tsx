@@ -13,7 +13,6 @@ type Props = {
 
 type Token = { text: string; highlight: boolean }
 
-// 把一段文本按关键词列表切成 token 序列,匹配的标 highlight=true
 function tokenize(text: string, keywords: string[]): Token[] {
   if (!keywords || keywords.length === 0) return [{ text, highlight: false }]
   // 长关键词优先匹配,避免短词把长词切碎
