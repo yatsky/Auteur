@@ -18,7 +18,8 @@ export const VOICE_GROUPS: VoiceGroup[] = [
   {
     label: '推荐 · 旁白解说',
     voices: [
-      { value: 'zh_male_wennuanahu_uranus_bigtts',     label: '温暖阿虎',  suit: '温暖治愈/亲和叙述/陪伴感(默认)' },
+      { value: 'zh_male_dayi_uranus_bigtts',           label: '大壹2.0',  suit: '成熟稳重/通用叙述/解说' },
+      { value: 'zh_male_wennuanahu_uranus_bigtts',     label: '温暖阿虎',  suit: '温暖治愈/亲和叙述/陪伴感' },
       { value: 'zh_male_xuanyijieshuo_uranus_bigtts', label: '悬疑解说', suit: '神秘/暗黑风/解说' },
       { value: 'zh_male_shenyeboke_uranus_bigtts',    label: '深夜播客', suit: '深沉/沉郁/落魄文人' },
       { value: 'zh_male_cixingjieshuonan_uranus_bigtts', label: '磁性解说男', suit: '磁性/史诗叙述' },
