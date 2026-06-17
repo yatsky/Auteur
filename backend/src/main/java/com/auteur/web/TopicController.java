@@ -157,12 +157,15 @@ public class TopicController {
             String pj = req.getPresetInputJson().trim();
             t.setPresetInputJson(pj.isEmpty() || "null".equalsIgnoreCase(pj) ? null : pj);
         }
-        // 用户没显式给项目名又转入 SCHEDULED:从 title 截前 10 字兜底,避免后续工作台显示空。
         if (req.getStatus() == TopicStatus.SCHEDULED
-                && (t.getProjectName() == null || t.getProjectName().isBlank())
-                && t.getTitle() != null) {
-            String title = t.getTitle();
-            t.setProjectName(title.substring(0, Math.min(title.length(), 10)));
+                && (t.getProjectName() == null || t.getProjectName().isBlank())) {
+            String pro = t.getProtagonist();
+            if (pro != null && !pro.isBlank()) {
+                t.setProjectName(pro.length() <= 40 ? pro : pro.substring(0, 40));
+            } else if (t.getTitle() != null) {
+                String title = t.getTitle();
+                t.setProjectName(title.substring(0, Math.min(title.length(), 10)));
+            }
         }
         return topicRepository.save(t);
     }

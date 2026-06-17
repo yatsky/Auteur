@@ -123,9 +123,6 @@ public class BrainstormService {
             Topic t = new Topic();
             String trimmedTitle = TextUtils.truncate(c.getTitle(), 200);
             t.setTitle(trimmedTitle);
-            if (trimmedTitle != null && !trimmedTitle.isBlank()) {
-                t.setProjectName(trimmedTitle.substring(0, Math.min(trimmedTitle.length(), 10)));
-            }
             t.setDynasty(TextUtils.truncate(c.getDynasty(), 40));
             t.setGenre(TextUtils.truncate(c.getGenre(), 40));
             t.setProtagonist(TextUtils.truncate(c.getProtagonist(), 120));
@@ -169,9 +166,21 @@ public class BrainstormService {
                     t.setProtagonist(TextUtils.truncate(c.getIdentityTag(), 120));
                 }
             }
+            t.setProjectName(pickProjectName(t.getProtagonist(), trimmedTitle));
             persisted.add(topicRepository.save(t));
         }
         return persisted;
+    }
+
+    /** project_name(VARCHAR 40)显示规则:protagonist 优先,否则截 title 前 10 字。两者都空返回 null。 */
+    private static String pickProjectName(String protagonist, String title) {
+        if (protagonist != null && !protagonist.isBlank()) {
+            return TextUtils.truncate(protagonist.trim(), 40);
+        }
+        if (title != null && !title.isBlank()) {
+            return title.substring(0, Math.min(title.length(), 10));
+        }
+        return null;
     }
 
     private List<BrainstormCandidate> parseCandidates(String raw) {

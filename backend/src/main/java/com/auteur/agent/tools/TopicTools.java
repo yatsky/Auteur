@@ -187,9 +187,12 @@ public class TopicTools {
             Topic t = new Topic();
             String title = args.get("title").asText();
             t.setTitle(title);
-            // projectName:不传则从 title 截前 10 字
+            // projectName:不传则优先用 protagonist,没有再截 title 前 10 字
             if (args.hasNonNull("projectName")) {
                 t.setProjectName(args.get("projectName").asText());
+            } else if (args.hasNonNull("protagonist")) {
+                String pro = args.get("protagonist").asText();
+                t.setProjectName(pro.length() <= 40 ? pro : pro.substring(0, 40));
             } else if (title != null && !title.isBlank()) {
                 t.setProjectName(title.substring(0, Math.min(title.length(), 10)));
             }
