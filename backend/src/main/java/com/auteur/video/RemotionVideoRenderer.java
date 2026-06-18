@@ -76,6 +76,9 @@ public class RemotionVideoRenderer implements VideoRenderer {
         Path outDir = ensureDir(Paths.get(props.getStorage().getLocalDir()));
         Path workDir = ensureDir(Paths.get(props.getStorage().getWorkDir())
                 .resolve("remotion-" + UUID.randomUUID()));
+        // 提前声明 outPath,让 finally 也能 deleteQuietly:TOS upload 抛异常时若 outPath 仍在 try 作用域内,
+        // 异常路径就泄漏 134MB 视频文件不被清理。
+        Path outPath = null;
 
         try {
             List<ImageClip> ordered = new ArrayList<>(req.clips());
@@ -166,7 +169,7 @@ public class RemotionVideoRenderer implements VideoRenderer {
 
             long ts = System.currentTimeMillis();
             String outName = String.format("script-%d-%d.mp4", req.scriptId(), ts);
-            Path outPath = outDir.resolve(outName).toAbsolutePath();
+            outPath = outDir.resolve(outName).toAbsolutePath();
 
             if (req.compositionId() == null || req.compositionId().isBlank()) {
                 throw new IllegalArgumentException("RemotionVideoRenderer: compositionId 必填,请检查 preset.composition_id");
@@ -187,7 +190,6 @@ public class RemotionVideoRenderer implements VideoRenderer {
             String url = tos.upload(
                     com.auteur.storage.TosStorageService.buildKey(req.scriptId(), "video", outName),
                     outPath, "video/mp4");
-            deleteQuietly(outPath);
             return new Result(url, durationSec,
                     req.width() > 0 ? req.width() : 1080,
                     req.height() > 0 ? req.height() : 1920,
@@ -198,6 +200,8 @@ public class RemotionVideoRenderer implements VideoRenderer {
         } catch (Exception e) {
             throw new RuntimeException("Remotion render failed: " + e.getMessage(), e);
         } finally {
+            // 不管 upload 成败都清本地文件:成功路径删传完的视频,异常路径删 134 MB 残骸不漏。
+            if (outPath != null) deleteQuietly(outPath);
             cleanWorkDir(workDir);
         }
     }

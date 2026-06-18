@@ -40,6 +40,10 @@ export default defineConfig({
     },
   },
   server: {
+    // 显式绑 127.0.0.1:Windows 上 vite 默认 'localhost' 会走系统双栈解析,
+    // 浏览器/客户端用 'localhost' 时偶尔先尝试 IPv6(::1) 再回落 IPv4 卡几秒。
+    // 锁死 IPv4 行为可预测,mac/linux 影响为零(原本就是 IPv4 优先)。
+    host: '127.0.0.1',
     port: 5174,
     proxy: {
       '/api': {
