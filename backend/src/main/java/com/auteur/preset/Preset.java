@@ -119,6 +119,14 @@ public class Preset {
     @Column(name = "min_extreme_closeup", nullable = false)
     private int minExtremeCloseup = 0;
 
+    /**
+     * 章节边界黑帧时长(秒)。Remotion StoryComposition 在 sectionCode 切换处插入此长度的黑帧;
+     * 前后各 0.1s 渐变(包含在该值内)。与字幕 cue 重叠时自动回退白闪 FlashHint。
+     * 默认 0.30 沿用旧常量;需要更明显黑过渡的预设调到 0.6-0.8。
+     */
+    @Column(name = "chapter_break_sec", nullable = false)
+    private double chapterBreakSec = 0.30;
+
     @Column(name = "current_version", nullable = false)
     private Integer currentVersion = 1;
 

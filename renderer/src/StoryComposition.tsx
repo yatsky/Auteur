@@ -10,11 +10,11 @@ import { FPS, type StoryProps, type MotionDir, type SubtitleCue } from './types'
 const sec = (s: number) => Math.round(s * FPS)
 
 // 通用 Story 视频合成器(横屏/竖屏 / LifeCopy alias 共用):
-//  - 章节断点黑帧:在 sectionCode 切换处插 0.3s 黑帧(前后各 0.10s 安全缓冲不与 cue 重叠)。
+//  - 章节断点黑帧:在 sectionCode 切换处插 chapterBreakSec 长度的黑帧(前后各 0.10s 安全缓冲不与 cue 重叠)。
+//    chapterBreakSec 由 preset.chapter_break_sec 决定;<=0 跳过断点。默认 0.30 沿用旧常量。
 //  - 开头 hook 段 0..hookFrames:多张快切 + 钩子旁白 + 中央大字标题 + 翻书音效。
 //    主体 shots / audio / 字幕整体后推 hookFrames(用 Sequence from=hookFrames 包裹)。
 //    hookDurationSec=0 时退回原行为,无 hook。
-const CHAPTER_BREAK_SEC = 0.3
 const CHAPTER_SAFE_BEFORE = 0.10
 const CHAPTER_SAFE_AFTER = 0.10
 const SUBTITLE_MAX_CHARS = 18
@@ -83,6 +83,7 @@ export const StoryComposition: React.FC<StoryProps> = ({
   hookText,
   hookDurationSec,
   hookPageFlipSoundUrl,
+  chapterBreakSec,
 }) => {
   const motionByShot = new Map<number, MotionDir>(
     plan.shotPlans.map((p) => [p.shotId, p.motion]),
@@ -96,20 +97,23 @@ export const StoryComposition: React.FC<StoryProps> = ({
   // 章节断点检测(用拆短后的 cuesShort 做 overlap)。
   // black 模式需要 cue 间隙(画面变黑但音频不停,与字幕重叠会出现"黑屏但还在说话")。
   // overlap 时回退到 flash:白色叠层短闪不依赖静音,补回章节感不与字幕冲突。
+  // chapterBreakSec <= 0 时跳过整段断点(给"完全不要章节过渡"的预设留出口)。
   const chapterBreaks: { startSec: number; kind: 'black' | 'flash' }[] = []
-  for (let i = 1; i < shots.length; i++) {
-    const prev = shots[i - 1].sectionCode
-    const curr = shots[i].sectionCode
-    if (!prev || !curr || prev === curr) continue
-    const breakStart = shots[i].startSec - CHAPTER_BREAK_SEC / 2
-    const breakEnd = breakStart + CHAPTER_BREAK_SEC
-    if (breakStart < 0) continue
-    const safeStart = breakStart - CHAPTER_SAFE_BEFORE
-    const safeEnd = breakEnd + CHAPTER_SAFE_AFTER
-    const overlapsCue = cuesShort.some(
-      (c) => safeEnd > c.startSec && safeStart < c.endSec,
-    )
-    chapterBreaks.push({ startSec: breakStart, kind: overlapsCue ? 'flash' : 'black' })
+  if (chapterBreakSec > 0) {
+    for (let i = 1; i < shots.length; i++) {
+      const prev = shots[i - 1].sectionCode
+      const curr = shots[i].sectionCode
+      if (!prev || !curr || prev === curr) continue
+      const breakStart = shots[i].startSec - chapterBreakSec / 2
+      const breakEnd = breakStart + chapterBreakSec
+      if (breakStart < 0) continue
+      const safeStart = breakStart - CHAPTER_SAFE_BEFORE
+      const safeEnd = breakEnd + CHAPTER_SAFE_AFTER
+      const overlapsCue = cuesShort.some(
+        (c) => safeEnd > c.startSec && safeStart < c.endSec,
+      )
+      chapterBreaks.push({ startSec: breakStart, kind: overlapsCue ? 'flash' : 'black' })
+    }
   }
 
   const hookEnabled =
@@ -170,7 +174,7 @@ export const StoryComposition: React.FC<StoryProps> = ({
           <Sequence
             key={`chapter-${i}`}
             from={sec(b.startSec)}
-            durationInFrames={sec(CHAPTER_BREAK_SEC)}
+            durationInFrames={sec(chapterBreakSec)}
             name={`chapterBreak-${i}-${b.kind}`}
           >
             {b.kind === 'black' ? <BlackHoldFrame /> : <FlashHint />}

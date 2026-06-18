@@ -344,6 +344,8 @@ public class VideoAssemblyService {
         String presetName = ctx != null ? ctx.preset().getName() : null;
         // preset.watermark_text 决定水印文本;null/空 = 不加水印。Remotion 的 Watermark 组件已对空值短路。
         String watermarkText = ctx != null ? ctx.preset().getWatermarkText() : null;
+        // preset.chapter_break_sec 决定章节断点黑帧时长;ctx 缺省回落 0.30 沿用旧常量。
+        double chapterBreakSec = ctx != null ? ctx.preset().getChapterBreakSec() : 0.30;
         return new VideoRenderer.Request(
                 scriptId, clips, audioUrl, subUrl, format, width, height, bgmCfg, subtitleStyle,
                 presetName,
@@ -352,7 +354,8 @@ public class VideoAssemblyService {
                 topic != null ? topic.getId() : null,
                 hook,
                 compositionId,
-                watermarkText);
+                watermarkText,
+                chapterBreakSec);
     }
 
     /** 任一步失败返回 null,主流程退回"无 hook"原行为。 */

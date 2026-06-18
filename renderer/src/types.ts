@@ -66,5 +66,6 @@ export const storyPropsSchema = z.object({
   hookText: z.string().default(''),
   hookDurationSec: z.number().default(0),
   hookPageFlipSoundUrl: z.string().default(''),
+  chapterBreakSec: z.number().default(0.3),
 })
 export type StoryProps = z.infer<typeof storyPropsSchema>

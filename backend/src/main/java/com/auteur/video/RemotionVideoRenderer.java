@@ -129,6 +129,7 @@ public class RemotionVideoRenderer implements VideoRenderer {
             root.set("shots", shotsNode);
             root.set("subtitleCues", cuesNode);
             root.put("watermark", req.watermarkText() == null ? "" : req.watermarkText());
+            root.put("chapterBreakSec", req.chapterBreakSec());
             if (req.bgm() != null && req.bgm().httpUrl() != null && !req.bgm().httpUrl().isBlank()) {
                 root.put("bgmUrl", req.bgm().httpUrl());
                 root.put("bgmVolume", req.bgm().volume());

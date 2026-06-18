@@ -36,11 +36,13 @@ public interface VideoRenderer {
      * @param subtitleStyle "standard" 走 SRT force_style;"highlight" 走 ASS 关键词加色加粗。
      * @param compositionId Remotion composition 名;Remotion 路径必填,ffmpeg 路径可空。
      * @param watermarkText 左上角水印文本;null/空 = 不加水印。ffmpeg 路径忽略。
+     * @param chapterBreakSec 章节边界黑帧时长(秒);Remotion 路径消费,ffmpeg 路径忽略。来自 preset.chapter_break_sec。
      */
     record Request(Long scriptId, List<ImageClip> clips, String audioUrl, String subtitleUrl,
                    String format, int width, int height, BgmConfig bgm, String subtitleStyle,
                    String contentType, String personaJson, String protagonistRefUrl, Long topicId,
-                   HookConfig hook, String compositionId, String watermarkText) {}
+                   HookConfig hook, String compositionId, String watermarkText,
+                   double chapterBreakSec) {}
 
     record Result(String videoUrl, Integer durationSeconds, Integer width, Integer height,
                   String format, BigDecimal costYuan) {}

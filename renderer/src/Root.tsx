@@ -30,6 +30,7 @@ const storyHorizontalDefaultProps: StoryProps = {
   hookText: '',
   hookDurationSec: 0,
   hookPageFlipSoundUrl: '',
+  chapterBreakSec: 0.3,
 }
 
 const storyVerticalDefaultProps: StoryProps = {

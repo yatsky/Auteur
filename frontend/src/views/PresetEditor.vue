@@ -61,6 +61,7 @@ function emptyPreset(): Preset {
     formatHeight: 1080,
     watermarkText: null,
     hookSegmentEnabled: false,
+    chapterBreakSec: 0.30,
     currentVersion: 1,
   }
 }
@@ -512,6 +513,22 @@ const optimizeSectionLabel = computed(() =>
           <label class="text-sm text-text-primary block">开场 hook 段 (hook_segment_enabled)</label>
           <div class="text-xs text-text-muted">开场 4s hook 段(快切 + 钩子旁白)</div>
           <input type="checkbox" v-model="draft.hookSegmentEnabled" />
+        </div>
+        <div class="space-y-1.5">
+          <label class="text-sm text-text-primary block">章节断点黑帧时长 (chapter_break_sec)</label>
+          <div class="text-xs text-text-muted">
+            sectionCode 切换处插入的黑帧时长(秒,前后各 0.1s 渐变包含在内)。
+            默认 0.30 沿用旧行为;0 = 完全不插断点;
+            想让章节过渡更明显可调到 0.6-0.8(过大易被字幕 cue 重叠回退到白闪)。
+          </div>
+          <input
+            v-model.number="draft.chapterBreakSec"
+            type="number"
+            step="0.05"
+            min="0"
+            max="2"
+            class="form-input w-32"
+          />
         </div>
       </div>
     </div>

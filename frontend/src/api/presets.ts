@@ -24,6 +24,7 @@ export interface Preset {
   formatHeight: number
   watermarkText?: string | null
   hookSegmentEnabled: boolean
+  chapterBreakSec: number
   currentVersion: number
   createdAt?: string
   updatedAt?: string
