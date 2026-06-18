@@ -40,7 +40,7 @@ public class StoryboardShot {
     @Column(name = "prompt_en", columnDefinition = "TEXT")
     private String promptEn;
 
-    @Column(name = "negative_prompt", length = 500)
+    @Column(name = "negative_prompt", columnDefinition = "TEXT")
     private String negativePrompt;
 
     @Column(name = "style_tag", length = 40)
