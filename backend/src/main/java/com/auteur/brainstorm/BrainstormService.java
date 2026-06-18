@@ -15,6 +15,7 @@ import com.auteur.llm.LlmResult;
 import com.auteur.llm.ModelRegistry;
 import com.auteur.llm.PromptTemplateService;
 import com.auteur.pipeline.PipelineRunService;
+import com.auteur.video.DirectorNoteOptimizeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ public class BrainstormService {
     private final PipelineRunService runService;
     private final InsightService insightService;
     private final com.auteur.preset.PresetService presetService;
+    private final DirectorNoteOptimizeService directorNoteOptimizeService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Transactional
@@ -169,7 +171,33 @@ public class BrainstormService {
             t.setProjectName(pickProjectName(t.getProtagonist(), trimmedTitle));
             persisted.add(topicRepository.save(t));
         }
+        // 自动回填 directorNote(并行调 LLM,失败不阻塞 brainstorm 整体)
+        autoFillDirectorNotes(persisted);
         return persisted;
+    }
+
+    /**
+     * brainstorm 后给每条 topic 自动生成一份 directorNote,免得用户每次还要手动点"AI 智能填充"。
+     * 并行 LLM 调用(每条耗时 ~5-10s),JPA dirty-checking 在事务 commit 时把 directorNote 自动 flush。
+     * 单条失败只 log,不影响其他 topic 与整体 brainstorm 返回。
+     */
+    private void autoFillDirectorNotes(List<Topic> topics) {
+        if (topics.isEmpty()) return;
+        long t0 = System.currentTimeMillis();
+        java.util.concurrent.atomic.AtomicInteger ok = new java.util.concurrent.atomic.AtomicInteger();
+        topics.parallelStream().forEach(t -> {
+            try {
+                DirectorNoteOptimizeService.OptimizeResponse resp =
+                        directorNoteOptimizeService.optimizeForTopic(t, null);
+                t.setDirectorNote(objectMapper.writeValueAsString(resp.note()));
+                ok.incrementAndGet();
+            } catch (Exception e) {
+                log.warn("[Brainstorm] 自动 directorNote 失败 topicId={} title={}: {}",
+                        t.getId(), t.getTitle(), e.toString());
+            }
+        });
+        log.info("[Brainstorm] 自动 directorNote 完成 total={} success={} ms={}",
+                topics.size(), ok.get(), System.currentTimeMillis() - t0);
     }
 
     /** project_name(VARCHAR 40)显示规则:protagonist 优先,否则截 title 前 10 字。两者都空返回 null。 */

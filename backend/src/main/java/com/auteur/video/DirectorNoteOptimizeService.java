@@ -43,13 +43,26 @@ public class DirectorNoteOptimizeService {
         if (topicId == null || topicId <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "topicId 非法");
         }
-        // userFeedback 允许为空(初次生成或用户没有具体诉求,让模型按 Topic 上下文自行判断)
-        String feedback = (req == null || req.userFeedback() == null) ? "" : req.userFeedback().trim();
         Topic topic = topicRepository.findById(topicId).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "topic " + topicId + " 不存在"));
+        return optimizeForTopic(topic, req);
+    }
 
-        // currentValues 优先用前端传的(含未保存草稿),为空则回落 DB 里的 directorNote。
-        JsonNode currentNote = req.currentValues();
+    /**
+     * 对一个已经持有的 Topic 对象重写 directorNote。供 BrainstormService 在创建 topic 后
+     * 自动回填 directorNote 用——不再走 DB 反查,避开"刚 save 还未 flush"的查不到。
+     * 同时 REST 入口 {@link #optimize(Long, OptimizeRequest)} 也复用这条主路径。
+     */
+    public OptimizeResponse optimizeForTopic(Topic topic, OptimizeRequest req) {
+        if (topic == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "topic 为空");
+        }
+        Long topicId = topic.getId();
+        // userFeedback 允许为空(初次生成或用户没有具体诉求,让模型按 Topic 上下文自行判断)
+        String feedback = (req == null || req.userFeedback() == null) ? "" : req.userFeedback().trim();
+
+        // currentValues 优先用前端传的(含未保存草稿),为空则回落 Topic 自带的 directorNote。
+        JsonNode currentNote = req == null ? null : req.currentValues();
         if (currentNote == null || currentNote.isNull()) {
             currentNote = parseJsonOrEmpty(topic.getDirectorNote());
         }
