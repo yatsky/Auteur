@@ -6,6 +6,7 @@ import com.auteur.domain.TopicRepository;
 import com.auteur.llm.LlmCallSpec;
 import com.auteur.llm.LlmClient;
 import com.auteur.llm.LlmResult;
+import com.auteur.llm.PromptTemplateService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,6 +39,7 @@ public class DirectorNoteOptimizeService {
     private final LlmClient llmClient;
     private final ObjectMapper objectMapper;
     private final TopicRepository topicRepository;
+    private final PromptTemplateService promptService;
 
     public OptimizeResponse optimize(Long topicId, OptimizeRequest req) {
         if (topicId == null || topicId <= 0) {
@@ -70,83 +72,30 @@ public class DirectorNoteOptimizeService {
         String currentJson = toPrettyJson(currentNote);
         String topicCtx = buildTopicContext(topic);
 
-        String system = """
-                你是 Auteur 视频创作工具的"总导演笔记重写助手"。
-                用户给出当前导演笔记草稿(可能不完整或为空)+ 自然语言诉求,你要综合两者重写整份导演笔记。
-
-                【输出要求】
-                1. 严格 JSON,不要 Markdown 代码块,不要前后任何解释文字。
-                2. JSON 顶层只有两个 key:note 与 explanation。
-                3. note 的 shape 必须严格符合下列 schema(任何缺失或类型不符都不接受):
-                   {
-                     "tone": "<非空字符串,整体调性>",
-                     "pacing": "<非空字符串,整体节奏>",
-                     "narrativeArc": [
-                       { "section": "A", "guidance": "<非空字符串>" },
-                       { "section": "B", "guidance": "<非空字符串>" },
-                       { "section": "C", "guidance": "<非空字符串>" },
-                       { "section": "D", "guidance": "<非空字符串>" },
-                       { "section": "E", "guidance": "<非空字符串>" }
-                     ],
-                     "visualStyle": {
-                       "palette": "<字符串>",
-                       "depthOfField": "<字符串>",
-                       "lighting": "<字符串>",
-                       "avoidWords": ["<字符串>", ...]
-                     },
-                     "protagonistVibe": {
-                       "appearance": "<字符串>",
-                       "voiceVibe": "<字符串>",
-                       "speakingPace": "<字符串>"
-                     },
-                     "keyMoments": [{ "time": "<非空>", "what": "<非空>" }, ...],
-                     "highlightThemes": ["<字符串>", ...],
-                     "directorNotes": "<散文体补充指令,可空字符串。绝对不要 Markdown 或代码块>"
-                   }
-                4. narrativeArc 严格 5 段,顺序固定 A→B→C→D→E,不许多不许少不许乱序。
-                5. keyMoments 推荐 2-4 个;highlightThemes 推荐 3-8 个。
-                6. 如果用户当前已填了某些内容,在合理范围内尽量保留其语感,不要无故抹平用户已经写好的措辞。
-                7. explanation 是一句中文,30-120 字,概括你做了哪些调整。
-                8. **JSON 结构纪律(违反就解析失败)**:
-                   - 每个 `{` 必须对应一个 `}` 关闭后才进逗号或下一个键
-                   - 数组里每个对象先写 `}` 关闭对象,再写 `,` 连接下一个,最后用 `]` 关闭数组
-                   - narrativeArc 5 个 element 都是对象 — 每个对象都用 `}` 闭合,数组整体用 `]` 闭合,
-                     不要把 `]` 当成对象闭合写在 element 内部
-                """;
-
         String userFeedbackBlock = feedback.isEmpty()
                 ? "(用户未给出具体诉求 — 请你结合 Topic 上下文与当前草稿,产出最贴合本片题材/情绪的整份导演笔记。"
                   + "若当前草稿是空对象,从零生成;若已有部分内容,尽量保留其语感的同时把缺的字段补齐、不合理的地方调顺。)"
                 : feedback;
 
-        String user = """
-                你正在重写一个 Topic 的导演笔记。
-
-                ====== Topic 上下文 ======
-                %s
-
-                ====== 当前导演笔记草稿(JSON,可能为空对象表示完全空白)======
-                %s
-
-                ====== 用户诉求 ======
-                %s
-
-                请综合上述信息重写整份 DirectorNote。直接输出符合上述【输出要求】的 JSON。
-                """.formatted(topicCtx, currentJson, userFeedbackBlock);
+        // prompt yaml 在 classpath:prompts/director_note_optimize.yaml,只这里这一份调用方
+        PromptTemplateService.Rendered tpl = promptService.render("director_note_optimize", Map.of(
+                "topic_context", topicCtx,
+                "current_note_json", currentJson,
+                "user_feedback_block", userFeedbackBlock
+        ));
 
         LlmCallSpec spec = LlmCallSpec.builder()
                 .operation("director_note_optimize")
                 .relatedType("TOPIC")
                 .relatedId(topicId)
-                .temperature(0.5)
-                // 不设 maxTokens 时 DeepSeek 默认 1024 会截断 → JSON 解析失败。
-                .maxTokens(4000)
+                .temperature(tpl.temperature() != null ? tpl.temperature() : 0.5)
+                .maxTokens(tpl.maxTokens() != null ? tpl.maxTokens() : 4000)
                 .build();
 
         // LLM 偶发结构性错误(数组对象嵌套漏 } 之类),整次重新生成成功率 > 修复尝试。最多重试 2 次。
         ResponseStatusException lastErr = null;
         for (int attempt = 1; attempt <= 2; attempt++) {
-            LlmResult result = llmClient.chat(spec, system, user);
+            LlmResult result = llmClient.chat(spec, tpl.system(), tpl.user());
             String raw = result.getContent();
             log.info("[DirectorNoteOptimize] topicId={} attempt={} feedbackChars={} outChars={} ms={}",
                     topicId, attempt, feedback.length(),
@@ -167,6 +116,14 @@ public class DirectorNoteOptimizeService {
     private String buildTopicContext(Topic topic) {
         StringBuilder sb = new StringBuilder();
         sb.append("title: ").append(TextUtils.safe(topic.getTitle())).append('\n');
+        if (topic.getDurationMinutes() != null && topic.getDurationMinutes() > 0) {
+            int min = topic.getDurationMinutes();
+            int sec = min * 60;
+            sb.append("duration_minutes: ").append(min)
+              .append(" (== ").append(sec).append(" 秒,即 ")
+              .append(String.format("%02d:%02d", sec / 60, sec % 60))
+              .append(")\n");
+        }
         if (topic.getDynasty() != null && !topic.getDynasty().isBlank()) {
             sb.append("dynasty: ").append(topic.getDynasty()).append('\n');
         }
