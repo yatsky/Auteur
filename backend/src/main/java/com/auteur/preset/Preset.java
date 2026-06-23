@@ -50,6 +50,15 @@ public class Preset {
     @Column(name = "input_schema_json", columnDefinition = "TEXT")
     private String inputSchemaJson;
 
+    /**
+     * 默认导演笔记模板。HotPromoteService 在 promote 新建 topic 时把它 copy 到 topic.director_note。
+     * NULL = 该 preset 不带默认模板,topic 的 director_note 保持 NULL(下游降级)。
+     */
+    @JsonRawValue
+    @JsonDeserialize(using = JsonRawStringDeserializer.class)
+    @Column(name = "default_director_note_json", columnDefinition = "JSON")
+    private String defaultDirectorNoteJson;
+
     @Column(name = "brainstorm_prompt_yaml", columnDefinition = "TEXT")
     private String brainstormPromptYaml;
 

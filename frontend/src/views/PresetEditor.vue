@@ -26,6 +26,7 @@ const successMsg = ref<string | null>(null)
 const tabs = [
   { key: 'basic',     label: '基本信息' },
   { key: 'input',     label: '输入字段' },
+  { key: 'directorNote', label: '导演笔记模板' },
   { key: 'brainstorm',label: '选题策划（选题）' },
   { key: 'script',    label: '编剧（脚本）' },
   { key: 'critic',    label: '编剧自审（脚本自审）' },
@@ -46,6 +47,7 @@ function emptyPreset(): Preset {
     displayName: '',
     description: '',
     inputSchemaJson: null,
+    defaultDirectorNoteJson: null,
     brainstormPromptYaml: '',
     scriptPromptYaml: 'name: my_script\ntemperature: 0.7\n\n# model 留空 → 走「AI 模型」页面 auteur.model.script;\n# 想给本预设单独指定模型,在这里加 model: <id> 即可。\n\nsystem: |\n  你是 ...\n\nuser: |\n  请按主题 {{theme}} 生成 ...\n',
     scriptCriticPromptYaml: '',
@@ -73,6 +75,7 @@ const draft = ref<Preset>(emptyPreset())
 const imageConfigText = ref<string>('')
 const voiceConfigText = ref<string>('')
 const inputSchemaText = ref<string>('')
+const defaultDirectorNoteText = ref<string>('')
 
 const versions = ref<PresetVersion[]>([])
 const showVersions = ref(false)
@@ -83,6 +86,7 @@ async function load() {
     imageConfigText.value = ''
     voiceConfigText.value = ''
     inputSchemaText.value = ''
+    defaultDirectorNoteText.value = ''
     return
   }
   loading.value = true
@@ -92,6 +96,7 @@ async function load() {
     imageConfigText.value = p.imageConfigJson ? JSON.stringify(p.imageConfigJson, null, 2) : ''
     voiceConfigText.value = p.voiceConfigJson ? JSON.stringify(p.voiceConfigJson, null, 2) : ''
     inputSchemaText.value = p.inputSchemaJson ? JSON.stringify(p.inputSchemaJson, null, 2) : ''
+    defaultDirectorNoteText.value = p.defaultDirectorNoteJson ? JSON.stringify(p.defaultDirectorNoteJson, null, 2) : ''
     errorMsg.value = null
   } catch (e: any) {
     errorMsg.value = extractError(e, '加载失败')
@@ -117,6 +122,8 @@ function buildPayload(): Partial<Preset> {
   payload.imageConfigJson = imageConfigText.value.trim() ? JSON.parse(imageConfigText.value) : null
   payload.voiceConfigJson = voiceConfigText.value.trim() ? JSON.parse(voiceConfigText.value) : null
   payload.inputSchemaJson = inputSchemaText.value.trim() ? JSON.parse(inputSchemaText.value) : null
+  payload.defaultDirectorNoteJson = defaultDirectorNoteText.value.trim()
+    ? JSON.parse(defaultDirectorNoteText.value) : null
   if (isNew.value) {
     delete payload.id
     delete payload.createdAt
@@ -179,6 +186,8 @@ async function onRollback(v: number) {
     imageConfigText.value = updated.imageConfigJson ? JSON.stringify(updated.imageConfigJson, null, 2) : ''
     voiceConfigText.value = updated.voiceConfigJson ? JSON.stringify(updated.voiceConfigJson, null, 2) : ''
     inputSchemaText.value = updated.inputSchemaJson ? JSON.stringify(updated.inputSchemaJson, null, 2) : ''
+    defaultDirectorNoteText.value = updated.defaultDirectorNoteJson
+      ? JSON.stringify(updated.defaultDirectorNoteJson, null, 2) : ''
     successMsg.value = `已回滚至 v${v},当前版本号 = v${updated.currentVersion}`
     showVersions.value = false
   } catch (e: any) {
@@ -209,6 +218,7 @@ async function toggleVersions() {
 const SECTION_FIELDS: Record<TabKey, string[]> = {
   basic:       ['displayName', 'description'],
   input:       ['inputSchemaJson'],
+  directorNote: ['defaultDirectorNoteJson'],
   brainstorm:  ['brainstormPromptYaml'],
   script:      ['scriptPromptYaml'],
   critic:      ['scriptCriticPromptYaml', 'scriptCriticThreshold'],
@@ -229,6 +239,7 @@ function tabLabel(k: TabKey): string {
 const TAB_HINTS: Record<TabKey, string> = {
   basic: '预设元信息(显示名/描述)',
   input: '创建 topic 时的表单字段(JSON Schema)',
+  directorNote: '该预设自带的默认导演笔记模板(JSON)。promote 新建 topic 时 copy 到 topic.director_note 作为创作起点',
   brainstorm: '选题阶段的 LLM Prompt(YAML)',
   script: '编剧阶段的 LLM Prompt(YAML,必填)',
   critic: '脚本自审 Prompt + 阈值',
@@ -250,6 +261,8 @@ function collectSectionValues(section: TabKey): Record<string, any> {
   for (const f of SECTION_FIELDS[section]) {
     if (f === 'inputSchemaJson') {
       values[f] = parseJsonOrNull(inputSchemaText.value)
+    } else if (f === 'defaultDirectorNoteJson') {
+      values[f] = parseJsonOrNull(defaultDirectorNoteText.value)
     } else if (f === 'imageConfigJson') {
       values[f] = parseJsonOrNull(imageConfigText.value)
     } else if (f === 'voiceConfigJson') {
@@ -284,6 +297,8 @@ function applyOptimize(fields: Record<string, any>) {
   for (const [k, v] of Object.entries(fields)) {
     if (k === 'inputSchemaJson') {
       inputSchemaText.value = v == null ? '' : JSON.stringify(v, null, 2)
+    } else if (k === 'defaultDirectorNoteJson') {
+      defaultDirectorNoteText.value = v == null ? '' : JSON.stringify(v, null, 2)
     } else if (k === 'imageConfigJson') {
       imageConfigText.value = v == null ? '' : JSON.stringify(v, null, 2)
     } else if (k === 'voiceConfigJson') {
@@ -410,6 +425,22 @@ const optimizeSectionLabel = computed(() =>
           class="form-textarea font-mono text-xs"
           rows="22"
           placeholder='{"type":"object","required":["theme"],"properties":{"theme":{"type":"string","title":"主题"}}}'
+        />
+      </div>
+
+      <div v-show="activeTab === 'directorNote'" class="card p-5 space-y-3">
+        <div class="text-sm text-text-secondary">
+          该预设的默认导演笔记模板(JSON 对象,可空)。从热点池 promote 新建 topic 时,
+          这份模板会被 copy 到 topic.director_note 作为创作 baseline,用户可在 topic 详情页继续编辑。
+          常用字段:<code class="text-xs">tone</code>(整体调性) / <code class="text-xs">pacing</code>(整体节奏) /
+          <code class="text-xs">narrativeArc</code>(五段节奏 A/B/C/D/E) / <code class="text-xs">visualStyle</code>(美术色调等)。
+          空 = 该预设无默认模板,promote 出的 topic 的 director_note 留空。
+        </div>
+        <textarea
+          v-model="defaultDirectorNoteText"
+          class="form-textarea font-mono text-xs"
+          rows="22"
+          placeholder='{"tone":"沉重克制,孤独少年皇帝的隐忍回忆","pacing":"快入慢出","narrativeArc":{"A":"...","B":"...","C":"...","D":"...","E":"..."},"visualStyle":{"palette":"暗调冷色"}}'
         />
       </div>
 

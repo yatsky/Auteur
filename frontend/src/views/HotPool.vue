@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   CheckSquare, Flame, Loader2, RefreshCw, Settings, ShieldAlert, Sparkles,
 } from 'lucide-vue-next'
@@ -13,6 +14,8 @@ import HotItemDetailDrawer from '../components/hotpool/HotItemDetailDrawer.vue'
 import PromoteApprovalCard from '../components/hotpool/PromoteApprovalCard.vue'
 import ErrorBanner from '../components/ErrorBanner.vue'
 import type { HotItem, HotItemStatus, HotSource } from '../types'
+
+const router = useRouter()
 
 // ---------- 数据 ----------
 const items = ref<HotItem[]>([])
@@ -126,13 +129,14 @@ function onPromoteDone(topicIds: number[]) {
   promoteOpen.value = false
   selectedIds.value = new Set()
   fetchMsg.value = `已送入 ${topicIds.length} 条选题`
-  itemsLoad.run()
+  // 批量场景跳选题列表页,用户能一眼看到刚创建的一批
+  router.push('/topics')
 }
 
-function onItemPromoted(item: HotItem, topicId: number) {
+function onItemPromoted(_item: HotItem, topicId: number) {
   detailItem.value = null
-  fetchMsg.value = `「${item.title.slice(0, 20)}…」已送入选题 (id=${topicId})`
-  itemsLoad.run()
+  // 单条 promote 直接跳到新建 topic 详情页,用户可以立刻配置预设输入 / 导演笔记
+  router.push(`/topics/${topicId}`)
 }
 
 function onItemDismissed(item: HotItem) {

@@ -36,6 +36,7 @@ public class PresetOptimizeService {
     private static final Map<String, List<String>> SECTION_FIELDS = Map.ofEntries(
             Map.entry("basic", List.of("displayName", "description")),
             Map.entry("input", List.of("inputSchemaJson")),
+            Map.entry("directorNote", List.of("defaultDirectorNoteJson")),
             Map.entry("brainstorm", List.of("brainstormPromptYaml")),
             Map.entry("script", List.of("scriptPromptYaml")),
             Map.entry("critic", List.of("scriptCriticPromptYaml", "scriptCriticThreshold")),
@@ -51,6 +52,7 @@ public class PresetOptimizeService {
     private static final Map<String, String> SECTION_LABELS = Map.ofEntries(
             Map.entry("basic", "基本信息"),
             Map.entry("input", "输入字段"),
+            Map.entry("directorNote", "导演笔记模板"),
             Map.entry("brainstorm", "选题"),
             Map.entry("script", "编剧"),
             Map.entry("critic", "自审"),
@@ -68,6 +70,11 @@ public class PresetOptimizeService {
             Map.entry("input",
                     "inputSchemaJson 是 topic 创建表单的 JSON Schema(JSON 对象)。需符合 JSON Schema 规范,"
                             + "字段含 type/properties/required 等。前端 DynamicForm 据此渲染表单。"),
+            Map.entry("directorNote",
+                    "defaultDirectorNoteJson 是该预设自带的导演笔记模板(JSON 对象,可空)。"
+                            + "promote 新建 topic 时 copy 到 topic.director_note,作为创作 baseline。"
+                            + "常用字段:tone(整体调性)/pacing(整体节奏)/narrativeArc(五段节奏 A/B/C/D/E)/visualStyle(美术色调等)。"
+                            + "空 = 该预设无默认模板,topic 创建后 director_note 留空待用户填。"),
             Map.entry("brainstorm",
                     "brainstormPromptYaml 是选题 LLM Prompt 模板(YAML 字符串),必含 system 与 user 字段,"
                             + "可含 model / temperature。模板里 {{key}} 是变量占位符,只能保留或在合理时新增,不能随意删除。"

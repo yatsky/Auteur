@@ -6,6 +6,8 @@ export interface Preset {
   displayName?: string | null
   description?: string | null
   inputSchemaJson?: any
+  /** 该 preset 自带的默认导演笔记模板。HotPromoteService 在 promote 时 copy 到 topic.director_note。 */
+  defaultDirectorNoteJson?: any
   brainstormPromptYaml?: string | null
   scriptPromptYaml: string
   scriptCriticPromptYaml?: string | null

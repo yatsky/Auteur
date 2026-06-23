@@ -166,6 +166,7 @@ public class PresetService {
         if (patch.getDisplayName() != null) cur.setDisplayName(patch.getDisplayName());
         if (patch.getDescription() != null) cur.setDescription(patch.getDescription());
         if (patch.getInputSchemaJson() != null) cur.setInputSchemaJson(patch.getInputSchemaJson());
+        if (patch.getDefaultDirectorNoteJson() != null) cur.setDefaultDirectorNoteJson(patch.getDefaultDirectorNoteJson());
         if (patch.getBrainstormPromptYaml() != null) cur.setBrainstormPromptYaml(patch.getBrainstormPromptYaml());
         if (patch.getScriptPromptYaml() != null) cur.setScriptPromptYaml(patch.getScriptPromptYaml());
         if (patch.getScriptCriticPromptYaml() != null) cur.setScriptCriticPromptYaml(patch.getScriptCriticPromptYaml());
