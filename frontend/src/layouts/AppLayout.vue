@@ -11,6 +11,7 @@ import {
   Cpu,
   Sun, Moon,
   MessageSquare,
+  Flame,
   PanelLeftClose, PanelLeftOpen,
 } from 'lucide-vue-next'
 import { useRoute } from 'vue-router'
@@ -49,6 +50,7 @@ const navGroups: NavGroup[] = [
     items: [
       { to: '/home', icon: LayoutDashboard, label: '工作台' },
       { to: '/chat', icon: MessageSquare, label: 'Agent 控制台', matchPaths: ['/chat'], hint: 'AI' },
+      { to: '/hot-pool', icon: Flame, label: '热点池', matchPaths: ['/hot-pool'] },
       { to: '/topics', icon: Lightbulb, label: '选题池', matchPaths: ['/topics'] },
       { to: '/scripts', icon: FileText, label: '脚本工作台', matchPaths: ['/scripts'] },
       { to: '/factcheck', icon: Search, label: '事实核查', matchPaths: ['/factcheck'] },

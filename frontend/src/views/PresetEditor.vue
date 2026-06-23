@@ -6,6 +6,7 @@ import {
 } from 'lucide-vue-next'
 import ErrorBanner from '../components/ErrorBanner.vue'
 import PresetOptimizeDialog from '../components/PresetOptimizeDialog.vue'
+import HotSubscriptionTab from '../components/hotpool/HotSubscriptionTab.vue'
 import {
   getPreset, createPreset, updatePreset, saveAsNewVersion, listPresetVersions,
   rollbackPreset, type Preset, type PresetVersion,
@@ -33,6 +34,7 @@ const tabs = [
   { key: 'voice',     label: '配音演员（配音字幕）' },
   { key: 'bgm',       label: '作曲（BGM）' },
   { key: 'composition',label: '制片（合成）' },
+  { key: 'hot',       label: '热点订阅' },
 ] as const
 type TabKey = typeof tabs[number]['key']
 const activeTab = ref<TabKey>('basic')
@@ -54,6 +56,7 @@ function emptyPreset(): Preset {
     bgmMoodPromptYaml: '',
     imageConfigJson: null,
     voiceConfigJson: null,
+    hotSourceConfigJson: null,
     bgmEnabled: false,
     bgmLocked: false,
     compositionId: 'StoryHorizontal',
@@ -214,6 +217,7 @@ const SECTION_FIELDS: Record<TabKey, string[]> = {
   voice:       ['voiceConfigJson'],
   bgm:         ['bgmMoodPromptYaml', 'bgmEnabled', 'bgmLocked'],
   composition: ['compositionId', 'formatWidth', 'formatHeight', 'watermarkText', 'hookSegmentEnabled'],
+  hot:         ['hotSourceConfigJson'],
 }
 
 const optimizeSection = ref<TabKey | null>(null)
@@ -233,6 +237,7 @@ const TAB_HINTS: Record<TabKey, string> = {
   voice: '语音合成 voice/速率/音量(JSON)',
   bgm: 'BGM 选曲开关 + mood 推荐 Prompt',
   composition: 'Remotion composition / 分辨率 / 水印 / hook 段',
+  hot: '从热点池抓素材作为 brainstorm 种子(无需调度,生成选题时触发)',
 }
 
 function tabHint(k: TabKey): string {
@@ -530,6 +535,10 @@ const optimizeSectionLabel = computed(() =>
             class="form-input w-32"
           />
         </div>
+      </div>
+
+      <div v-show="activeTab === 'hot'" class="card p-5">
+        <HotSubscriptionTab v-model="draft.hotSourceConfigJson" />
       </div>
     </div>
 

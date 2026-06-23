@@ -75,6 +75,24 @@ services:
       # 默认沿用 dev 时的 5174 习惯；想用 80/8080 改 .env
       - "${FRONTEND_PORT:-5174}:80"
 
+  # —— 可选：RSSHub，解锁微博/知乎/B 站/小红书/抖音等热搜 ——
+  #
+  # 起这个服务后，到「系统设置 → 热点源管理」添加 URL = http://rsshub:1200/<路径>
+  # 即可订阅各站点热搜。路由清单见 https://docs.rsshub.app/zh/routes/
+  #
+  # 不起也能跑（默认的 36 氪 + 新浪滚动财经够覆盖一部分），按需取消注释即可启用。
+  # rsshub:
+  #   image: diygod/rsshub:latest
+  #   container_name: auteur-rsshub
+  #   restart: unless-stopped
+  #   environment:
+  #     CACHE_EXPIRE: 300
+  #     # 微博等站点需要 cookie 才能稳定拉数据，填好后取消下两行注释：
+  #     # WEIBO_COOKIES: '_T_WM=...'
+  #   # 默认不暴露 1200 给宿主机；只让 backend 容器内访问。需要在本机调试时打开：
+  #   # ports:
+  #   #   - "1200:1200"
+
 volumes:
   auteur-mysql:
   auteur-storage:

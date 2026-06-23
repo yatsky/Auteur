@@ -16,6 +16,8 @@ export interface Preset {
   bgmMoodPromptYaml?: string | null
   imageConfigJson?: any
   voiceConfigJson?: any
+  /** 热点订阅配置 JSON 字符串(后端 @JsonRawValue) — 见 HotSourceConfig */
+  hotSourceConfigJson?: string | null
   bgmEnabled: boolean
   /** true = BGM 锁定模式,用户不让选,后端按 preset 兜底出曲。仅 bgmEnabled=true 时有意义。 */
   bgmLocked: boolean

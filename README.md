@@ -210,8 +210,38 @@ preset:
 | Jamendo BGM API | BGM 不推荐，制片照常合成（没 BGM 而已） |
 | Remotion | `auteur.video.provider=ffmpeg` 走纯 ffmpeg 路径 |
 | LLM 网关 | OpenAI 兼容协议，自部署 vLLM、DeepSeek、智谱、Anthropic 都行 |
+| RSSHub | 默认源（36 氪 / 新浪滚动）够用；想接微博/知乎/抖音热搜再起 |
 
 **后端不会因为某个外部依赖缺失而启动失败 —— 降级路径都打过。**
+
+### 🔥 热点池（选题原料层）
+
+「热点池」是 brainstorm 上游的数据源：把外部新闻 / 热搜聚合进 `hot_item` 表，brainstorm 时按预设配置注入 LLM 上下文。
+
+**默认开箱即用的源（无需任何外部依赖）：**
+- 36 氪 快讯 / 文章 RSS — `https://36kr.com/feed-newsflash` 等
+- 新浪滚动财经 JSON API — `feed.mix.sina.com.cn/api/roll/get`
+
+**想接微博 / 知乎 / 抖音 / 小红书 / B 站 / 雪球 等热搜？需要自部署 [RSSHub](https://github.com/DIYgod/RSSHub)：**
+
+三种起法挑一种：
+
+```bash
+# 1️⃣ 一行 docker（最快）
+docker run -d -p 1200:1200 diygod/rsshub:latest
+
+# 2️⃣ 已在 docker-compose 里预留服务，取消注释即可
+#    （编辑 docker-compose.yml 把 rsshub: 那段反注释）
+docker compose up -d rsshub
+
+# 3️⃣ Node 直跑（本机已装 Node 22+）
+git clone https://github.com/DIYgod/RSSHub.git
+cd RSSHub && pnpm install && pnpm start
+```
+
+起来后，到「系统设置 → 热点源管理」点「添加源」，URL 填 `http://localhost:1200/<路径>`（docker compose 模式填 `http://rsshub:1200/<路径>`）。RSSHub 路由清单见 https://docs.rsshub.app/zh/routes/。
+
+**不起 RSSHub 也能完整跑通流程** —— 默认的 2 个国内财经源就够 brainstorm。后续按需扩展。
 
 ---
 

@@ -5,6 +5,7 @@ import { ArrowLeft, Loader2, Save, Settings, Eye, EyeOff, RotateCcw } from 'luci
 import { listAppConfig, updateAppConfig, type AppConfigItem } from '../api/appConfig'
 import { extractError } from '../lib/format'
 import ErrorBanner from '../components/ErrorBanner.vue'
+import HotSourcesTable from '../components/hotpool/HotSourcesTable.vue'
 
 const router = useRouter()
 const items = ref<AppConfigItem[]>([])
@@ -157,6 +158,11 @@ function isDirty(key: string): boolean {
           <strong>修改 LLM / TOS 等基础服务后需要重启应用才能生效</strong>;
           其它(语音、BGM、插件 token)立即生效。
         </div>
+      </div>
+
+      <!-- 热点源管理 — 单独锚定,不走 app_config -->
+      <div id="hot-sources" class="card p-5">
+        <HotSourcesTable />
       </div>
 
       <div v-for="g in grouped" :key="g.category" class="card p-5 space-y-4">

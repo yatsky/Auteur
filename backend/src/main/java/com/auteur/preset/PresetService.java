@@ -176,6 +176,7 @@ public class PresetService {
         if (patch.getBgmMoodPromptYaml() != null) cur.setBgmMoodPromptYaml(patch.getBgmMoodPromptYaml());
         if (patch.getImageConfigJson() != null) cur.setImageConfigJson(patch.getImageConfigJson());
         if (patch.getVoiceConfigJson() != null) cur.setVoiceConfigJson(patch.getVoiceConfigJson());
+        if (patch.getHotSourceConfigJson() != null) cur.setHotSourceConfigJson(patch.getHotSourceConfigJson());
         // primitive boolean/int 字段没法用 null 做"未设置"标记。约定:调用方要么传完整对象(UI),
         // 要么先用 cur 的当前值预填 patch(Agent 单字段写入路径),applyPatch 一律无条件覆盖。
         cur.setBgmEnabled(patch.isBgmEnabled());

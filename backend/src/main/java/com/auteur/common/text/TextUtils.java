@@ -35,4 +35,10 @@ public final class TextUtils {
         if (s == null) return "null";
         return s.length() <= 200 ? s : s.substring(0, 200) + "...";
     }
+
+    /** preview 重载,自定义截断长度。结尾追加 "..."(已含在判断里:超过才追加)。 */
+    public static String preview(String s, int max) {
+        if (s == null) return "null";
+        return s.length() <= max ? s : s.substring(0, max) + "...";
+    }
 }

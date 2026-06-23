@@ -4,9 +4,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.auteur.common.text.TextUtils;
 import com.auteur.domain.PipelineStage;
+import com.auteur.domain.PublishedVideoRepository;
 import com.auteur.domain.Topic;
 import com.auteur.domain.TopicRepository;
 import com.auteur.domain.TopicStatus;
+import com.auteur.hotpool.HotFetchService;
+import com.auteur.hotpool.HotItem;
+import com.auteur.hotpool.HotItemQueryService;
+import com.auteur.hotpool.HotItemRepository;
 import com.auteur.insights.InsightDtos.BrainstormDataPack;
 import com.auteur.insights.InsightService;
 import com.auteur.llm.LlmCallSpec;
@@ -40,6 +45,10 @@ public class BrainstormService {
     private final InsightService insightService;
     private final com.auteur.preset.PresetService presetService;
     private final DirectorNoteOptimizeService directorNoteOptimizeService;
+    private final HotItemRepository hotItemRepository;
+    private final HotItemQueryService hotItemQueryService;
+    private final HotFetchService hotFetchService;
+    private final PublishedVideoRepository publishedVideoRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Transactional
@@ -74,7 +83,7 @@ public class BrainstormService {
         Map<String, Object> vars = new HashMap<>();
         vars.put("n", req.getN());
         vars.put("archive_hint", TextUtils.safe(req.getArchiveHint()));
-        vars.put("done_topics", TextUtils.safe(req.getDoneTopics()));
+        vars.put("done_topics", buildDoneTopics(preset.getId(), req.getDoneTopics()));
 
         boolean dataDriven = Boolean.TRUE.equals(req.getUseDataDriven());
         if (dataDriven) {
@@ -96,6 +105,9 @@ public class BrainstormService {
         } else {
             fillDataDrivenDefaults(vars);
         }
+
+        // 热点池接入:withHotFetch=true 时按 preset 配置先抓一批,然后与显式 hotItemIds 合并
+        vars.put("hot_items_context", buildHotItemsContext(preset, req));
 
         PromptTemplateService.Rendered tpl = promptService.renderInline(preset.getBrainstormPromptYaml(), vars);
         String operation = "brainstorm_" + preset.getName();
@@ -238,6 +250,101 @@ public class BrainstormService {
         vars.put("top_features", "（暂无历史数据，沿用静态权重经验值）");
         vars.put("bottom_features", "（暂无历史数据）");
         vars.put("prev_week_plan", "（暂无上周复盘的下周改进计划）");
+    }
+
+    /**
+     * 拼热点条目 context — 供预设的 brainstorm_prompt_yaml 通过 {{hot_items_context}} 引用。
+     *
+     * withHotFetch=true 时先按预设 hot_source_config 实拉一批(写库),与显式 hotItemIds 合并去重。
+     * 拉取失败会被 HotFetchService 内部吞掉,不影响 brainstorm 本身。
+     *
+     * 老预设不引用 {{hot_items_context}} 时,本变量被忽略(向后兼容)。
+     */
+    private String buildHotItemsContext(com.auteur.preset.Preset preset, BrainstormRequest req) {
+        // 收集 entity,而不是 id → 二次 findAllById 是无谓的 round-trip(query() 已经返回 entity)。
+        java.util.LinkedHashMap<Long, HotItem> selected = new java.util.LinkedHashMap<>();
+
+        if (Boolean.TRUE.equals(req.getWithHotFetch())) {
+            HotItemQueryService.HotItemFilter f = hotItemQueryService.filterFromPreset(preset);
+            if (f.disabled) {
+                log.info("[Brainstorm] preset={} 关闭了热点订阅,跳过 hot_items_context", preset.getName());
+            } else {
+                // 预设勾了源就只抓那几个;没勾源 = UI 承诺的「所有 enabled 源」,改调 fetchAll 兜底。
+                try {
+                    if (f.sourceIds != null && !f.sourceIds.isEmpty()) {
+                        hotFetchService.fetchForPreset(preset.getId(), f.sourceIds);
+                    } else {
+                        hotFetchService.fetchAll();
+                    }
+                } catch (RuntimeException e) {
+                    log.warn("[Brainstorm] 热点抓取失败,本次跳过: {}", e.getMessage());
+                }
+                if (f.limit == null) f.limit = 8; // 上下文别太长
+                hotItemQueryService.query(f).forEach(it -> selected.put(it.getId(), it));
+            }
+        }
+        // 显式 ids 是用户手动挑的,绕过 disabled,直接合并。
+        if (req.getHotItemIds() != null && !req.getHotItemIds().isEmpty()) {
+            // 避免重复 round-trip:只查不在 selected 里的 id。
+            List<Long> missing = req.getHotItemIds().stream()
+                    .filter(id -> !selected.containsKey(id))
+                    .toList();
+            if (!missing.isEmpty()) {
+                hotItemRepository.findAllById(missing).forEach(it -> selected.put(it.getId(), it));
+            }
+        }
+
+        if (selected.isEmpty()) return "";
+
+        StringBuilder sb = new StringBuilder("以下是当前社会热点(用作素材参考):\n");
+        for (HotItem it : selected.values()) {
+            sb.append("- 【").append(it.getTitle()).append("】");
+            if (it.getSummary() != null && !it.getSummary().isBlank()) {
+                sb.append(" ").append(TextUtils.preview(it.getSummary(), 160));
+            }
+            sb.append('\n');
+        }
+        log.info("[Brainstorm] hot_items_context items={} chars={}", selected.size(), sb.length());
+        return sb.toString();
+    }
+
+    /**
+     * 已做过的题清单 — 喂给 LLM 的 {{done_topics}} 占位符。
+     *
+     * 数据来源:
+     *   1) published_video 表(权威)— 按 preset_id 过滤,只看本预设近 100 条已发视频;
+     *      跨预设(LifeCopy / 历史悬案号 等)的标题不会污染当前预设的 done_topics。
+     *      LIMIT 100 由 Pageable 在 SQL 层完成,不会拉全表到 JVM。
+     *   2) 前端传的 done_topics(可选,通常是「topic 列表前 30 条草稿」)— 补充未发但已存在的占位选题。
+     *
+     * 合并去重(LinkedHashSet 保序),空串/"无" 兜底。
+     */
+    private String buildDoneTopics(Long presetId, String fromRequest) {
+        java.util.LinkedHashSet<String> all = new java.util.LinkedHashSet<>();
+
+        if (presetId != null) {
+            try {
+                publishedVideoRepository.findRecentTitlesByPresetId(
+                                presetId, org.springframework.data.domain.PageRequest.of(0, 100))
+                        .stream()
+                        .filter(t -> t != null && !t.isBlank())
+                        .map(String::trim)
+                        .forEach(all::add);
+            } catch (RuntimeException e) {
+                log.warn("[Brainstorm] 加载已发布视频去重失败,跳过: {}", e.getMessage());
+            }
+        }
+
+        if (fromRequest != null && !fromRequest.isBlank() && !"无".equals(fromRequest.trim())) {
+            for (String t : fromRequest.split(" / ")) {
+                String trimmed = t.trim();
+                if (!trimmed.isEmpty()) all.add(trimmed);
+            }
+        }
+
+        if (all.isEmpty()) return "无";
+        log.info("[Brainstorm] done_topics merged={} (published+request)", all.size());
+        return String.join(" / ", all);
     }
 
 }

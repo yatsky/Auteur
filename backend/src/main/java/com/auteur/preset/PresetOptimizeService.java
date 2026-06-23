@@ -44,7 +44,8 @@ public class PresetOptimizeService {
             Map.entry("voice", List.of("voiceConfigJson")),
             Map.entry("bgm", List.of("bgmMoodPromptYaml", "bgmEnabled", "bgmLocked")),
             Map.entry("composition", List.of(
-                    "compositionId", "formatWidth", "formatHeight", "watermarkText", "hookSegmentEnabled"))
+                    "compositionId", "formatWidth", "formatHeight", "watermarkText", "hookSegmentEnabled")),
+            Map.entry("hot", List.of("hotSourceConfigJson"))
     );
 
     private static final Map<String, String> SECTION_LABELS = Map.ofEntries(
@@ -57,7 +58,8 @@ public class PresetOptimizeService {
             Map.entry("image", "美术"),
             Map.entry("voice", "录音"),
             Map.entry("bgm", "BGM"),
-            Map.entry("composition", "合成")
+            Map.entry("composition", "合成"),
+            Map.entry("hot", "热点订阅")
     );
 
     private static final Map<String, String> SECTION_GUIDANCE = Map.ofEntries(
@@ -92,7 +94,13 @@ public class PresetOptimizeService {
             Map.entry("composition",
                     "compositionId 是 Remotion composition 名(如 StoryHorizontal / StoryVertical / LifeCopy);"
                             + "formatWidth / formatHeight 是成片分辨率整数(横屏 1920×1080,竖屏 1080×1920);"
-                            + "watermarkText 是左上角水印文本(空字符串 = 不加);hookSegmentEnabled 是布尔。")
+                            + "watermarkText 是左上角水印文本(空字符串 = 不加);hookSegmentEnabled 是布尔。"),
+            Map.entry("hot",
+                    "hotSourceConfigJson 是热点订阅配置(JSON 对象或 null,null=不订阅)。结构:"
+                            + "{ enabled, sourceIds: number[], includeKeywords: string[], excludeKeywords: string[], "
+                            + "includeTags: string[], maxAgeHours: int, minPopularity: 0..1 }。"
+                            + "excludeKeywords 是合规护栏(命中即排除),如 [股票推荐,必涨,翻倍,内幕]。"
+                            + "整体置 null 等于关闭订阅。优化时保持 JSON 形态严格,字段名匹配。")
     );
 
     public OptimizeResponse optimize(Long presetId, OptimizeRequest req) {
@@ -205,6 +213,7 @@ public class PresetOptimizeService {
         m.put("bgmMoodPromptYaml", preset.getBgmMoodPromptYaml());
         m.put("imageConfigJson", parseJsonOrNull(preset.getImageConfigJson()));
         m.put("voiceConfigJson", parseJsonOrNull(preset.getVoiceConfigJson()));
+        m.put("hotSourceConfigJson", parseJsonOrNull(preset.getHotSourceConfigJson()));
         m.put("bgmEnabled", preset.isBgmEnabled());
         m.put("bgmLocked", preset.isBgmLocked());
         m.put("compositionId", preset.getCompositionId());

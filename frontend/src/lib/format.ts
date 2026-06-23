@@ -10,3 +10,9 @@ export function formatDuration(sec: number | null | undefined): string {
   const s = Math.floor(sec % 60)
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
+
+/** 把用户在 textarea / 输入框里写的关键词字符串拆成数组,中英文逗号 / 空白 / 换行都分隔。 */
+export function splitWords(s: string | null | undefined): string[] {
+  if (!s) return []
+  return s.split(/[,，\s\n]+/).map((w) => w.trim()).filter(Boolean)
+}

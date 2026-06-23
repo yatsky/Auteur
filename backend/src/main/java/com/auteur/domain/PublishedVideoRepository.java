@@ -1,6 +1,9 @@
 package com.auteur.domain;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,6 +14,17 @@ public interface PublishedVideoRepository extends JpaRepository<PublishedVideo, 
 
     /** drift / daily-trend 用:近 N 天的样本。 */
     List<PublishedVideo> findByPublishedAtAfterOrderByPublishedAtDesc(LocalDateTime since);
+
+    /**
+     * Brainstorm 去重用:取某预设近期已发视频标题。通过 topic.preset_id 关联过滤,
+     * 跨预设(LifeCopy / 历史悬案号 等)的标题不会污染当前预设的 done_topics。
+     * Pageable 控制 LIMIT,调用方传 PageRequest.of(0, 100) 之类。
+     */
+    @Query("select v.title from PublishedVideo v where v.topicId in " +
+            "(select t.id from com.auteur.domain.Topic t where t.presetId = :presetId) " +
+            "and v.title is not null and v.title <> '' " +
+            "order by v.publishedAt desc")
+    List<String> findRecentTitlesByPresetId(@Param("presetId") Long presetId, Pageable pageable);
 
     /** bulk 导入 merge key 之一:有 vid 时按平台 vid 找已存在的行。 */
     Optional<PublishedVideo> findByPlatformAndPlatformVideoId(String platform, String platformVideoId);

@@ -34,6 +34,7 @@ import PresetLibrary from '../views/PresetLibrary.vue'
 import SystemConfig from '../views/SystemConfig.vue'
 import ModelConfig from '../views/ModelConfig.vue'
 import PresetEditor from '../views/PresetEditor.vue'
+import HotPool from '../views/HotPool.vue'
 
 const router = createRouter({
   // base 路径与 vite.config.ts 的 base 配置同步:
@@ -146,6 +147,8 @@ const router = createRouter({
 
     // Preset 管理
     { path: '/presets', name: 'preset-library', component: PresetLibrary, meta: { title: '预设库' } },
+    // 热点池(选题原料)
+    { path: '/hot-pool', name: 'hot-pool', component: HotPool, meta: { title: '热点池' } },
     // 系统设置(LLM 中转 / 对象存储 / 语音 / BGM 等密钥)
     { path: '/config', name: 'system-config', component: SystemConfig, meta: { title: '系统设置' } },
     // AI 模型(流水线每一步用的模型,落 app_config 表 category='model')

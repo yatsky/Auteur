@@ -415,3 +415,73 @@ export interface CoverAsset {
   runId: number | null
   createdAt: string
 }
+
+// ====== 热点池 ======
+
+export interface HotSource {
+  id: number
+  name: string
+  adapter: 'rss' | 'http_json' | string
+  url: string
+  /** 适配器私有配置 JSON 字符串 */
+  configJson: string | null
+  /** 默认 tag 数组的 JSON 字符串 */
+  defaultTagsJson: string | null
+  enabled: boolean
+  lastFetchedAt: string | null
+  lastFetchCount: number | null
+  lastFetchError: string | null
+  createdAt?: string
+  updatedAt?: string
+}
+
+export type HotItemStatus = 'new' | 'promoted' | 'dismissed'
+
+export interface HotItem {
+  id: number
+  sourceId: number
+  externalId: string
+  title: string
+  summary: string | null
+  url: string | null
+  bodyText: string | null
+  /** tag 数组的 JSON 字符串(后端 @JsonRawValue,直接 parse) */
+  tagsJson: string | null
+  popularity: number
+  locale: string
+  publishedAt: string | null
+  fetchedAt: string
+  status: HotItemStatus
+  promotedTopicId: number | null
+  createdAt: string
+}
+
+/** 后端 fetch 端点返回的每源结果 */
+export interface HotFetchResult {
+  sourceId: number
+  sourceName: string
+  inserted: number
+  skipped: number
+  error: string | null
+}
+
+/** preset.hotSourceConfigJson 解出来的结构 — 前端编辑面板用 */
+export interface HotSourceConfig {
+  enabled: boolean
+  sourceIds: number[]
+  includeKeywords: string[]
+  excludeKeywords: string[]
+  includeTags?: string[]
+  maxAgeHours?: number
+  minPopularity?: number
+}
+
+export const DEFAULT_HOT_SOURCE_CONFIG: HotSourceConfig = {
+  enabled: false,
+  sourceIds: [],
+  includeKeywords: [],
+  excludeKeywords: [],
+  includeTags: [],
+  maxAgeHours: 48,
+  minPopularity: 0.3,
+}

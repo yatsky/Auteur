@@ -85,6 +85,17 @@ public class Preset {
     @Column(name = "voice_config_json", columnDefinition = "TEXT")
     private String voiceConfigJson;
 
+    /**
+     * 热点订阅配置 JSON — 前端「热点订阅」tab 落盘。
+     * 结构: { enabled, sourceIds: number[], includeKeywords: string[], excludeKeywords: string[],
+     *        maxAgeHours: int, minPopularity: double }
+     * 为 null 或 enabled=false → 该预设 brainstorm 时不拉热点。
+     */
+    @JsonRawValue
+    @JsonDeserialize(using = JsonRawStringDeserializer.class)
+    @Column(name = "hot_source_config_json", columnDefinition = "TEXT")
+    private String hotSourceConfigJson;
+
     @Column(name = "bgm_enabled", nullable = false)
     private boolean bgmEnabled;
 
