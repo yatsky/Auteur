@@ -45,7 +45,8 @@ public class PresetOptimizeService {
             Map.entry("voice", List.of("voiceConfigJson")),
             Map.entry("bgm", List.of("bgmMoodPromptYaml", "bgmEnabled", "bgmLocked")),
             Map.entry("composition", List.of(
-                    "compositionId", "formatWidth", "formatHeight", "watermarkText", "hookSegmentEnabled")),
+                    "compositionId", "formatWidth", "formatHeight", "watermarkText", "hookSegmentEnabled",
+                    "chapterBreakSec")),
             Map.entry("hot", List.of("hotSourceConfigJson"))
     );
 

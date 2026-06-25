@@ -10,7 +10,7 @@ import AudioPlayer from '../components/AudioPlayer.vue'
 import { generateVoiceAsync, listVoices } from '../api/scripts'
 import { previewVoice } from '../api/voiceCatalog'
 import { extractError } from '../lib/format'
-import { DEFAULT_VOICE, VOICE_GROUPS, voiceLabelOf } from '../lib/voices'
+import { defaultVoice, ensureVoiceCatalogLoaded, voiceGroups, voiceLabelOf } from '../lib/voices'
 import type { PipelineRunStatus, VoiceAsset } from '../types'
 
 const { items, loading, errorMsg } = useRecentScripts()
@@ -22,13 +22,15 @@ const selected = computed(() => items.value.find((s) => s.scriptId === selectedS
 const qsid = Number(route.query.scriptId)
 if (Number.isFinite(qsid) && qsid > 0) selectedScriptId.value = qsid
 
-const voiceModel = ref<string>(DEFAULT_VOICE)
+const voiceModel = ref<string>('')  // catalog 加载完前空串,加载后设为 defaultVoice.value
 const speed = ref(1.0)
 const pitch = ref(0)
 const subtitleStyle = ref<'standard' | 'highlight'>('standard')
 const markFinal = ref(true)
 const voiceSource = ref<'auto_default' | 'manual'>('manual')
-const voiceSourceLabel = computed(() => voiceSource.value === 'auto_default' ? '默认音色 · 爽快思思' : '')
+const voiceSourceLabel = computed(() =>
+  voiceSource.value === 'auto_default' ? `默认音色 · ${voiceLabelOf(defaultVoice.value)}` : '',
+)
 
 const voices = ref<VoiceAsset[]>([])
 const voicesLoading = ref(false)
@@ -80,7 +82,7 @@ watch(selectedScriptId, (sid) => {
  * 进 voice studio 时套 catalog 默认音色。用户改后 voiceSource=manual,提示消失。
  */
 async function resolveVoiceDefaults(_scriptId: number) {
-  voiceModel.value = DEFAULT_VOICE
+  voiceModel.value = defaultVoice.value
   speed.value = 1.0
   voiceSource.value = 'auto_default'
 }
@@ -92,8 +94,9 @@ watch(voiceModel, (_, prev) => {
 })
 watch(speed, () => { demoUrl.value = null })
 
-// 进入页面时如果 URL 已有 scriptId,直接拉默认值
-onMounted(() => {
+// 进入页面时先 fetch catalog,再用 default。catalog 是单一来源,后端 VolcanoVoiceCatalog 改 → 自动同步。
+onMounted(async () => {
+  await ensureVoiceCatalogLoaded()
   if (selectedScriptId.value != null) resolveVoiceDefaults(selectedScriptId.value)
 })
 
@@ -306,8 +309,8 @@ async function triggerGen() {
               <div>
                 <div class="text-xs text-text-muted mb-1.5">音色</div>
                 <select v-model="voiceModel" class="w-full bg-surface-secondary border border-border-subtle rounded px-2 py-1.5 text-sm">
-                  <optgroup v-for="g in VOICE_GROUPS" :key="g.label" :label="g.label">
-                    <option v-for="v in g.voices" :key="v.value" :value="v.value">
+                  <optgroup v-for="g in voiceGroups" :key="g.label" :label="g.label">
+                    <option v-for="v in g.voices" :key="v.voiceType" :value="v.voiceType">
                       {{ v.label }}{{ v.suit ? ' · ' + v.suit : '' }}
                     </option>
                   </optgroup>

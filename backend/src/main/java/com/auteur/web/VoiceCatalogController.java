@@ -13,7 +13,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 火山预训练音色目录给前端用。跟后端 prompt 里给 LLM 的列表是同一份(VolcanoVoiceCatalog)。
+ * 火山预训练音色目录给前端用。**单一来源** — 跟 LLM prompt 里给的列表是同一份(VolcanoVoiceCatalog)。
+ * 前端 frontend/src/lib/voices.ts 只保留 UI 分组规则,音色定义本身都从这里拉。
  * 同时挂一条 /demo 试听端点。
  */
 @RestController
@@ -24,9 +25,12 @@ public class VoiceCatalogController {
     private final VolcanoVoiceCatalog catalog;
     private final VoiceDemoService demoService;
 
+    /** 一次性返回 default + 完整 voices 列表。前端启动时拉一次缓存。 */
+    public record CatalogResponse(String defaultVoice, List<VolcanoVoiceCatalog.Voice> voices) {}
+
     @GetMapping("/catalog")
-    public List<VolcanoVoiceCatalog.Voice> list() {
-        return catalog.all();
+    public CatalogResponse catalog() {
+        return new CatalogResponse(catalog.defaultVoice(), catalog.all());
     }
 
     public record DemoRequest(String voiceType, Double speed) {}

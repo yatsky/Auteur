@@ -67,5 +67,7 @@ export const storyPropsSchema = z.object({
   hookDurationSec: z.number().default(0),
   hookPageFlipSoundUrl: z.string().default(''),
   chapterBreakSec: z.number().default(0.3),
+  // 字幕距底边比例(0.0-0.5);0 = 走 SubtitleTrack 内置智能默认(竖屏 0.257/横屏 0.125)
+  subtitleBottomRatio: z.number().default(0),
 })
 export type StoryProps = z.infer<typeof storyPropsSchema>

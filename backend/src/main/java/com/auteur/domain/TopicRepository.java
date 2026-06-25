@@ -22,4 +22,7 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
     /** 系列列表 enrich:按 series_id 一次性出每个 series 的 topic 数量。 */
     @Query("SELECT t.seriesId, COUNT(t) FROM Topic t WHERE t.seriesId IN :seriesIds GROUP BY t.seriesId")
     List<Object[]> countBySeriesIds(@Param("seriesIds") Collection<Long> seriesIds);
+
+    /** 删 preset 前预检:还有几条 topic 引用这个 preset。0 = 可以安全删。 */
+    long countByPresetId(Long presetId);
 }

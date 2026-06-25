@@ -37,12 +37,13 @@ public interface VideoRenderer {
      * @param compositionId Remotion composition 名;Remotion 路径必填,ffmpeg 路径可空。
      * @param watermarkText 左上角水印文本;null/空 = 不加水印。ffmpeg 路径忽略。
      * @param chapterBreakSec 章节边界黑帧时长(秒);Remotion 路径消费,ffmpeg 路径忽略。来自 preset.chapter_break_sec。
+     * @param subtitleBottomRatio 字幕距底边比例(0.0-0.5);null = 走 renderer 智能默认。来自 preset.subtitle_bottom_ratio。
      */
     record Request(Long scriptId, List<ImageClip> clips, String audioUrl, String subtitleUrl,
                    String format, int width, int height, BgmConfig bgm, String subtitleStyle,
                    String contentType, String personaJson, String protagonistRefUrl, Long topicId,
                    HookConfig hook, String compositionId, String watermarkText,
-                   double chapterBreakSec) {}
+                   double chapterBreakSec, Double subtitleBottomRatio) {}
 
     record Result(String videoUrl, Integer durationSeconds, Integer width, Integer height,
                   String format, BigDecimal costYuan) {}

@@ -10,6 +10,7 @@ import BgmPicker from '../components/BgmPicker.vue'
 import {
   listImages, listShots, listVoices, listVideos, renderVideoAsync,
 } from '../api/scripts'
+import { listAppConfig, updateAppConfig } from '../api/appConfig'
 import { useRunPoll } from '../composables/useRunPoll'
 import { extractError, formatDuration } from '../lib/format'
 import type {
@@ -41,6 +42,42 @@ const rendering = ref(false)
 const playing = ref(false)
 const playhead = ref(0)
 let playTimer: number | null = null
+
+// 字幕距底边比例 - 全局基础设置(app_config.auteur.video.subtitle-bottom-ratio)。
+// 一刀切影响所有 preset 的视频。0 = 走 renderer 智能默认(竖屏 25.7%/横屏 12.5%)。
+const SUBTITLE_RATIO_KEY = 'auteur.video.subtitle-bottom-ratio'
+const subtitleRatio = ref<number>(0)
+const subtitleSaving = ref(false)
+const subtitleSavedFlash = ref(false)
+const subtitleSaveError = ref<string | null>(null)
+
+async function loadSubtitleRatio() {
+  try {
+    const items = await listAppConfig()
+    const item = items.find((x) => x.configKey === SUBTITLE_RATIO_KEY)
+    const raw = item?.displayValue ?? ''
+    const n = raw.trim() ? Number(raw) : 0
+    subtitleRatio.value = Number.isFinite(n) ? n : 0
+  } catch (e) {
+    subtitleRatio.value = 0
+  }
+}
+
+async function saveSubtitleRatio() {
+  subtitleSaving.value = true
+  subtitleSaveError.value = null
+  try {
+    // 0 → 空字符串 = 清空走智能默认;>0 → 数值字符串
+    const value = subtitleRatio.value > 0 ? String(subtitleRatio.value) : ''
+    await updateAppConfig({ [SUBTITLE_RATIO_KEY]: value })
+    subtitleSavedFlash.value = true
+    setTimeout(() => { subtitleSavedFlash.value = false }, 1500)
+  } catch (e) {
+    subtitleSaveError.value = extractError(e, '保存失败')
+  } finally {
+    subtitleSaving.value = false
+  }
+}
 
 interface TimelineShot {
   id: number
@@ -195,9 +232,10 @@ watch(scriptId, () => {
   runStatus.value = null
   runMsg.value = null
   loadAll()
+  loadSubtitleRatio()
 })
 
-onMounted(loadAll)
+onMounted(() => { loadAll(); loadSubtitleRatio() })
 onBeforeUnmount(stopPlay)
 </script>
 
@@ -312,6 +350,29 @@ onBeforeUnmount(stopPlay)
                   <input v-model="markFinal" type="checkbox" class="accent-accent" />
                   设为定稿(替换该 script 的当前定稿)
                 </label>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-border-subtle">
+              <div class="rounded border border-border-subtle bg-surface-secondary p-2.5 text-xs space-y-2">
+                <div class="flex items-center gap-2">
+                  <Subtitles :size="14" class="text-text-muted" />
+                  <span class="font-medium">字幕距底边</span>
+                  <span class="ml-auto font-mono text-text-primary">
+                    {{ subtitleRatio > 0 ? `${(subtitleRatio * 100).toFixed(1)}%` : '默认' }}
+                  </span>
+                </div>
+                <input type="range" min="0" max="0.5" step="0.005"
+                       v-model.number="subtitleRatio"
+                       :disabled="subtitleSaving"
+                       @change="saveSubtitleRatio"
+                       class="w-full accent-accent" />
+                <div class="text-[10px] text-text-muted leading-relaxed">
+                  避开抖音底部标题。0 = renderer 智能默认(竖屏 25.7% / 横屏 12.5%)。
+                  <span class="text-text-muted/70">全局基础设置,影响所有预设的视频。</span>
+                </div>
+                <div v-if="subtitleSavedFlash" class="text-[10px] text-status-done">已保存 ✓</div>
+                <div v-if="subtitleSaveError" class="text-[10px] text-status-failed">{{ subtitleSaveError }}</div>
               </div>
             </div>
 

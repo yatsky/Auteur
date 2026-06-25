@@ -5,6 +5,7 @@ import com.auteur.domain.TopicRepository;
 import com.auteur.domain.TopicStatus;
 import com.auteur.preset.Preset;
 import com.auteur.preset.PresetRepository;
+import com.auteur.preset.PresetService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class HotPromoteService {
     private final HotItemRepository itemRepo;
     private final TopicRepository topicRepo;
     private final PresetRepository presetRepo;
+    private final PresetService presetService;
     private final ObjectMapper objectMapper;
 
     @Transactional
@@ -100,23 +102,8 @@ public class HotPromoteService {
      * schema 的 default 仅在该字段没被其他来源(目前只有 hot 四项)覆盖时灌入 — hot 永远优先。
      */
     private String buildPresetInput(HotItem item, Preset preset) {
-        ObjectNode root = objectMapper.createObjectNode();
         // 先灌 schema default(后面 hot 字段同名覆盖)
-        String schemaJson = preset.getInputSchemaJson();
-        if (schemaJson != null && !schemaJson.isBlank()) {
-            try {
-                com.fasterxml.jackson.databind.JsonNode schema = objectMapper.readTree(schemaJson);
-                com.fasterxml.jackson.databind.JsonNode props = schema.get("properties");
-                if (props != null && props.isObject()) {
-                    props.fields().forEachRemaining(e -> {
-                        com.fasterxml.jackson.databind.JsonNode def = e.getValue().get("default");
-                        if (def != null && !def.isNull()) root.set(e.getKey(), def);
-                    });
-                }
-            } catch (Exception ex) {
-                log.warn("[hotpool] preset.inputSchemaJson 解析失败 presetId={}: {}", preset.getId(), ex.toString());
-            }
-        }
+        ObjectNode root = presetService.extractSchemaDefaults(preset);
         // hot 字段后写,同名覆盖
         root.put("hotItemTitle", item.getTitle());
         if (item.getSummary() != null) root.put("hotItemSummary", item.getSummary());

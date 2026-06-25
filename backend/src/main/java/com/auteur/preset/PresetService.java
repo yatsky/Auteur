@@ -29,6 +29,7 @@ public class PresetService {
     private final PresetRepository presetRepo;
     private final PresetVersionRepository versionRepo;
     private final PresetAssetRepository assetRepo;
+    private final com.auteur.domain.TopicRepository topicRepo;
     private final ObjectMapper objectMapper;
 
     public Preset get(Long id) {
@@ -71,6 +72,33 @@ public class PresetService {
             log.warn("[Preset] voice_config_json 解析失败 presetId={}: {}", preset.getId(), e.toString());
             return null;
         }
+    }
+
+    /**
+     * 扫 preset.inputSchemaJson 的 properties[*].default,产出一个 ObjectNode 当 topic.preset_input_json 的"地板"。
+     * 所有 Topic 创建路径(HotPromoteService / BrainstormService / Agent tools / 手工新建)都应该先调这个拿到 defaults,
+     * 再让 promote 时的 hot 字段 / brainstorm 时的 LLM 输出去**覆盖**它,保证频道级常量(受众/时长/情绪等)总有值。
+     *
+     * 返回值是 mutable ObjectNode — 调用方可以直接 root.set(...) 往里覆写。
+     * schema 缺失/解析失败 → 返回空 ObjectNode(不抛,降级)。
+     */
+    public com.fasterxml.jackson.databind.node.ObjectNode extractSchemaDefaults(Preset preset) {
+        com.fasterxml.jackson.databind.node.ObjectNode out = objectMapper.createObjectNode();
+        String schemaJson = preset.getInputSchemaJson();
+        if (schemaJson == null || schemaJson.isBlank()) return out;
+        try {
+            com.fasterxml.jackson.databind.JsonNode schema = objectMapper.readTree(schemaJson);
+            com.fasterxml.jackson.databind.JsonNode props = schema.get("properties");
+            if (props != null && props.isObject()) {
+                props.fields().forEachRemaining(e -> {
+                    com.fasterxml.jackson.databind.JsonNode def = e.getValue().get("default");
+                    if (def != null && !def.isNull()) out.set(e.getKey(), def);
+                });
+            }
+        } catch (JsonProcessingException e) {
+            log.warn("[Preset] input_schema_json 解析失败 presetId={}: {}", preset.getId(), e.toString());
+        }
+        return out;
     }
 
     @Transactional
@@ -133,6 +161,14 @@ public class PresetService {
     @Transactional
     public void delete(Long id) {
         Preset preset = get(id);
+        // 预检 — preset 表跟 topic 之间是 ON DELETE RESTRICT,有引用就删不掉。
+        // 直接 delete 会丢 500;先 count 一下给前端友好提示。
+        long refCount = topicRepo.countByPresetId(id);
+        if (refCount > 0) {
+            throw new ResponseStatusException(BAD_REQUEST,
+                    "该预设下还有 " + refCount + " 条 topic 引用,不能删除。"
+                            + "请先归档 / 删除这些 topic,或把它们迁移到别的预设。");
+        }
         // FK ON DELETE CASCADE 会把 preset_version / preset_asset 一起清掉
         presetRepo.delete(preset);
         log.info("[Preset] deleted id={} name={}", id, preset.getName());

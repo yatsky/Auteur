@@ -152,33 +152,31 @@ public class BrainstormService {
             t.setSource("AI_BRAINSTORM");
             t.setPresetId(preset.getId());
             t.setPresetVersionUsed(preset.getCurrentVersion());
+            // 频道级常量(受众/时长/情绪等)从 schema.default 灌底,LLM 输出覆盖。
+            // 跟 HotPromoteService 一致 —— 任何 Topic 创建路径都该保证 schema.default 至少不丢。
+            com.fasterxml.jackson.databind.node.ObjectNode inputRoot = presetService.extractSchemaDefaults(preset);
             if (c.getPresetInput() != null && !c.getPresetInput().isEmpty()) {
-                try {
-                    t.setPresetInputJson(objectMapper.writeValueAsString(c.getPresetInput()));
-                } catch (Exception e) {
-                    log.warn("[Brainstorm] preset_input_json (generic) 序列化失败 title={}: {}",
-                            c.getTitle(), e.toString());
-                }
+                // LLM 输出整 map 覆盖到 root(key 命中 → 覆盖,新 key → 追加)
+                c.getPresetInput().forEach((k, v) ->
+                        inputRoot.set(k, objectMapper.valueToTree(v)));
                 if ((t.getProtagonist() == null || t.getProtagonist().isBlank())
                         && c.getIdentityTag() != null) {
                     t.setProtagonist(TextUtils.truncate(c.getIdentityTag(), 120));
                 }
             } else if (c.getIdentityTag() != null) {
                 // 老路径(lifecopy):identity_tag / era / archetype / nodes 4 个硬编码字段
-                Map<String, Object> input = new HashMap<>();
-                input.put("identity_tag", c.getIdentityTag());
-                input.put("era", c.getEra());
-                input.put("archetype", c.getArchetype());
-                input.put("nodes", c.getNodes() == null ? List.of() : c.getNodes());
-                try {
-                    t.setPresetInputJson(objectMapper.writeValueAsString(input));
-                } catch (Exception e) {
-                    log.warn("[Brainstorm] preset_input_json 序列化失败 title={}: {}",
-                            c.getTitle(), e.toString());
-                }
+                inputRoot.set("identity_tag", objectMapper.valueToTree(c.getIdentityTag()));
+                inputRoot.set("era", objectMapper.valueToTree(c.getEra()));
+                inputRoot.set("archetype", objectMapper.valueToTree(c.getArchetype()));
+                inputRoot.set("nodes", objectMapper.valueToTree(
+                        c.getNodes() == null ? List.of() : c.getNodes()));
                 if (t.getProtagonist() == null || t.getProtagonist().isBlank()) {
                     t.setProtagonist(TextUtils.truncate(c.getIdentityTag(), 120));
                 }
+            }
+            // 即使两条 LLM 路径都没产出,只要 schema 有 default,也要落盘(频道常量不丢)
+            if (inputRoot.size() > 0) {
+                t.setPresetInputJson(inputRoot.toString());
             }
             t.setProjectName(pickProjectName(t.getProtagonist(), trimmedTitle));
             persisted.add(topicRepository.save(t));

@@ -346,6 +346,9 @@ public class VideoAssemblyService {
         String watermarkText = ctx != null ? ctx.preset().getWatermarkText() : null;
         // preset.chapter_break_sec 决定章节断点黑帧时长;ctx 缺省回落 0.30 沿用旧常量。
         double chapterBreakSec = ctx != null ? ctx.preset().getChapterBreakSec() : 0.30;
+        // 字幕距底边比例:全局基础设置(app_config),0 = 走 renderer 智能默认(竖屏 0.257/横屏 0.125)。
+        // 用户在「视频组装」页或「系统设置」页拖滑块即可一刀切影响所有 preset 的视频。
+        double subtitleBottomRatio = runtimeConfig.getDouble("auteur.video.subtitle-bottom-ratio", 0.0);
         return new VideoRenderer.Request(
                 scriptId, clips, audioUrl, subUrl, format, width, height, bgmCfg, subtitleStyle,
                 presetName,
@@ -355,7 +358,8 @@ public class VideoAssemblyService {
                 hook,
                 compositionId,
                 watermarkText,
-                chapterBreakSec);
+                chapterBreakSec,
+                subtitleBottomRatio > 0 ? subtitleBottomRatio : null);
     }
 
     /** 任一步失败返回 null,主流程退回"无 hook"原行为。 */
@@ -363,6 +367,11 @@ public class VideoAssemblyService {
             List<VideoRenderer.ImageClip> clips, Topic topic, VoiceAsset voice,
             com.auteur.preset.PresetContext ctx) {
         try {
+            // preset.hook_segment_enabled 是 hook 段开关。false → 跳过整段(开头直接进主体)。
+            if (ctx == null || !ctx.preset().isHookSegmentEnabled()) {
+                log.info("[制片] hook: preset.hook_segment_enabled=false,跳过");
+                return null;
+            }
             if (clips == null || clips.size() < 6) {
                 log.info("[制片] hook: clips 不足 6 张,跳过");
                 return null;

@@ -11,16 +11,10 @@ import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.GradientPaint;
 import java.awt.Graphics2D;
-import java.awt.LinearGradientPaint;
-import java.awt.MultipleGradientPaint;
 import java.awt.RenderingHints;
 import java.awt.Shape;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -37,8 +31,8 @@ import java.util.UUID;
  *
  * canvas → Java2D 关键差异:
  *   - textBaseline=middle 没原生支持,手算 y + ascent - (ascent+descent)/2
- *   - 渐变用 LinearGradientPaint(stops) / GradientPaint(两段)
  *   - 圆角裁切走 setClip(RoundRectangle2D)
+ *   - 高亮黄字描边走 GlyphVector.getOutline → draw(outline) + fill(outline)
  */
 @Slf4j
 @Component
@@ -80,13 +74,12 @@ public class Java2DCoverRenderer {
             BufferedImage hero = req.heroImagePath() != null && Files.exists(req.heroImagePath())
                     ? safeRead(req.heroImagePath()) : null;
 
-            String tpl = req.templateId() != null ? req.templateId() : "bottom-caption";
+            String tpl = req.templateId() != null ? req.templateId() : "centered-highlight";
             switch (tpl) {
-                case "split-vertical"   -> renderSplitVertical(g, req, hero);
-                case "diagonal"         -> renderDiagonal(g, req, hero);
-                case "minimal"          -> renderMinimal(g, req, hero);
-                case "lifecopy-classic" -> renderLifecopyClassic(g, req, hero);
-                default                 -> renderBottomCaption(g, req, hero);
+                case "lifecopy-classic"   -> renderLifecopyClassic(g, req, hero);
+                case "centered-highlight" -> renderCenteredHighlight(g, req, hero);
+                // 已废弃模板(bottom-caption / split-vertical / diagonal / minimal) fallback 到 centered-highlight
+                default                   -> renderCenteredHighlight(g, req, hero);
             }
         } finally {
             g.dispose();
@@ -115,183 +108,140 @@ public class Java2DCoverRenderer {
         }
     }
 
-    private void renderBottomCaption(Graphics2D g, RenderRequest req, BufferedImage hero) {
+    private void renderCenteredHighlight(Graphics2D g, RenderRequest req, BufferedImage hero) {
         int w = req.width(), h = req.height();
         BrandIdentity brand = req.brand();
 
-        g.setColor(parseColor(brand.getBgColor(), Color.BLACK));
-        g.fillRect(0, 0, w, h);
-
-        if (hero != null) drawCover(g, hero, 0, 0, w, h);
-        else drawHeroPlaceholder(g, 0, 0, w, h, brand);
-
-        // 底部渐变蒙层(透明 → 主色)
-        int overlayH = (int) (h * 0.55);
-        Color primary = parseColor(brand.getPrimaryColor(), Color.BLACK);
-        LinearGradientPaint grad = new LinearGradientPaint(
-                new Point2D.Float(0, h - overlayH), new Point2D.Float(0, h),
-                new float[]{0f, 0.5f, 1f},
-                new Color[]{
-                        new Color(0, 0, 0, 0),
-                        withAlpha(primary, 0.55f),
-                        withAlpha(primary, 0.92f),
-                });
-        g.setPaint(grad);
-        g.fillRect(0, h - overlayH, w, overlayH);
-
-        int padX = (int) (w * 0.07);
-        int maxTextW = w - padX * 2;
-        double ratio = (double) w / h;
-        int titleSize = ratio < 1 ? (int) Math.round(w * 0.095) : (int) Math.round(h * 0.13);
-        Font titleFont = pickBoldFont(titleSize);
-        g.setFont(titleFont);
-        FontMetrics fm = g.getFontMetrics();
-        List<String> lines = capLines(wrapText(fm, nz(req.titleText(), "在这里写一个有钩子的标题"), maxTextW), 3);
-
-        int cornerH = (int) Math.round(h * 0.06);
-        double lineGap = titleSize * 0.18;
-        double titleBlockH = lines.size() * (titleSize + lineGap) - lineGap;
-        double titleEndY = h - cornerH * 2 - h * 0.04;
-        double titleStartY = titleEndY - titleBlockH;
-
-        g.setColor(Color.WHITE);
-        for (int i = 0; i < lines.size(); i++) {
-            double y = titleStartY + i * (titleSize + lineGap) + titleSize;
-            g.drawString(lines.get(i), padX, (float) y);
+        // 背景:hero 图填满(主图保持清晰);无 hero 时纯 bgColor 兜底
+        if (hero != null) {
+            drawCover(g, hero, 0, 0, w, h);
+        } else {
+            g.setColor(parseColor(brand.getBgColor(), new Color(0xF5, 0xEF, 0xE0)));
+            g.fillRect(0, 0, w, h);
         }
 
-        drawLogoAndAuthor(g, padX, h - cornerH - (int) (h * 0.03), cornerH, brand, Color.WHITE);
-    }
+        // 顶 / 底装饰条(品牌主色)
+        Color primary = parseColor(brand.getPrimaryColor(), Color.BLACK);
+        int decoH = Math.max(4, (int) (h * 0.006));
+        g.setColor(primary);
+        g.fillRect(0, 0, w, decoH);
+        g.fillRect(0, h - decoH, w, decoH);
 
-    private void renderSplitVertical(Graphics2D g, RenderRequest req, BufferedImage hero) {
-        int w = req.width(), h = req.height();
-        BrandIdentity brand = req.brand();
-
-        int heroH = (int) Math.round(h * 0.6);
-        int captionH = h - heroH;
-
-        if (hero != null) drawCover(g, hero, 0, 0, w, heroH);
-        else drawHeroPlaceholder(g, 0, 0, w, heroH, brand);
-
-        g.setColor(parseColor(brand.getBgColor(), new Color(0xF5, 0xEF, 0xE0)));
-        g.fillRect(0, heroH, w, captionH);
-
-        g.setColor(parseColor(brand.getPrimaryColor(), Color.BLACK));
-        g.fillRect(0, heroH, w, Math.max(4, (int) (h * 0.005)));
-
-        int padX = (int) (w * 0.07);
+        int padX = (int) (w * 0.08);
         int maxTextW = w - padX * 2;
         double ratio = (double) w / h;
-        int titleSize = ratio > 1.5
-                ? (int) Math.round(captionH * 0.32)
-                : (int) Math.round(captionH * 0.26);
+        int titleSize = ratio < 1 ? (int) Math.round(w * 0.105) : (int) Math.round(h * 0.135);
         g.setFont(pickBoldFont(titleSize));
         FontMetrics fm = g.getFontMetrics();
-        List<String> lines = capLines(wrapText(fm, nz(req.titleText(), "主标题"), maxTextW), 2);        g.setColor(parseColor(brand.getPrimaryColor(), Color.BLACK));
-        double lineGap = titleSize * 0.2;
-        for (int i = 0; i < lines.size(); i++) {
-            double y = heroH + captionH * 0.32 + i * (titleSize + lineGap) + titleSize;
-            g.drawString(lines.get(i), padX, (float) y);
+
+        // 解析 **重点词** → segments
+        List<HighlightSeg> segments = parseHighlights(
+                nz(req.titleText(), "在标题里用 **双星号** 包裹重点词"));
+        StringBuilder plainBuf = new StringBuilder();
+        for (HighlightSeg s : segments) plainBuf.append(s.text);
+        String plain = plainBuf.toString();
+        boolean[] highlightMask = new boolean[plain.length()];
+        int idx = 0;
+        for (HighlightSeg s : segments) {
+            for (int k = 0; k < s.text.length(); k++) highlightMask[idx++] = s.highlight;
         }
 
-        int cornerH = (int) Math.round(h * 0.05);
-        drawLogoAndAuthor(g, padX, h - cornerH - (int) (h * 0.025), cornerH, brand,
-                parseColor(brand.getPrimaryColor(), Color.BLACK));
-    }
+        List<String> lines = capLines(wrapText(fm, plain, maxTextW), 4);
 
-    private void renderDiagonal(Graphics2D g, RenderRequest req, BufferedImage hero) {
-        int w = req.width(), h = req.height();
-        BrandIdentity brand = req.brand();
-
-        g.setColor(parseColor(brand.getBgColor(), new Color(0xF5, 0xEF, 0xE0)));
-        g.fillRect(0, 0, w, h);
-
-        double heroX = w * 0.42;
-        double heroY = h * 0.08;
-        double heroW = w * 0.55;
-        double heroH = h * 0.84;
-
-        AffineTransform old = g.getTransform();
-        AffineTransform t = new AffineTransform();
-        t.rotate(Math.toRadians(-3), heroX + heroW / 2, heroY + heroH / 2);
-        g.transform(t);
-        if (hero != null) drawCover(g, hero, (int) heroX, (int) heroY, (int) heroW, (int) heroH);
-        else drawHeroPlaceholder(g, (int) heroX, (int) heroY, (int) heroW, (int) heroH, brand);
-        g.setTransform(old);
-
-        Color primary = parseColor(brand.getPrimaryColor(), Color.BLACK);
-        g.setColor(withAlpha(primary, 0.92f));
-        int[] xs = { 0, (int) (w * 0.46), (int) (w * 0.42), 0 };
-        int[] ys = { 0, 0, h, h };
-        g.fillPolygon(xs, ys, 4);
-
-        int padX = (int) (w * 0.04);
-        int maxTextW = (int) (w * 0.36);
-        double ratio = (double) w / h;
-        int titleSize = ratio < 1 ? (int) Math.round(w * 0.085) : (int) Math.round(h * 0.11);
-        g.setFont(pickBoldFont(titleSize));
-        FontMetrics fm = g.getFontMetrics();
-        List<String> lines = capLines(wrapText(fm, nz(req.titleText(), "示例标题"), maxTextW), 4);
-
-        double lineGap = titleSize * 0.18;
+        double lineGap = titleSize * 0.22;
         double blockH = lines.size() * (titleSize + lineGap) - lineGap;
-        double startY = h * 0.5 - blockH / 2 + titleSize;
-        g.setColor(Color.WHITE);
-        for (int i = 0; i < lines.size(); i++) {
-            g.drawString(lines.get(i), padX, (float) (startY + i * (titleSize + lineGap)));
+        double blockTopY = (h - blockH) / 2.0 - h * 0.04;
+        double startY = blockTopY + titleSize;
+
+        // 中央半透明深色横带 — 仅 hero 模式;纯色 bg 已有对比不需要
+        if (hero != null) {
+            double bandPad = h * 0.045;
+            double bandY = blockTopY - bandPad;
+            double bandH = blockH + bandPad * 2;
+            g.setColor(new Color(0, 0, 0, (int) (255 * 0.55)));
+            g.fillRect(0, (int) bandY, w, (int) bandH);
+        }
+
+        Color textColor = hero != null ? Color.WHITE : primary;
+        int charCursor = 0;
+        for (int li = 0; li < lines.size(); li++) {
+            String line = lines.get(li);
+            List<HighlightSeg> colored = lineToColoredSegments(line, charCursor, highlightMask);
+            charCursor += line.length();
+
+            int totalLineW = 0;
+            for (HighlightSeg s : colored) totalLineW += fm.stringWidth(s.text);
+            float x = (w - totalLineW) / 2f;
+            float y = (float) (startY + li * (titleSize + lineGap));
+
+            for (HighlightSeg seg : colored) {
+                if (seg.highlight) {
+                    java.awt.font.GlyphVector gv = g.getFont().createGlyphVector(
+                            g.getFontRenderContext(), seg.text);
+                    Shape outline = gv.getOutline(x, y);
+                    float strokeW = (float) Math.max(4, titleSize * 0.08);
+                    java.awt.Stroke oldStroke = g.getStroke();
+                    g.setStroke(new BasicStroke(strokeW,
+                            BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                    g.setColor(Color.BLACK);
+                    g.draw(outline);
+                    g.setColor(new Color(0xFF, 0xD9, 0x3D));
+                    g.fill(outline);
+                    g.setStroke(oldStroke);
+                } else {
+                    g.setColor(textColor);
+                    g.drawString(seg.text, x, y);
+                }
+                x += fm.stringWidth(seg.text);
+            }
         }
 
         int cornerH = (int) Math.round(h * 0.05);
-        drawLogoAndAuthor(g, padX, h - cornerH - (int) (h * 0.03), cornerH, brand, Color.WHITE);
+        drawLogoAndAuthor(g, (int) (w * 0.06), h - cornerH - (int) (h * 0.05), cornerH, brand, textColor);
     }
 
-    private void renderMinimal(Graphics2D g, RenderRequest req, BufferedImage hero) {
-        int w = req.width(), h = req.height();
-        BrandIdentity brand = req.brand();
+    // ===================== centered-highlight 高亮辅助 =====================
 
-        g.setColor(parseColor(brand.getBgColor(), new Color(0xF5, 0xEF, 0xE0)));
-        g.fillRect(0, 0, w, h);
+    private record HighlightSeg(String text, boolean highlight) {}
 
-        Color primary = parseColor(brand.getPrimaryColor(), Color.BLACK);
-        g.setColor(primary);
-        g.fillRect(0, 0, w, Math.max(6, (int) (h * 0.008)));
-
-        int padX = (int) (w * 0.1);
-        int maxTextW = w - padX * 2;
-        double ratio = (double) w / h;
-        int titleSize = ratio < 1 ? (int) Math.round(w * 0.11) : (int) Math.round(h * 0.14);
-        g.setFont(pickBoldFont(titleSize));
-        FontMetrics fm = g.getFontMetrics();
-        List<String> lines = capLines(wrapText(fm, nz(req.titleText(), "极简标题"), maxTextW), 3);
-
-        double lineGap = titleSize * 0.25;
-        double blockH = lines.size() * (titleSize + lineGap) - lineGap;
-        double startY = h * 0.4 - blockH / 2 + titleSize;
-        g.setColor(primary);
-        for (int i = 0; i < lines.size(); i++) {
-            String line = lines.get(i);
-            int textW = fm.stringWidth(line);
-            g.drawString(line, (w - textW) / 2f, (float) (startY + i * (titleSize + lineGap)));
+    /** "存款 **100 万**,降息少 **2500 块**" → segments,跟前端 parseHighlights 行为一致。 */
+    private List<HighlightSeg> parseHighlights(String text) {
+        List<HighlightSeg> out = new ArrayList<>();
+        if (text == null || text.isEmpty()) {
+            out.add(new HighlightSeg("", false));
+            return out;
         }
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("\\*\\*([^*]+?)\\*\\*");
+        java.util.regex.Matcher m = p.matcher(text);
+        int cursor = 0;
+        while (m.find()) {
+            if (m.start() > cursor) out.add(new HighlightSeg(text.substring(cursor, m.start()), false));
+            out.add(new HighlightSeg(m.group(1), true));
+            cursor = m.end();
+        }
+        if (cursor < text.length()) out.add(new HighlightSeg(text.substring(cursor), false));
+        if (out.isEmpty()) out.add(new HighlightSeg("", false));
+        return out;
+    }
 
-        // 右下角圆角小 hero
-        double heroSide = Math.min(w, h) * 0.32;
-        double heroX = w - heroSide - w * 0.06;
-        double heroY = h - heroSide - h * 0.1;
-        double r = heroSide * 0.1;
-        Shape oldClip = g.getClip();
-        Shape rounded = new RoundRectangle2D.Double(heroX, heroY, heroSide, heroSide, r * 2, r * 2);
-        g.setClip(rounded);
-        if (hero != null) drawCover(g, hero, (int) heroX, (int) heroY, (int) heroSide, (int) heroSide);
-        else drawHeroPlaceholder(g, (int) heroX, (int) heroY, (int) heroSide, (int) heroSide, brand);
-        g.setClip(oldClip);
-
-        g.setColor(primary);
-        g.setStroke(new java.awt.BasicStroke((float) Math.max(2, w * 0.003)));
-        g.draw(new RoundRectangle2D.Double(heroX, heroY, heroSide, heroSide, r * 2, r * 2));
-
-        int cornerH = (int) Math.round(h * 0.05);
-        drawLogoAndAuthor(g, (int) (w * 0.06), h - cornerH - (int) (h * 0.06), cornerH, brand, primary);
+    /** 把一已断行的字符串切回 mini-segments(该行内同色连续段)。 */
+    private List<HighlightSeg> lineToColoredSegments(String line, int startCharIdx, boolean[] highlightMask) {
+        List<HighlightSeg> segs = new ArrayList<>();
+        if (line.isEmpty()) return segs;
+        StringBuilder cur = new StringBuilder();
+        boolean curH = startCharIdx < highlightMask.length && highlightMask[startCharIdx];
+        for (int i = 0; i < line.length(); i++) {
+            boolean h = (startCharIdx + i) < highlightMask.length && highlightMask[startCharIdx + i];
+            if (h == curH) {
+                cur.append(line.charAt(i));
+            } else {
+                if (cur.length() > 0) segs.add(new HighlightSeg(cur.toString(), curH));
+                cur = new StringBuilder().append(line.charAt(i));
+                curH = h;
+            }
+        }
+        if (cur.length() > 0) segs.add(new HighlightSeg(cur.toString(), curH));
+        return segs;
     }
 
     // 录取通知书风格:黑底外框 + 红底圆角 hero + 底部主副标题。titleText 含 \n 时拆主副。
@@ -424,23 +374,6 @@ public class Java2DCoverRenderer {
             sy = (img.getHeight() - sh) / 2;
         }
         g.drawImage(img, x, y, x + w, y + h, sx, sy, sx + sw, sy + sh, null);
-    }
-
-    /** hero 没传时:左上 primary → 右下 secondary 渐变 + "封面主图占位" 文字。 */
-    private void drawHeroPlaceholder(Graphics2D g, int x, int y, int w, int h, BrandIdentity brand) {
-        Color p = parseColor(brand.getPrimaryColor(), Color.DARK_GRAY);
-        Color s = parseColor(brand.getSecondaryColor(), Color.GRAY);
-        g.setPaint(new GradientPaint(x, y, p, x + w, y + h, s));
-        g.fillRect(x, y, w, h);
-        g.setColor(new Color(255, 255, 255, 90));
-        int sz = (int) (Math.min(w, h) * 0.06);
-        g.setFont(pickPlainFont(sz));
-        FontMetrics fm = g.getFontMetrics();
-        String txt = "封面主图占位";
-        int tw = fm.stringWidth(txt);
-        // textBaseline=middle 等价: y + ascent - (ascent+descent)/2
-        int by = y + h / 2 + fm.getAscent() - (fm.getAscent() + fm.getDescent()) / 2;
-        g.drawString(txt, x + (w - tw) / 2f, by);
     }
 
     /** logo 圆形 clip + 古铜金描边 + 第一行 brandName + @author 小字 */
@@ -600,19 +533,7 @@ public class Java2DCoverRenderer {
         return fallback;
     }
 
-    private static Color withAlpha(Color c, float alpha) {
-        return new Color(c.getRed(), c.getGreen(), c.getBlue(), Math.round(alpha * 255));
-    }
-
-    @SuppressWarnings("unused")
-    private static final MultipleGradientPaint.CycleMethod NO_CYCLE_REF = MultipleGradientPaint.CycleMethod.NO_CYCLE;
-
     private static String nz(String s, String fallback) {
         return s == null || s.isBlank() ? fallback : s;
-    }
-
-    @SuppressWarnings("unused")
-    private static Rectangle2D.Double rect(double x, double y, double w, double h) {
-        return new Rectangle2D.Double(x, y, w, h);
     }
 }

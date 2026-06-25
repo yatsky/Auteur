@@ -84,6 +84,7 @@ export const StoryComposition: React.FC<StoryProps> = ({
   hookDurationSec,
   hookPageFlipSoundUrl,
   chapterBreakSec,
+  subtitleBottomRatio,
 }) => {
   const motionByShot = new Map<number, MotionDir>(
     plan.shotPlans.map((p) => [p.shotId, p.motion]),
@@ -181,7 +182,7 @@ export const StoryComposition: React.FC<StoryProps> = ({
           </Sequence>
         ))}
 
-        <SubtitleTrack cues={cuesShort} highlightKeywords={plan.highlightKeywords} large />
+        <SubtitleTrack cues={cuesShort} highlightKeywords={plan.highlightKeywords} large bottomRatio={subtitleBottomRatio} />
       </Sequence>
 
       {/* 整片水印(贯穿 hook + 主体)。空串 = 不渲染 */}

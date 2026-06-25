@@ -133,6 +133,10 @@ public class RemotionVideoRenderer implements VideoRenderer {
             root.set("subtitleCues", cuesNode);
             root.put("watermark", req.watermarkText() == null ? "" : req.watermarkText());
             root.put("chapterBreakSec", req.chapterBreakSec());
+            // preset.subtitle_bottom_ratio:null 不传 → renderer 走智能默认(竖屏 0.257/横屏 0.125)
+            if (req.subtitleBottomRatio() != null) {
+                root.put("subtitleBottomRatio", req.subtitleBottomRatio());
+            }
             if (req.bgm() != null && req.bgm().httpUrl() != null && !req.bgm().httpUrl().isBlank()) {
                 root.put("bgmUrl", req.bgm().httpUrl());
                 root.put("bgmVolume", req.bgm().volume());

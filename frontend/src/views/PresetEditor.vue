@@ -226,7 +226,7 @@ const SECTION_FIELDS: Record<TabKey, string[]> = {
   image:       ['imageConfigJson'],
   voice:       ['voiceConfigJson'],
   bgm:         ['bgmMoodPromptYaml', 'bgmEnabled', 'bgmLocked'],
-  composition: ['compositionId', 'formatWidth', 'formatHeight', 'watermarkText', 'hookSegmentEnabled'],
+  composition: ['compositionId', 'formatWidth', 'formatHeight', 'watermarkText', 'hookSegmentEnabled', 'chapterBreakSec'],
   hot:         ['hotSourceConfigJson'],
 }
 

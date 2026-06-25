@@ -45,6 +45,7 @@ public class VolcanoVoiceCatalog {
             new Voice("zh_female_wenrouxiaoya_uranus_bigtts","温柔小雅","婉约/内敛少妇", "female", "biography"),
             new Voice("zh_female_roumeinvyou_uranus_bigtts","柔美女友","柔美/温柔早逝", "female", "biography"),
             new Voice("zh_female_qiaopinv_uranus_bigtts",   "俏皮女声", "活泼少女/公主", "female", "biography"),
+            new Voice("zh_female_mizai_uranus_bigtts",      "咪仔2.0",  "优雅的知心姐姐", "female", "both"),
             // emo v2 系列(_mars_bigtts):情感更丰富
             new Voice("zh_female_shuangkuaisisi_emo_v2_mars_bigtts", "爽快思思", "明亮爽朗/年轻女声/当代叙述", "female", "both")
     );
