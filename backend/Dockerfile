@@ -47,4 +47,6 @@ EXPOSE 8082
 HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=5 \
     CMD curl -fsS http://localhost:8082/actuator/health || exit 1
 
-ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]
+# Wait for the MySQL sidecar before starting (avoids the startup race where Spring
+# Boot fails fast on first boot / box reboot while MySQL is still initializing).
+ENTRYPOINT ["bash", "-c", "host=${MYSQL_HOST:-mysql}; port=${MYSQL_PORT:-3306}; echo \"[entrypoint] waiting for $host:$port ...\"; for i in $(seq 1 120); do (echo > /dev/tcp/$host/$port) >/dev/null 2>&1 && { echo \"[entrypoint] $host:$port is up\"; break; }; sleep 2; done; sleep 3; exec java $JAVA_OPTS -jar /app/app.jar"]
